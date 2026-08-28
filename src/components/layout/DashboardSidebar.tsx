@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { requestsService, DEFAULT_WORKSPACE_USER } from '@/services/requestsService';
 import { WorkspaceUser } from '@/types';
+import { SmoothLogoutModal } from '@/components/ui/SmoothLogoutModal';
 
 export interface DashboardSidebarProps {
   onCloseMobile?: () => void;
@@ -49,6 +50,7 @@ export function DashboardSidebar({
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(2);
   const [unreadNotifsCount, setUnreadNotifsCount] = useState(2);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   const loadData = async () => {
@@ -420,58 +422,28 @@ export function DashboardSidebar({
                   <p className="text-[10px] text-slate-500">20th Mth Following credit limit</p>
                 </div>
               </Link>
-
-              <Link
-                href="/operations/dashboard"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 text-cyan-300 hover:bg-slate-800 hover:text-cyan-200 transition-colors font-bold"
-              >
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Operations Command Centre</p>
-                  <p className="text-[10px] text-slate-400">Internal operations workspace</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/finance/dashboard"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 text-emerald-300 hover:bg-slate-800 hover:text-emerald-200 transition-colors font-bold"
-              >
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Finance Control Centre</p>
-                  <p className="text-[10px] text-slate-400">Payments, credits & treasury</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/procurement/dashboard"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 text-sky-300 hover:bg-slate-800 hover:text-sky-200 transition-colors font-bold"
-              >
-                <ShieldCheck className="w-4 h-4 text-sky-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Procurement Command Centre</p>
-                  <p className="text-[10px] text-slate-400">Sourcing & supplier POs</p>
-                </div>
-              </Link>
             </div>
 
             {/* Sign Out */}
             <div className="border-t border-slate-800 pt-1">
-              <Link
-                href="/login"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 text-red-400 hover:bg-red-950/40 hover:text-red-300 font-bold transition-colors"
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileDropdownOpen(false);
+                  setIsLoggingOut(true);
+                }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-red-400 hover:bg-red-950/40 hover:text-red-300 font-bold transition-colors text-left"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Sign Out</span>
-              </Link>
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Smooth Logout Overlay */}
+      <SmoothLogoutModal isOpen={isLoggingOut} onClose={() => setIsLoggingOut(false)} />
     </aside>
   );
 }

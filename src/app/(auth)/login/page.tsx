@@ -31,6 +31,9 @@ import {
 } from 'lucide-react';
 import { UserRole, WorkspaceUser } from '@/types';
 import { requestsService } from '@/services/requestsService';
+import { operationsService } from '@/services/operations/operationsService';
+import { procurementService } from '@/services/procurement/procurementService';
+import { financeService } from '@/services/finance/financeService';
 
 interface RoleConfig {
   role: UserRole;
@@ -79,7 +82,7 @@ const WORKSPACE_ROLES: RoleConfig[] = [
     badge: 'Logistics Ops',
     roleTitle: 'Logistics & MPI Compliance Lead',
     phoneMasked: '+64 27 ••• •492',
-    defaultRoute: '/shipments',
+    defaultRoute: '/operations/dashboard',
     portalName: 'Logistics & MPI Clearance Hub',
     description: 'Manage NZ customs clearance, MPI biosecurity releases, air/sea freight & courier dispatch.',
     mfaRequired: true,
@@ -96,7 +99,7 @@ const WORKSPACE_ROLES: RoleConfig[] = [
     badge: 'Sourcing Specialist',
     roleTitle: 'Senior Parts Sourcing Specialist',
     phoneMasked: '+64 21 ••• •114',
-    defaultRoute: '/requests',
+    defaultRoute: '/procurement/dashboard',
     portalName: 'Global Sourcing & Bidding Desk',
     description: 'Coordinate supplier bidding across Japan, Europe & USA with fitment validation.',
     mfaRequired: true,
@@ -113,7 +116,7 @@ const WORKSPACE_ROLES: RoleConfig[] = [
     badge: 'Trade Accounts',
     roleTitle: 'Trade Accounts & Credit Officer',
     phoneMasked: '+64 22 ••• •905',
-    defaultRoute: '/payments',
+    defaultRoute: '/finance/dashboard',
     portalName: 'Trade Accounts & Billing Portal',
     description: 'Review 20th month trade credit lines, NZBN validations, GST duty & merchant clearing.',
     mfaRequired: true,
@@ -374,10 +377,12 @@ export default function LoginPage() {
 
       setMfaSuccess(true);
 
+      const effectiveEmail = email.trim() || currentRoleConfig.email;
+
       const userSession: WorkspaceUser = {
         id: `usr_${currentRoleConfig.role.toLowerCase()}_1`,
         name: currentRoleConfig.name,
-        email: currentRoleConfig.email,
+        email: effectiveEmail,
         role: currentRoleConfig.role,
         roleTitle: currentRoleConfig.roleTitle,
         deskName: currentRoleConfig.deskName,
@@ -395,9 +400,15 @@ export default function LoginPage() {
 
       await requestsService.setCurrentUser(userSession);
 
-      if (selectedRole === 'Customer') {
-        await requestsService.resetToDefaults();
-      } else {
+      if (selectedRole === 'Operations') {
+        operationsService.switchUser(currentRoleConfig.name);
+      } else if (selectedRole === 'Procurement') {
+        procurementService.switchUser('usr_proc_lead_1');
+      } else if (selectedRole === 'Finance') {
+        financeService.switchUser('usr_fin_lead_1');
+      }
+
+      if (selectedRole !== 'Customer') {
         await requestsService.updateCompanyProfile({
           legalBusinessName: `${currentRoleConfig.organization}`,
           tradingName: `${currentRoleConfig.name} (${currentRoleConfig.role})`,

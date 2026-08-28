@@ -20,6 +20,7 @@ import { operationsService } from '@/services/operations/operationsService';
 import { OperationsStaffUser } from '@/types/operations';
 import { GlobalSearchModal } from './GlobalSearchModal';
 import { QuickCreateModal } from './QuickCreateModal';
+import { SmoothLogoutModal } from '@/components/ui/SmoothLogoutModal';
 import { cn } from '@/lib/utils';
 
 export interface OperationsHeaderProps {
@@ -33,6 +34,7 @@ export function OperationsHeader({ onOpenMobileMenu }: OperationsHeaderProps) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notifMenuRef = useRef<HTMLDivElement>(null);
 
@@ -320,25 +322,20 @@ export function OperationsHeader({ onOpenMobileMenu }: OperationsHeaderProps) {
                     <ShieldCheck className="w-4 h-4 text-slate-400" />
                     <span>Audit & Compliance Log</span>
                   </Link>
-                  <Link
-                    href="/dashboard"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-blue-50 hover:text-[#2B4499] transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4 text-slate-400" />
-                    <span>View Customer Portal</span>
-                  </Link>
                 </div>
 
                 <div className="pt-1 mt-1 border-t border-slate-100">
-                  <Link
-                    href="/login"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-red-600 hover:bg-red-50 font-semibold transition-colors"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserDropdownOpen(false);
+                      setIsLoggingOut(true);
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-red-600 hover:bg-red-50 font-semibold transition-colors text-left"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Sign Out</span>
-                  </Link>
+                  </button>
                 </div>
               </div>
             )}
@@ -349,6 +346,7 @@ export function OperationsHeader({ onOpenMobileMenu }: OperationsHeaderProps) {
       {/* Modals */}
       <GlobalSearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
       <QuickCreateModal isOpen={isQuickCreateOpen} onClose={() => setIsQuickCreateOpen(false)} />
+      <SmoothLogoutModal isOpen={isLoggingOut} onClose={() => setIsLoggingOut(false)} />
     </>
   );
 }

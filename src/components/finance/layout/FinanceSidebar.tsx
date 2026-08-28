@@ -34,11 +34,12 @@ import {
   PlusCircle,
   ExternalLink,
   Shield,
-  Box,
   Wallet,
+  LogOut,
 } from 'lucide-react';
 import { financeService } from '@/services/finance/financeService';
 import { FinanceStaffUser } from '@/types/finance';
+import { SmoothLogoutModal } from '@/components/ui/SmoothLogoutModal';
 
 export interface FinanceSidebarProps {
   onCloseMobile?: () => void;
@@ -62,6 +63,7 @@ export function FinanceSidebar({
   const [awaitingCount, setAwaitingCount] = useState(0);
   const [refundsCount, setRefundsCount] = useState(0);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
   const loadData = () => {
@@ -357,71 +359,84 @@ export function FinanceSidebar({
           )}
         </button>
 
-        {/* Popover Switcher */}
+        {/* Enhanced Profile Menu Popover */}
         {profileDropdownOpen && (
           <div
             className={cn(
-              'absolute bottom-full left-3 z-50 mb-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 text-slate-200 animate-slide-up',
+              'absolute bottom-full left-3 z-50 mb-2 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl py-2 text-xs text-slate-200 animate-slide-up',
               isCollapsed ? 'w-64 -left-2' : 'w-[calc(100%-24px)]'
             )}
           >
-            <div className="px-2.5 py-2 border-b border-slate-800 mb-1">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                Switch Finance Specialist
-              </p>
-            </div>
-            <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
-              {staffUsers.map((u) => (
-                <button
-                  key={u.id}
-                  onClick={() => handleSwitchUser(u)}
-                  className={cn(
-                    'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left text-xs transition-colors',
-                    currentUser.id === u.id
-                      ? 'bg-[#ed2025]/20 text-white font-medium border border-[#ed2025]/30'
-                      : 'hover:bg-slate-800 text-slate-300'
-                  )}
-                >
-                  <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
-                    {u.avatar}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate font-semibold">{u.name}</p>
-                    <p className="truncate text-[10px] text-slate-400">{u.role}</p>
-                  </div>
-                  {currentUser.id === u.id && (
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  )}
-                </button>
-              ))}
+            {/* Header Info */}
+            <div className="px-4 py-3 border-b border-slate-800 bg-slate-950/60">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-bold text-white text-xs truncate">{currentUser.name}</span>
+                <span className="text-[9px] font-black uppercase text-emerald-400 bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800 shrink-0">
+                  {currentUser.role}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 truncate">{currentUser.email || 'finance@procurly.com'}</p>
             </div>
 
-            <div className="pt-2 mt-2 border-t border-slate-800 flex flex-col gap-1">
+            {/* Navigation Links */}
+            <div className="py-1.5">
               <Link
-                href="/dashboard"
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                href="/finance/tasks"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
               >
-                <ExternalLink className="w-3 h-3 text-slate-400" />
-                <span>Switch to Customer Portal</span>
+                <ListTodo className="w-4 h-4 text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">My Finance Tasks</p>
+                  <p className="text-[10px] text-slate-500">Approvals & clearing queue</p>
+                </div>
               </Link>
+
               <Link
-                href="/procurement/dashboard"
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                href="/finance/transactions"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
               >
-                <ExternalLink className="w-3 h-3 text-slate-400" />
-                <span>Switch to Procurement Portal</span>
+                <History className="w-4 h-4 text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Payment & Audit Ledger</p>
+                  <p className="text-[10px] text-slate-500">Complete transaction history</p>
+                </div>
               </Link>
+
               <Link
-                href="/operations/dashboard"
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                href="/team"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
               >
-                <ExternalLink className="w-3 h-3 text-slate-400" />
-                <span>Switch to Operations Portal</span>
+                <User className="w-4 h-4 text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Team & Financial Access</p>
+                  <p className="text-[10px] text-slate-500">Manage Treasury roles</p>
+                </div>
               </Link>
+            </div>
+
+            {/* Sign Out */}
+            <div className="border-t border-slate-800 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setProfileDropdownOpen(false);
+                  setIsLoggingOut(true);
+                }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-red-400 hover:bg-red-950/40 hover:text-red-300 font-bold transition-colors text-left"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Smooth Logout Overlay */}
+      <SmoothLogoutModal isOpen={isLoggingOut} onClose={() => setIsLoggingOut(false)} />
     </aside>
   );
 }
