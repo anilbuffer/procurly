@@ -121,7 +121,7 @@ export default function MessagesPage() {
       {/* Main Messaging Interface (Two-Column Layout) */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-card overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[620px]">
         {/* Left Col (4 cols): Conversations List */}
-        <div className="lg:col-span-4 border-r border-slate-200 flex flex-col">
+        <div className={`lg:col-span-4 border-r border-slate-200 flex flex-col ${selectedRequestId ? 'hidden lg:flex' : 'flex'}`}>
           {/* Conversation Search Bar */}
           <div className="p-3.5 border-b border-slate-100 bg-slate-50/50">
             <div className="relative w-full">
@@ -137,7 +137,7 @@ export default function MessagesPage() {
           </div>
 
           {/* Conversations Thread List */}
-          <div className="flex-1 overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto divide-y divide-slate-100 custom-scrollbar max-h-[550px] lg:max-h-none">
             {filteredRequests.map((req) => {
               const isSelected = req.id === selectedRequestId;
               const lastMsg = req.messages && req.messages.length > 0 ? req.messages[req.messages.length - 1] : null;
@@ -173,27 +173,36 @@ export default function MessagesPage() {
 
         {/* Right Col (8 cols): Active Chat Thread & Composer */}
         {selectedRequest ? (
-          <div className="lg:col-span-8 flex flex-col h-full bg-slate-50/30">
+          <div className={`lg:col-span-8 flex flex-col h-full bg-slate-50/30 ${!selectedRequestId ? 'hidden lg:flex' : 'flex'}`}>
             {/* Thread Header */}
-            <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                    {selectedRequest.referenceNumber}
-                  </span>
-                  <span className="text-xs font-bold text-slate-800">
-                    {selectedRequest.vehicle.make} {selectedRequest.vehicle.model} · {selectedRequest.vehicle.year}
-                  </span>
-                  <Badge variant="status" status={selectedRequest.status} dot={true} />
+            <div className="p-4 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedRequestId('')}
+                  className="lg:hidden p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold flex items-center gap-1"
+                >
+                  ← All Chats
+                </button>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-xs font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      {selectedRequest.referenceNumber}
+                    </span>
+                    <span className="text-xs font-bold text-slate-800">
+                      {selectedRequest.vehicle.make} {selectedRequest.vehicle.model}
+                    </span>
+                    <Badge variant="status" status={selectedRequest.status} dot={true} />
+                  </div>
+                  <p className="text-xs text-slate-600 font-medium mt-0.5 truncate max-w-xs sm:max-w-md">
+                    {selectedRequest.parts[0]?.name || selectedRequest.title}
+                  </p>
                 </div>
-                <p className="text-xs text-slate-600 font-medium mt-1">
-                  {selectedRequest.parts[0]?.name || selectedRequest.title}
-                </p>
               </div>
 
               <Link href={`/requests/${selectedRequest.id}`}>
                 <Button variant="outline" size="sm" className="text-xs font-bold">
-                  View Request Details →
+                  View Details →
                 </Button>
               </Link>
             </div>

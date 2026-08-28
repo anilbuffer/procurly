@@ -376,3 +376,21 @@ export interface NotificationItem {
 
 // Legacy alias for compatibility
 export type TradeAccount = CompanyProfile;
+
+// RBAC Roles & Security
+export type UserRole = 'Customer' | 'Operations' | 'Procurement' | 'Finance' | 'Administrator';
+
+export interface WorkspaceUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  roleTitle: string;
+  deskName: string;
+  organization: string;
+  avatar: string;
+  badge: string;
+  permissions: string[];
+  mfaEnabled: boolean;
+  defaultRoute: string;
+}

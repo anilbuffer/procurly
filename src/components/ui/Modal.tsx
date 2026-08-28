@@ -66,26 +66,26 @@ export function Modal({
       {/* Modal Dialog */}
       <div
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-2xl border border-slate-200 z-10 overflow-hidden animate-slide-up my-8',
+          'relative w-full max-w-[95vw] bg-white rounded-2xl shadow-2xl border border-slate-200 z-10 overflow-hidden animate-slide-up my-auto max-h-[92vh] flex flex-col',
           maxWidths[resolvedWidth]
         )}
       >
         {(title || description) && (
-          <div className="px-6 py-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+          <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/50 shrink-0">
             <div>
-              {title && <h3 className="text-lg font-bold text-slate-900">{title}</h3>}
+              {title && <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-tight">{title}</h3>}
               {description && <p className="text-xs text-slate-500 mt-0.5">{description}</p>}
             </div>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+              className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors ml-2 shrink-0"
               aria-label="Close dialog"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         )}
-        <div className="p-6">{children}</div>
+        <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar flex-1">{children}</div>
       </div>
     </div>
   );
