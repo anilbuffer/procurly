@@ -1,0 +1,100 @@
+export const BRAND = {
+  name: "Procurly",
+  subBrand: "by Autohub",
+  fullName: "Procurly by Autohub",
+  tagline: "Precision B2B Automotive Parts Sourcing & Global Logistics",
+  nzTradeSubtitle: "Door-to-door vehicle parts procurement platform for New Zealand dealers and trade repairers.",
+  colors: {
+    primaryRed: "#ed2025",
+    secondaryBlue: "#2b4499",
+    canvas: "#F8FAFC",
+    card: "#FFFFFF",
+    textDark: "#0F172A",
+  },
+  contact: {
+    phone: "0800 288 6482",
+    intlPhone: "+64 9 525 6800",
+    email: "procurement@procurly.autohub.co.nz",
+    hours: "Mon - Fri: 7:30 AM - 5:30 PM NZST",
+    hubs: [
+      { city: "Auckland Hub", address: "142 Neilson St, Penrose, Auckland 1061" },
+      { city: "Christchurch Hub", address: "55 Lunns Road, Middleton, Christchurch 8024" },
+      { city: "Wellington Logistics", address: "8 Seaview Road, Lower Hutt 5010" },
+      { city: "Tauranga Port Depot", address: "Hull Road, Mount Maunganui 3116" },
+    ],
+  },
+};
+
+export const SAMPLE_VEHICLES = [
+  {
+    vin: "JTEBX3EJ9K1208941",
+    year: 2021,
+    make: "Toyota",
+    model: "Hilux",
+    subModel: "SR5 Cruiser 4WD Double Cab",
+    engineCode: "1GD-FTV 2.8L Turbo Diesel",
+    chassisCode: "GUN126R",
+    originMarket: "Japan" as const,
+  },
+  {
+    vin: "MNAEY0FF8NW601934",
+    year: 2022,
+    make: "Ford",
+    model: "Ranger",
+    subModel: "Wildtrak Bi-Turbo",
+    engineCode: "YN2X 2.0L Bi-Turbo",
+    chassisCode: "PY20",
+    originMarket: "Australia" as const,
+  },
+  {
+    vin: "ZE1-042891",
+    year: 2020,
+    make: "Nissan",
+    model: "Leaf",
+    subModel: "e+ G 62kWh",
+    engineCode: "EM57 Electric",
+    chassisCode: "ZE1",
+    originMarket: "Japan" as const,
+  },
+  {
+    vin: "WBA8E12040K918234",
+    year: 2020,
+    make: "BMW",
+    model: "3 Series",
+    subModel: "M340i xDrive Sedan",
+    engineCode: "B58B30 3.0L Turbo",
+    chassisCode: "G20",
+    originMarket: "Europe" as const,
+  },
+  {
+    vin: "JF1VAG09489201948",
+    year: 2019,
+    make: "Subaru",
+    model: "WRX STI",
+    subModel: "Type S Premium",
+    engineCode: "EJ207 2.0L Twin Scroll Turbo",
+    chassisCode: "VAB",
+    originMarket: "Japan" as const,
+  },
+];
+
+export const PART_CATEGORIES = [
+  "Engine & Mechanical",
+  "Transmission & Drivetrain",
+  "Body Panels & Structural Panels",
+  "Headlights, Tail Lights & Lighting",
+  "Steering & Suspension",
+  "Braking Systems & ABS Modules",
+  "Cooling & Climate Control (Radiators/Condensers)",
+  "Electronic Control Units (ECU, BCM, TCU)",
+  "Interior, Airbags & Dash Components",
+  "EV / Hybrid Battery & Inverters",
+];
+
+export const NZ_BUSINESS_TYPES = [
+  { id: "Dealership", label: "Franchised / Independent Dealership" },
+  { id: "Collision Repairer", label: "Collision Repair / Panel & Paint Workshop" },
+  { id: "Mechanical Workshop", label: "Mechanical Workshop & Auto Service Centre" },
+  { id: "Fleet Operator", label: "Commercial Fleet / Rental Operations" },
+  { id: "Specialist Importer", label: "Specialist Vehicle Rebuilder & Importer" },
+];
