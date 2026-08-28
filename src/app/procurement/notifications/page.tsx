@@ -88,7 +88,7 @@ export default function ProcurementNotificationsPage() {
           className={cn(
             'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all',
             filter === 'All'
-              ? 'bg-slate-900 text-white shadow-xs'
+              ? 'bg-[#ed2025] text-white shadow-xs'
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
           )}
         >
@@ -99,7 +99,7 @@ export default function ProcurementNotificationsPage() {
           className={cn(
             'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all',
             filter === 'Unread'
-              ? 'bg-brand-red text-white shadow-xs'
+              ? 'bg-[#ed2025] text-white shadow-xs'
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
           )}
         >
@@ -110,7 +110,7 @@ export default function ProcurementNotificationsPage() {
           className={cn(
             'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all',
             filter === 'Urgent'
-              ? 'bg-amber-500 text-white shadow-xs'
+              ? 'bg-[#ed2025] text-white shadow-xs'
               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
           )}
         >

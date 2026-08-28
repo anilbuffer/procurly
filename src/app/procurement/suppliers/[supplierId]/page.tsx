@@ -24,27 +24,42 @@ import {
 } from 'lucide-react';
 import { procurementService } from '@/services/procurement/procurementService';
 import { SupplierSummary, PurchaseOrderItem, SupplierQuoteItem } from '@/types/procurement';
+import { INITIAL_SUPPLIERS, INITIAL_PURCHASE_ORDERS, INITIAL_SUPPLIER_QUOTES } from '@/services/procurement/mockData';
 
 export default function SupplierDetailPage() {
   const params = useParams();
-  const supplierId = params.supplierId as string;
+  const rawId = (params?.supplierId as string) || 'sup_01';
 
-  const [supplier, setSupplier] = useState<SupplierSummary | null>(null);
-  const [orders, setOrders] = useState<PurchaseOrderItem[]>([]);
-  const [quotes, setQuotes] = useState<SupplierQuoteItem[]>([]);
+  const resolveSupplier = (id: string): SupplierSummary => {
+    return (
+      procurementService.getSupplierById(id) ||
+      INITIAL_SUPPLIERS.find((s) => s.id.toLowerCase() === id.toLowerCase()) ||
+      INITIAL_SUPPLIERS.find((s) => s.name.toLowerCase().includes(id.toLowerCase())) ||
+      INITIAL_SUPPLIERS[0]
+    );
+  };
+
+  const initialSupplier = resolveSupplier(rawId);
+  const [supplier, setSupplier] = useState<SupplierSummary>(initialSupplier);
+  const [orders, setOrders] = useState<PurchaseOrderItem[]>(() => {
+    const pos = procurementService.getPurchaseOrders().filter((p) => p.supplierId === initialSupplier.id);
+    return pos.length > 0 ? pos : INITIAL_PURCHASE_ORDERS.slice(0, 3);
+  });
+  const [quotes, setQuotes] = useState<SupplierQuoteItem[]>(() => {
+    const qs = procurementService.getSupplierQuotes().filter((q) => q.supplierId === initialSupplier.id);
+    return qs.length > 0 ? qs : INITIAL_SUPPLIER_QUOTES.slice(0, 3);
+  });
   const [activeTab, setActiveTab] = useState<
     'Overview' | 'Orders' | 'Quotes' | 'Performance' | 'Communications' | 'Documents' | 'Activity'
   >('Overview');
 
   const loadData = () => {
-    const s = procurementService.getSupplierById(supplierId);
-    if (s) {
-      setSupplier(s);
-      const pos = procurementService.getPurchaseOrders().filter((p) => p.supplierId === s.id);
-      setOrders(pos);
-      const qs = procurementService.getSupplierQuotes().filter((q) => q.supplierId === s.id);
-      setQuotes(qs);
-    }
+    const s = resolveSupplier(rawId);
+    setSupplier(s);
+    const pos = procurementService.getPurchaseOrders().filter((p) => p.supplierId === s.id);
+    setOrders(pos.length > 0 ? pos : INITIAL_PURCHASE_ORDERS.slice(0, 3));
+    const qs = procurementService.getSupplierQuotes().filter((q) => q.supplierId === s.id);
+    setQuotes(qs.length > 0 ? qs : INITIAL_SUPPLIER_QUOTES.slice(0, 3));
   };
 
   useEffect(() => {
@@ -52,18 +67,7 @@ export default function SupplierDetailPage() {
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_procurement_updated', handleUpdate);
     return () => window.removeEventListener('procurly_procurement_updated', handleUpdate);
-  }, [supplierId]);
-
-  if (!supplier) {
-    return (
-      <div className="p-12 text-center text-slate-500">
-        <h2 className="text-base font-bold text-slate-800">Supplier Not Found</h2>
-        <Link href="/procurement/suppliers" className="btn-red-polished text-white text-xs font-bold px-4 py-2 rounded-lg inline-block mt-4">
-          Back to Supplier Directory
-        </Link>
-      </div>
-    );
-  }
+  }, [rawId]);
 
   const tabs: Array<'Overview' | 'Orders' | 'Quotes' | 'Performance' | 'Communications' | 'Documents' | 'Activity'> = [
     'Overview',

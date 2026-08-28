@@ -585,6 +585,8 @@ export const INITIAL_REQUESTS: ProcurementRequest[] = [
   },
 ];
 
+export const INITIAL_PROCUREMENT_REQUESTS: ProcurementRequest[] = INITIAL_REQUESTS;
+
 export const INITIAL_SUPPLIER_QUOTES: SupplierQuoteItem[] = [
   // Quotes for PR-10048 (Hilux Turbo)
   {

@@ -94,7 +94,7 @@ export default function SupplierDocumentsPage() {
             className={cn(
               'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all',
               selectedType === dt
-                ? 'bg-slate-900 text-white shadow-xs'
+                ? 'bg-[#ed2025] text-white shadow-xs'
                 : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
             )}
           >

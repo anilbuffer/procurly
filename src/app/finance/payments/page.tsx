@@ -115,7 +115,7 @@ export default function FinancePaymentsPage() {
           className={cn(
             'p-3.5 rounded-2xl border text-left transition-all',
             statusFilter === 'All'
-              ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+              ? 'bg-[#ed2025] text-white border-[#ed2025] shadow-sm'
               : 'bg-white text-slate-700 border-slate-200/80 hover:bg-slate-50'
           )}
         >
@@ -128,11 +128,11 @@ export default function FinancePaymentsPage() {
           className={cn(
             'p-3.5 rounded-2xl border text-left transition-all',
             statusFilter === 'Received'
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+              ? 'bg-[#ed2025] text-white border-[#ed2025] shadow-sm'
               : 'bg-white text-slate-700 border-slate-200/80 hover:bg-emerald-50/50'
           )}
         >
-          <span className="text-[10px] font-extrabold uppercase tracking-wider block text-emerald-600">Received</span>
+          <span className={cn('text-[10px] font-extrabold uppercase tracking-wider block', statusFilter === 'Received' ? 'text-white/80' : 'text-emerald-600')}>Received</span>
           <span className="text-base sm:text-lg font-black tracking-tight">{receivedCount}</span>
         </button>
 
@@ -141,11 +141,11 @@ export default function FinancePaymentsPage() {
           className={cn(
             'p-3.5 rounded-2xl border text-left transition-all',
             statusFilter === 'Pending'
-              ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+              ? 'bg-[#ed2025] text-white border-[#ed2025] shadow-sm'
               : 'bg-white text-slate-700 border-slate-200/80 hover:bg-amber-50/50'
           )}
         >
-          <span className="text-[10px] font-extrabold uppercase tracking-wider block text-amber-600">Pending</span>
+          <span className={cn('text-[10px] font-extrabold uppercase tracking-wider block', statusFilter === 'Pending' ? 'text-white/80' : 'text-amber-600')}>Pending</span>
           <span className="text-base sm:text-lg font-black tracking-tight">{pendingCount}</span>
         </button>
 
@@ -154,11 +154,11 @@ export default function FinancePaymentsPage() {
           className={cn(
             'p-3.5 rounded-2xl border text-left transition-all',
             statusFilter === 'Failed'
-              ? 'bg-red-600 text-white border-red-600 shadow-sm'
+              ? 'bg-[#ed2025] text-white border-[#ed2025] shadow-sm'
               : 'bg-white text-slate-700 border-slate-200/80 hover:bg-red-50/50'
           )}
         >
-          <span className="text-[10px] font-extrabold uppercase tracking-wider block text-red-600">Failed</span>
+          <span className={cn('text-[10px] font-extrabold uppercase tracking-wider block', statusFilter === 'Failed' ? 'text-white/80' : 'text-red-600')}>Failed</span>
           <span className="text-base sm:text-lg font-black tracking-tight">{failedCount}</span>
         </button>
 
@@ -167,11 +167,11 @@ export default function FinancePaymentsPage() {
           className={cn(
             'p-3.5 rounded-2xl border text-left transition-all',
             statusFilter === 'Credit Approved'
-              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+              ? 'bg-[#ed2025] text-white border-[#ed2025] shadow-sm'
               : 'bg-white text-slate-700 border-slate-200/80 hover:bg-indigo-50/50'
           )}
         >
-          <span className="text-[10px] font-extrabold uppercase tracking-wider block text-indigo-600">Credit Approved</span>
+          <span className={cn('text-[10px] font-extrabold uppercase tracking-wider block', statusFilter === 'Credit Approved' ? 'text-white/80' : 'text-indigo-600')}>Credit Approved</span>
           <span className="text-base sm:text-lg font-black tracking-tight">{creditApprovedCount}</span>
         </button>
 
@@ -180,11 +180,11 @@ export default function FinancePaymentsPage() {
           className={cn(
             'p-3.5 rounded-2xl border text-left transition-all',
             statusFilter === 'Refunded'
-              ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+              ? 'bg-[#ed2025] text-white border-[#ed2025] shadow-sm'
               : 'bg-white text-slate-700 border-slate-200/80 hover:bg-purple-50/50'
           )}
         >
-          <span className="text-[10px] font-extrabold uppercase tracking-wider block text-purple-600">Refunded</span>
+          <span className={cn('text-[10px] font-extrabold uppercase tracking-wider block', statusFilter === 'Refunded' ? 'text-white/80' : 'text-purple-600')}>Refunded</span>
           <span className="text-base sm:text-lg font-black tracking-tight">{refundedCount}</span>
         </button>
       </div>

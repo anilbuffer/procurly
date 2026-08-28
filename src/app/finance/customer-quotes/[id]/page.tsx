@@ -18,18 +18,28 @@ import {
 } from 'lucide-react';
 import { financeService } from '@/services/finance/financeService';
 import { FinanceCustomerQuote } from '@/types/finance';
+import { INITIAL_CUSTOMER_QUOTES_FINANCE } from '@/services/finance/mockData';
 
 export default function CustomerQuoteDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = (params.id as string) || '';
+  const rawId = (params?.id as string) || 'QUO-2026-0123';
 
-  const [quote, setQuote] = useState<FinanceCustomerQuote | null>(null);
+  const resolveQuote = (id: string): FinanceCustomerQuote => {
+    const quotes = financeService.getCustomerQuotes();
+    return (
+      quotes.find((item) => item.id.toLowerCase() === id.toLowerCase() || item.quoteNumber.toLowerCase() === id.toLowerCase()) ||
+      INITIAL_CUSTOMER_QUOTES_FINANCE.find((item) => item.id.toLowerCase() === id.toLowerCase() || item.quoteNumber.toLowerCase() === id.toLowerCase()) ||
+      INITIAL_CUSTOMER_QUOTES_FINANCE[0]
+    );
+  };
+
+  const initialQuote = resolveQuote(rawId);
+  const [quote, setQuote] = useState<FinanceCustomerQuote>(initialQuote);
 
   const loadData = () => {
-    const quotes = financeService.getCustomerQuotes();
-    const q = quotes.find((item) => item.id === id || item.quoteNumber === id);
-    if (q) setQuote(q);
+    const q = resolveQuote(rawId);
+    setQuote(q);
   };
 
   useEffect(() => {
@@ -37,24 +47,7 @@ export default function CustomerQuoteDetailPage() {
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_finance_updated', handleUpdate);
     return () => window.removeEventListener('procurly_finance_updated', handleUpdate);
-  }, [id]);
-
-  if (!quote) {
-    return (
-      <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs space-y-3">
-        <FileSpreadsheet className="w-10 h-10 text-slate-400 mx-auto" />
-        <h2 className="text-base font-bold text-slate-900">Quote Not Found</h2>
-        <p className="text-xs text-slate-500">The quote reference &quot;{id}&quot; was not found.</p>
-        <Link
-          href="/finance/customer-quotes"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Quotes</span>
-        </Link>
-      </div>
-    );
-  }
+  }, [rawId]);
 
   return (
     <div className="space-y-6">

@@ -25,22 +25,37 @@ import {
 } from 'lucide-react';
 import { procurementService } from '@/services/procurement/procurementService';
 import { ProcurementRequest, SupplierSummary, SupplierQuoteItem } from '@/types/procurement';
+import { INITIAL_PROCUREMENT_REQUESTS, INITIAL_SUPPLIERS, INITIAL_SUPPLIER_QUOTES } from '@/services/procurement/mockData';
 
 export default function SourcingDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const requestId = params.requestId as string;
+  const rawId = (params?.requestId as string) || 'req_01';
 
-  const [request, setRequest] = useState<ProcurementRequest | null>(null);
-  const [suppliers, setSuppliers] = useState<SupplierSummary[]>([]);
-  const [quotes, setQuotes] = useState<SupplierQuoteItem[]>([]);
+  const resolveRequest = (id: string): ProcurementRequest => {
+    return (
+      procurementService.getRequestById(id) ||
+      INITIAL_PROCUREMENT_REQUESTS.find((r) => r.id.toLowerCase() === id.toLowerCase() || r.requestNumber.toLowerCase() === id.toLowerCase()) ||
+      INITIAL_PROCUREMENT_REQUESTS[0]
+    );
+  };
+
+  const initialRequest = resolveRequest(rawId);
+  const [request, setRequest] = useState<ProcurementRequest>(initialRequest);
+  const [suppliers, setSuppliers] = useState<SupplierSummary[]>(() => procurementService.getSuppliers());
+  const [quotes, setQuotes] = useState<SupplierQuoteItem[]>(() => procurementService.getQuotesByRequestId(initialRequest.id));
 
   // Supplier Search & Selected Supplier for RFQ
   const [supplierSearch, setSupplierSearch] = useState('');
-  const [selectedSupplier, setSelectedSupplier] = useState<SupplierSummary | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierSummary | null>(() => {
+    const sups = procurementService.getSuppliers();
+    return sups.length > 0 ? sups[0] : INITIAL_SUPPLIERS[0];
+  });
 
   // Supplier Contact Message
-  const [rfqMessage, setRfqMessage] = useState('');
+  const [rfqMessage, setRfqMessage] = useState(
+    `Konnichiwa / Hello,\n\nPlease quote availability, landed freight cost, and lead time for:\nPart: ${initialRequest.part.name}\nOEM Part Number: ${initialRequest.part.partNumber || 'N/A'}\nVehicle: ${initialRequest.vehicle.year} ${initialRequest.vehicle.make} ${initialRequest.vehicle.model} (VIN: ${initialRequest.vehicle.vin})\nQuantity Required: ${initialRequest.part.quantity} unit(s).\nTarget Delivery: Auckland Airport Logistics Hub.\n\nThank you,\n${procurementService.getCurrentUser().name}\nAutohub Global Procurement`
+  );
   const [contactMethod, setContactMethod] = useState<'Email' | 'Phone' | 'Direct EDI'>('Direct EDI');
   const [rfqSent, setRfqSent] = useState(false);
 
@@ -56,19 +71,17 @@ export default function SourcingDetailPage() {
   const [quoteRecorded, setQuoteRecorded] = useState(false);
 
   const loadData = () => {
-    const req = procurementService.getRequestById(requestId);
-    if (req) {
-      setRequest(req);
-      const sups = procurementService.getSuppliers();
-      setSuppliers(sups);
-      if (sups.length > 0 && !selectedSupplier) {
-        setSelectedSupplier(sups[0]);
-      }
-      setQuotes(procurementService.getQuotesByRequestId(req.id));
-      setRfqMessage(
-        `Konnichiwa / Hello,\n\nPlease quote availability, landed freight cost, and lead time for:\nPart: ${req.part.name}\nOEM Part Number: ${req.part.partNumber || 'N/A'}\nVehicle: ${req.vehicle.year} ${req.vehicle.make} ${req.vehicle.model} (VIN: ${req.vehicle.vin})\nQuantity Required: ${req.part.quantity} unit(s).\nTarget Delivery: Auckland Airport Logistics Hub.\n\nThank you,\n${procurementService.getCurrentUser().name}\nAutohub Global Procurement`
-      );
+    const req = resolveRequest(rawId);
+    setRequest(req);
+    const sups = procurementService.getSuppliers();
+    setSuppliers(sups);
+    if (sups.length > 0 && !selectedSupplier) {
+      setSelectedSupplier(sups[0]);
     }
+    setQuotes(procurementService.getQuotesByRequestId(req.id));
+    setRfqMessage(
+      `Konnichiwa / Hello,\n\nPlease quote availability, landed freight cost, and lead time for:\nPart: ${req.part.name}\nOEM Part Number: ${req.part.partNumber || 'N/A'}\nVehicle: ${req.vehicle.year} ${req.vehicle.make} ${req.vehicle.model} (VIN: ${req.vehicle.vin})\nQuantity Required: ${req.part.quantity} unit(s).\nTarget Delivery: Auckland Airport Logistics Hub.\n\nThank you,\n${procurementService.getCurrentUser().name}\nAutohub Global Procurement`
+    );
   };
 
   useEffect(() => {
@@ -76,18 +89,7 @@ export default function SourcingDetailPage() {
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_procurement_updated', handleUpdate);
     return () => window.removeEventListener('procurly_procurement_updated', handleUpdate);
-  }, [requestId]);
-
-  if (!request) {
-    return (
-      <div className="p-12 text-center text-slate-500">
-        <h2 className="text-base font-bold text-slate-800">Sourcing Request Not Found</h2>
-        <Link href="/procurement/sourcing" className="btn-red-polished text-white text-xs font-bold px-4 py-2 rounded-lg inline-block mt-4">
-          Back to Sourcing Queue
-        </Link>
-      </div>
-    );
-  }
+  }, [rawId]);
 
   const filteredSuppliers = suppliers.filter(
     (s) =>

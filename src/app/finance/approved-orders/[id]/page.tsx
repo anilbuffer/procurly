@@ -20,19 +20,29 @@ import {
 import { financeService } from '@/services/finance/financeService';
 import { ApprovedOrderFinance } from '@/types/finance';
 import { FinancialClearanceModal } from '@/components/finance/modals/FinancialClearanceModal';
+import { INITIAL_APPROVED_ORDERS_FINANCE } from '@/services/finance/mockData';
 
 export default function ApprovedOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = (params.id as string) || '';
+  const rawId = (params?.id as string) || 'ORD-2026-0089';
 
-  const [order, setOrder] = useState<ApprovedOrderFinance | null>(null);
+  const resolveOrder = (id: string): ApprovedOrderFinance => {
+    const orders = financeService.getApprovedOrders();
+    return (
+      orders.find((item) => item.id.toLowerCase() === id.toLowerCase() || item.orderNumber.toLowerCase() === id.toLowerCase()) ||
+      INITIAL_APPROVED_ORDERS_FINANCE.find((item) => item.id.toLowerCase() === id.toLowerCase() || item.orderNumber.toLowerCase() === id.toLowerCase()) ||
+      INITIAL_APPROVED_ORDERS_FINANCE[0]
+    );
+  };
+
+  const initialOrder = resolveOrder(rawId);
+  const [order, setOrder] = useState<ApprovedOrderFinance>(initialOrder);
   const [clearanceModalOpen, setClearanceModalOpen] = useState(false);
 
   const loadData = () => {
-    const orders = financeService.getApprovedOrders();
-    const o = orders.find((item) => item.id === id || item.orderNumber === id);
-    if (o) setOrder(o);
+    const o = resolveOrder(rawId);
+    setOrder(o);
   };
 
   useEffect(() => {
@@ -40,24 +50,7 @@ export default function ApprovedOrderDetailPage() {
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_finance_updated', handleUpdate);
     return () => window.removeEventListener('procurly_finance_updated', handleUpdate);
-  }, [id]);
-
-  if (!order) {
-    return (
-      <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs space-y-3">
-        <CheckCircle2 className="w-10 h-10 text-slate-400 mx-auto" />
-        <h2 className="text-base font-bold text-slate-900">Approved Order Not Found</h2>
-        <p className="text-xs text-slate-500">The order reference &quot;{id}&quot; was not found.</p>
-        <Link
-          href="/finance/approved-orders"
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Approved Orders</span>
-        </Link>
-      </div>
-    );
-  }
+  }, [rawId]);
 
   const isCleared = order.clearanceStatus === 'Financially Cleared';
 

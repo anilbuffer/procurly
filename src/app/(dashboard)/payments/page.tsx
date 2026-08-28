@@ -144,7 +144,7 @@ export default function PaymentsPage() {
                 onClick={() => setActiveFilter(filter)}
                 className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${
                   activeFilter === filter
-                    ? 'bg-slate-900 text-white'
+                    ? 'bg-[#ed2025] text-white shadow-xs'
                     : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >

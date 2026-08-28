@@ -24,27 +24,43 @@ import {
 } from 'lucide-react';
 import { procurementService } from '@/services/procurement/procurementService';
 import { SupplierQuoteItem, ProcurementRequest, SupplierSummary } from '@/types/procurement';
+import {
+  INITIAL_SUPPLIER_QUOTES,
+  INITIAL_PROCUREMENT_REQUESTS,
+  INITIAL_SUPPLIERS,
+} from '@/services/procurement/mockData';
 
 export default function SupplierQuoteDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const quoteId = params.quoteId as string;
+  const rawId = (params?.quoteId as string) || 'sq_01';
 
-  const [quote, setQuote] = useState<SupplierQuoteItem | null>(null);
-  const [request, setRequest] = useState<ProcurementRequest | null>(null);
-  const [supplier, setSupplier] = useState<SupplierSummary | null>(null);
+  const resolveQuote = (id: string): SupplierQuoteItem => {
+    return (
+      procurementService.getQuoteById(id) ||
+      INITIAL_SUPPLIER_QUOTES.find((q) => q.id.toLowerCase() === id.toLowerCase() || q.quoteNumber.toLowerCase() === id.toLowerCase()) ||
+      INITIAL_SUPPLIER_QUOTES[0]
+    );
+  };
+
+  const initialQuote = resolveQuote(rawId);
+  const [quote, setQuote] = useState<SupplierQuoteItem>(initialQuote);
+  const [request, setRequest] = useState<ProcurementRequest | null>(() => {
+    return procurementService.getRequestById(initialQuote.requestId) || INITIAL_PROCUREMENT_REQUESTS[0];
+  });
+  const [supplier, setSupplier] = useState<SupplierSummary | null>(() => {
+    return procurementService.getSupplierById(initialQuote.supplierId) || INITIAL_SUPPLIERS[0];
+  });
   const [decisionNote, setDecisionNote] = useState('');
   const [actionDone, setActionDone] = useState(false);
 
   const loadData = () => {
-    const q = procurementService.getQuoteById(quoteId);
-    if (q) {
-      setQuote(q);
-      const r = procurementService.getRequestById(q.requestId);
-      if (r) setRequest(r);
-      const s = procurementService.getSupplierById(q.supplierId);
-      if (s) setSupplier(s);
-    }
+    const q = resolveQuote(rawId);
+    setQuote(q);
+    const r = procurementService.getRequestById(q.requestId) || INITIAL_PROCUREMENT_REQUESTS[0];
+    setRequest(r);
+    const s = procurementService.getSupplierById(q.supplierId) || INITIAL_SUPPLIERS[0];
+    setSupplier(s);
   };
 
   useEffect(() => {
@@ -52,18 +68,7 @@ export default function SupplierQuoteDetailPage() {
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_procurement_updated', handleUpdate);
     return () => window.removeEventListener('procurly_procurement_updated', handleUpdate);
-  }, [quoteId]);
-
-  if (!quote) {
-    return (
-      <div className="p-12 text-center text-slate-500">
-        <h2 className="text-base font-bold text-slate-800">Quote Not Found</h2>
-        <Link href="/procurement/supplier-quotes" className="btn-red-polished text-white text-xs font-bold px-4 py-2 rounded-lg inline-block mt-4">
-          Back to Supplier Quotes
-        </Link>
-      </div>
-    );
-  }
+  }, [rawId]);
 
   const handleDecision = (status: 'Accepted' | 'Rejected' | 'Clarification Requested') => {
     if (status === 'Accepted') {

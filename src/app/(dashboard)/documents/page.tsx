@@ -101,7 +101,7 @@ export default function DocumentsPage() {
               onClick={() => setActiveCategory(cat)}
               className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
                 activeCategory === cat
-                  ? 'bg-slate-900 text-white'
+                  ? 'bg-[#ed2025] text-white shadow-xs'
                   : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >

@@ -28,27 +28,37 @@ import { procurementService } from '@/services/procurement/procurementService';
 import { PurchaseOrderItem, POStatus, ProcurementRequest } from '@/types/procurement';
 import { POPreviewModal } from '@/components/procurement/modals/POPreviewModal';
 import { ReportExceptionModal } from '@/components/procurement/modals/ReportExceptionModal';
+import { INITIAL_PURCHASE_ORDERS, INITIAL_PROCUREMENT_REQUESTS } from '@/services/procurement/mockData';
 
 export default function PurchaseOrderDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const orderId = params.orderId as string;
+  const rawId = (params?.orderId as string) || 'po_01';
 
-  const [po, setPo] = useState<PurchaseOrderItem | null>(null);
-  const [request, setRequest] = useState<ProcurementRequest | null>(null);
-  const [etaDate, setEtaDate] = useState('');
+  const resolvePO = (id: string): PurchaseOrderItem => {
+    return (
+      procurementService.getPurchaseOrderById(id) ||
+      INITIAL_PURCHASE_ORDERS.find((p) => p.id.toLowerCase() === id.toLowerCase() || p.poNumber.toLowerCase() === id.toLowerCase()) ||
+      INITIAL_PURCHASE_ORDERS[0]
+    );
+  };
+
+  const initialPO = resolvePO(rawId);
+  const [po, setPo] = useState<PurchaseOrderItem>(initialPO);
+  const [request, setRequest] = useState<ProcurementRequest | null>(() => {
+    return procurementService.getRequestById(initialPO.requestId) || INITIAL_PROCUREMENT_REQUESTS[0];
+  });
+  const [etaDate, setEtaDate] = useState(initialPO.expectedDispatchDate);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [reportExceptionOpen, setReportExceptionOpen] = useState(false);
   const [actionDoneMsg, setActionDoneMsg] = useState('');
 
   const loadData = () => {
-    const p = procurementService.getPurchaseOrderById(orderId);
-    if (p) {
-      setPo(p);
-      setEtaDate(p.expectedDispatchDate);
-      const r = procurementService.getRequestById(p.requestId);
-      if (r) setRequest(r);
-    }
+    const p = resolvePO(rawId);
+    setPo(p);
+    setEtaDate(p.expectedDispatchDate);
+    const r = procurementService.getRequestById(p.requestId) || INITIAL_PROCUREMENT_REQUESTS[0];
+    setRequest(r);
   };
 
   useEffect(() => {
@@ -56,18 +66,7 @@ export default function PurchaseOrderDetailPage() {
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_procurement_updated', handleUpdate);
     return () => window.removeEventListener('procurly_procurement_updated', handleUpdate);
-  }, [orderId]);
-
-  if (!po) {
-    return (
-      <div className="p-12 text-center text-slate-500">
-        <h2 className="text-base font-bold text-slate-800">Purchase Order Not Found</h2>
-        <Link href="/procurement/purchase-orders" className="btn-red-polished text-white text-xs font-bold px-4 py-2 rounded-lg inline-block mt-4">
-          Back to Purchase Orders
-        </Link>
-      </div>
-    );
-  }
+  }, [rawId]);
 
   const handleUpdateStatus = (status: POStatus, msg: string) => {
     procurementService.updatePOStatus(po.id, status);

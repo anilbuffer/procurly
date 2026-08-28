@@ -76,7 +76,7 @@ export default function FinanceTasksPage() {
           className={cn(
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
             filter === 'All'
-              ? 'bg-slate-900 text-white shadow-sm'
+              ? 'bg-[#ed2025] text-white shadow-sm'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
           )}
         >
@@ -87,7 +87,7 @@ export default function FinanceTasksPage() {
           className={cn(
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5',
             filter === 'Urgent'
-              ? 'bg-red-600 text-white shadow-sm'
+              ? 'bg-[#ed2025] text-white shadow-sm'
               : 'bg-white text-red-600 hover:bg-red-50 border border-red-200'
           )}
         >
@@ -99,7 +99,7 @@ export default function FinanceTasksPage() {
           className={cn(
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5',
             filter === 'Due Today'
-              ? 'bg-amber-500 text-white shadow-sm'
+              ? 'bg-[#ed2025] text-white shadow-sm'
               : 'bg-white text-amber-700 hover:bg-amber-50 border border-amber-200'
           )}
         >
@@ -111,7 +111,7 @@ export default function FinanceTasksPage() {
           className={cn(
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all',
             filter === 'Upcoming'
-              ? 'bg-indigo-600 text-white shadow-sm'
+              ? 'bg-[#ed2025] text-white shadow-sm'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
           )}
         >
@@ -122,7 +122,7 @@ export default function FinanceTasksPage() {
           className={cn(
             'px-3.5 py-2 rounded-xl text-xs font-bold transition-all ml-auto',
             filter === 'Completed'
-              ? 'bg-emerald-600 text-white shadow-sm'
+              ? 'bg-[#ed2025] text-white shadow-sm'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80'
           )}
         >
