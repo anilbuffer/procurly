@@ -84,7 +84,7 @@ export default function ContactPage() {
                 <div key={idx} className="flex items-start gap-2.5 pb-2 border-b border-slate-100 last:border-0 last:pb-0">
                   <MapPin className="w-4 h-4 text-brand-blue shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold text-slate-800 block">{hub.city}</span>
+                    <span className="font-bold text-slate-800 block">{hub.city} Hub</span>
                     <span className="text-slate-500">{hub.address}</span>
                   </div>
                 </div>

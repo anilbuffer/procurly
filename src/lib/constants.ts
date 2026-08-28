@@ -17,10 +17,10 @@ export const BRAND = {
     email: "procurement@procurly.autohub.co.nz",
     hours: "Mon - Fri: 7:30 AM - 5:30 PM NZST",
     hubs: [
-      { city: "Auckland Hub", address: "142 Neilson St, Penrose, Auckland 1061" },
-      { city: "Christchurch Hub", address: "55 Lunns Road, Middleton, Christchurch 8024" },
-      { city: "Wellington Logistics", address: "8 Seaview Road, Lower Hutt 5010" },
-      { city: "Tauranga Port Depot", address: "Hull Road, Mount Maunganui 3116" },
+      { region: "Upper North Island", city: "Auckland", address: "142 Neilson St, Penrose, Auckland 1061", role: "Primary Hub" },
+      { region: "South Island Central", city: "Christchurch", address: "55 Lunns Road, Middleton, Christchurch 8024", role: "South Island Hub" },
+      { region: "Lower North Island", city: "Wellington", address: "8 Seaview Road, Lower Hutt 5010", role: "Cross-Dock Facility" },
+      { region: "Bay of Plenty Freight", city: "Tauranga", address: "Hull Road, Mount Maunganui 3116", role: "Port Gateway Depot" },
     ],
   },
 };
