@@ -49,12 +49,13 @@ export function getStatusBadgeVariant(status: string): {
   dot: string;
 } {
   switch (status) {
+    case 'Quoted':
     case 'Quote Ready':
       return {
-        bg: 'bg-blue-50 text-blue-700',
-        text: 'text-blue-700',
-        border: 'border-blue-200',
-        dot: 'bg-blue-600 animate-pulse',
+        bg: 'bg-amber-50 text-amber-900',
+        text: 'text-amber-900',
+        border: 'border-amber-300',
+        dot: 'bg-amber-500 animate-pulse',
       };
     case 'Quote Approved':
       return {
@@ -63,12 +64,13 @@ export function getStatusBadgeVariant(status: string): {
         border: 'border-indigo-200',
         dot: 'bg-indigo-600',
       };
+    case 'Shipped':
     case 'In Transit - Air':
       return {
-        bg: 'bg-amber-50 text-amber-800',
-        text: 'text-amber-800',
-        border: 'border-amber-200',
-        dot: 'bg-amber-500 animate-pulse',
+        bg: 'bg-blue-50 text-brand-blue',
+        text: 'text-brand-blue',
+        border: 'border-blue-200',
+        dot: 'bg-brand-blue animate-pulse',
       };
     case 'In Transit - Sea':
       return {
@@ -98,6 +100,7 @@ export function getStatusBadgeVariant(status: string): {
         border: 'border-slate-300',
         dot: 'bg-slate-500 animate-pulse',
       };
+    case 'Rejected':
     case 'Cancelled':
       return {
         bg: 'bg-red-50 text-red-700',

@@ -10,40 +10,38 @@ import { requestsService } from '@/services/requestsService';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('marcus.h@apexautocraft.co.nz');
+  const [email, setEmail] = useState('dave@premiermotors.co.nz');
   const [password, setPassword] = useState('••••••••••••');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    await requestsService.resetToDefaults();
     setTimeout(() => {
       router.push('/dashboard');
-    }, 500);
+    }, 400);
   };
 
-  const handleQuickDemo = async (type: 'apex' | 'southern' | 'fleet') => {
+  const handleQuickDemo = async (type: 'premier' | 'apex') => {
     setIsLoading(true);
-    if (type === 'apex') {
+    if (type === 'premier') {
+      await requestsService.resetToDefaults();
+    } else {
       await requestsService.updateTradeAccount({
         legalBusinessName: 'Apex Precision Automotive Group Ltd',
         tradingName: 'Apex Euro & Japanese Specialists',
         businessType: 'Collision Repairer',
         nzbn: '9429048291034',
-      });
-    } else if (type === 'southern') {
-      await requestsService.updateTradeAccount({
-        legalBusinessName: 'Southern Prestige European Ltd',
-        tradingName: 'Southern Prestige Motors Christchurch',
-        businessType: 'Specialist Importer',
-        nzbn: '9429041829102',
-      });
-    } else {
-      await requestsService.updateTradeAccount({
-        legalBusinessName: 'NZ Fleet Maintenance Operations Ltd',
-        tradingName: 'National Fleet Care',
-        businessType: 'Fleet Operator',
-        nzbn: '9429049918231',
+        deliverySetup: {
+          street: '18 Church Street',
+          suburb: 'Onehunga',
+          city: 'Auckland',
+          postcode: '1061',
+          hasForklift: true,
+          hasLoadingDock: true,
+          openingHours: 'Mon-Fri 7:00 AM - 5:30 PM',
+        },
       });
     }
     router.push('/dashboard');
@@ -70,7 +68,7 @@ export default function LoginPage() {
         </Link>
 
         <h2 className="text-2xl font-bold text-white tracking-tight">
-          Sign In to Your Trade Portal
+          Sign In to Customer Portal
         </h2>
         <p className="text-xs text-slate-400">
           Access active parts requests, landed quotations, and live freight tracking
@@ -115,10 +113,10 @@ export default function LoginPage() {
               variant="primary"
               size="lg"
               isLoading={isLoading}
-              className="w-full font-bold text-xs tracking-wide shadow-md"
+              className="w-full font-bold text-xs tracking-wide shadow-md bg-[#ed2025] hover:bg-[#d3181d] text-white"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Sign In to Trade Account
+              Sign In (Premier Motors NZ)
             </Button>
           </form>
 
@@ -130,29 +128,29 @@ export default function LoginPage() {
             <div className="grid grid-cols-1 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickDemo('apex')}
-                className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-red-50/50 hover:border-red-200 flex items-center justify-between text-left transition-all text-xs"
+                onClick={() => handleQuickDemo('premier')}
+                className="w-full p-2.5 rounded-lg border border-red-200 bg-red-50/40 hover:bg-red-50 hover:border-red-300 flex items-center justify-between text-left transition-all text-xs"
               >
                 <div className="flex items-center gap-2.5">
-                  <Wrench className="w-4 h-4 text-brand-red" />
+                  <Wrench className="w-4 h-4 text-[#ed2025]" />
                   <div>
-                    <span className="font-bold text-slate-800 block">Apex Collision & Japanese</span>
-                    <span className="text-[10px] text-slate-500">Auckland • Active Consignments</span>
+                    <span className="font-bold text-slate-900 block">Premier Motors NZ</span>
+                    <span className="text-[10px] text-slate-500">45 Great South Rd, Auckland • Active Requests (8)</span>
                   </div>
                 </div>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                <ArrowRight className="w-3.5 h-3.5 text-[#ed2025]" />
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickDemo('southern')}
+                onClick={() => handleQuickDemo('apex')}
                 className="w-full p-2.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-blue-50/50 hover:border-blue-200 flex items-center justify-between text-left transition-all text-xs"
               >
                 <div className="flex items-center gap-2.5">
                   <Building2 className="w-4 h-4 text-brand-blue" />
                   <div>
-                    <span className="font-bold text-slate-800 block">Southern Prestige European</span>
-                    <span className="text-[10px] text-slate-500">Christchurch • OEM Importer</span>
+                    <span className="font-bold text-slate-800 block">Apex Euro & Japanese Specialists</span>
+                    <span className="text-[10px] text-slate-500">Onehunga • Verified Repairer</span>
                   </div>
                 </div>
                 <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
@@ -162,7 +160,7 @@ export default function LoginPage() {
 
           <div className="pt-2 text-center text-xs text-slate-500">
             Don&apos;t have an Autohub trade account?{' '}
-            <Link href="/register" className="font-bold text-brand-red hover:underline">
+            <Link href="/register" className="font-bold text-[#ed2025] hover:underline">
               Register Trade Account
             </Link>
           </div>

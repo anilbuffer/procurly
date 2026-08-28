@@ -1,8 +1,8 @@
 import { PartRequest, TradeAccount, RequestStatus, QuoteOption } from '@/types';
 import { INITIAL_REQUESTS, INITIAL_TRADE_ACCOUNT } from './mockData';
 
-const REQUESTS_STORAGE_KEY = 'procurly_requests_data_v1';
-const ACCOUNT_STORAGE_KEY = 'procurly_account_data_v1';
+const REQUESTS_STORAGE_KEY = 'procurly_requests_data_v2';
+const ACCOUNT_STORAGE_KEY = 'procurly_account_data_v2';
 
 // Abstract Interface for Requests Service
 export interface IRequestsService {
@@ -12,9 +12,11 @@ export interface IRequestsService {
   createRequest(data: Omit<PartRequest, 'id' | 'referenceNumber' | 'createdAt' | 'updatedAt' | 'status'>): Promise<PartRequest>;
   updateRequestStatus(id: string, status: RequestStatus): Promise<PartRequest | null>;
   approveQuote(requestId: string, quoteId: string): Promise<PartRequest | null>;
+  rejectQuote(requestId: string, reason?: string): Promise<PartRequest | null>;
   sendMessage(requestId: string, text: string): Promise<PartRequest | null>;
   getTradeAccount(): Promise<TradeAccount>;
   updateTradeAccount(data: Partial<TradeAccount>): Promise<TradeAccount>;
+  resetToDefaults(): Promise<void>;
 }
 
 class MockRequestsService implements IRequestsService {
@@ -48,7 +50,16 @@ class MockRequestsService implements IRequestsService {
     let list = this.getStoredRequests();
 
     if (statusFilter && statusFilter !== 'All') {
-      list = list.filter((r) => r.status.toLowerCase().includes(statusFilter.toLowerCase()));
+      const filterLower = statusFilter.toLowerCase();
+      if (filterLower === 'quoted' || filterLower === 'quote ready' || filterLower === 'awaiting approval') {
+        list = list.filter((r) => r.status === 'Quoted' || r.status === 'Quote Ready');
+      } else if (filterLower === 'in transit' || filterLower === 'shipped') {
+        list = list.filter((r) => r.status === 'Shipped' || r.status.includes('In Transit') || r.status === 'Customs Clearance');
+      } else if (filterLower === 'delivered' || filterLower === 'completed') {
+        list = list.filter((r) => r.status === 'Delivered');
+      } else {
+        list = list.filter((r) => r.status.toLowerCase().includes(filterLower));
+      }
     }
 
     if (searchQuery && searchQuery.trim()) {
@@ -60,6 +71,7 @@ class MockRequestsService implements IRequestsService {
           r.vehicle.make.toLowerCase().includes(q) ||
           r.vehicle.model.toLowerCase().includes(q) ||
           r.vehicle.vin.toLowerCase().includes(q) ||
+          (r.vehicle.regoNumber && r.vehicle.regoNumber.toLowerCase().includes(q)) ||
           r.parts.some((p) => p.name.toLowerCase().includes(q) || (p.partNumber && p.partNumber.toLowerCase().includes(q)))
       );
     }
@@ -81,7 +93,7 @@ class MockRequestsService implements IRequestsService {
     data: Omit<PartRequest, 'id' | 'referenceNumber' | 'createdAt' | 'updatedAt' | 'status'>
   ): Promise<PartRequest> {
     const list = this.getStoredRequests();
-    const nextIndex = list.length + 128;
+    const nextIndex = list.length + 129;
     const refNumber = `AH-P-${String(nextIndex).padStart(6, '0')}`;
     const newId = `req_${Date.now()}`;
     const now = new Date().toISOString();
@@ -93,30 +105,30 @@ class MockRequestsService implements IRequestsService {
       carrierName: 'Air New Zealand Cargo / Priority Express',
       transitDays: '3-5 Business Days',
       estimatedDeliveryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      partCostNZD: 1450.0,
-      freightCostNZD: 280.0,
-      dutiesAndBiosecurityNZD: 55.0,
-      gstNZD: 267.75,
-      localCourierNZD: 40.0,
-      totalLandedCostNZD: 2092.75,
+      partCostNZD: 320.0,
+      freightCostNZD: 65.0,
+      dutiesAndBiosecurityNZD: 25.0,
+      gstNZD: 61.50,
+      localCourierNZD: 0.0,
+      totalLandedCostNZD: 471.50,
       isRecommended: true,
-      notes: 'Sourced from verified OEM partner in Osaka, Japan. Fast customs clearance included.',
+      notes: 'AIR FREIGHT - FASTEST (Inc. Freight, Customs, GST)',
     };
 
     const mockSeaQuote: QuoteOption = {
       id: `q_${Date.now()}_sea`,
       type: 'sea_freight',
-      carrierName: 'Autohub Consolidated Sea Logistics',
-      transitDays: '18-24 Days',
+      carrierName: 'Autohub Consolidated Sea Freight',
+      transitDays: '18-22 Business Days',
       estimatedDeliveryDate: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      partCostNZD: 1450.0,
-      freightCostNZD: 95.0,
-      dutiesAndBiosecurityNZD: 55.0,
-      gstNZD: 240.0,
-      localCourierNZD: 40.0,
-      totalLandedCostNZD: 1880.0,
+      partCostNZD: 240.0,
+      freightCostNZD: 30.0,
+      dutiesAndBiosecurityNZD: 20.0,
+      gstNZD: 43.50,
+      localCourierNZD: 0.0,
+      totalLandedCostNZD: 333.50,
       isRecommended: false,
-      notes: 'Consolidated container shipping to Port of Auckland or Lyttelton.',
+      notes: 'SEA FREIGHT - ECONOMY (Inc. Freight, Customs, GST)',
     };
 
     const newRequest: PartRequest = {
@@ -125,7 +137,7 @@ class MockRequestsService implements IRequestsService {
       referenceNumber: refNumber,
       createdAt: now,
       updatedAt: now,
-      status: 'Quote Ready',
+      status: 'Quoted',
       quoteOptions: [mockAirQuote, mockSeaQuote],
       assignedSpecialist: {
         name: 'Brendon Davies',
@@ -166,7 +178,7 @@ class MockRequestsService implements IRequestsService {
           sender: 'specialist',
           senderName: 'Brendon Davies',
           timestamp: 'Just now',
-          text: `Kia ora! We have generated all-inclusive landed quotes for ${data.vehicle.year} ${data.vehicle.make} ${data.vehicle.model}. Please compare the Air vs Sea freight options.`,
+          text: `Kia ora Dave! We have generated all-inclusive landed quotes for ${data.vehicle.year} ${data.vehicle.make} ${data.vehicle.model}. Please compare the Air vs Sea freight options and confirm approval.`,
         },
       ],
     };
@@ -194,13 +206,13 @@ class MockRequestsService implements IRequestsService {
     item.approvedQuoteId = quoteId;
     const selected = item.quoteOptions?.find((q) => q.id === quoteId);
     item.selectedFreight = selected?.type === 'sea_freight' ? 'Sea Freight (Consolidated)' : 'Air Freight (Express)';
-    item.status = selected?.type === 'sea_freight' ? 'In Transit - Sea' : 'In Transit - Air';
+    item.status = selected?.type === 'sea_freight' ? 'In Transit - Sea' : 'Shipped';
     item.updatedAt = new Date().toISOString();
 
     // Add milestone
     if (item.trackingMilestones) {
       item.trackingMilestones.forEach((m) => {
-        if (m.title.includes('Awaiting Trade Approval')) {
+        if (m.title.includes('Awaiting Trade Approval') || m.title.includes('Landed Quotation Issued')) {
           m.status = 'completed';
           m.timestamp = 'Approved today';
         }
@@ -208,12 +220,33 @@ class MockRequestsService implements IRequestsService {
       item.trackingMilestones.push({
         id: `m_${Date.now()}_disp`,
         title: 'Supplier Packaging & Dispatch Scheduled',
-        location: 'Export Warehouse Hub',
+        location: 'Export Warehouse Hub, Tokyo',
         timestamp: 'In Progress',
         status: 'in-progress',
-        description: `Export packaging initiated for ${item.selectedFreight}. Tracking number will be assigned shortly.`,
+        description: `Export packing and customs export filing initiated for ${item.selectedFreight}. Tracking number will be assigned shortly.`,
       });
     }
+
+    this.saveRequests(list);
+    return item;
+  }
+
+  async rejectQuote(requestId: string, reason?: string): Promise<PartRequest | null> {
+    const list = this.getStoredRequests();
+    const item = list.find((r) => r.id === requestId);
+    if (!item) return null;
+
+    item.status = 'Rejected';
+    item.updatedAt = new Date().toISOString();
+
+    if (!item.messages) item.messages = [];
+    item.messages.push({
+      id: `msg_${Date.now()}`,
+      sender: 'user',
+      senderName: 'Dave Morrison',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      text: reason ? `Quote rejected: ${reason}` : 'Quote rejected. Please source alternative options or pricing.',
+    });
 
     this.saveRequests(list);
     return item;
@@ -228,7 +261,7 @@ class MockRequestsService implements IRequestsService {
     item.messages.push({
       id: `msg_${Date.now()}`,
       sender: 'user',
-      senderName: 'Marcus Henderson',
+      senderName: 'Dave Morrison',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       text,
     });
@@ -259,6 +292,14 @@ class MockRequestsService implements IRequestsService {
       localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(updated));
     }
     return updated;
+  }
+
+  async resetToDefaults(): Promise<void> {
+    if (this.isBrowser()) {
+      localStorage.setItem(REQUESTS_STORAGE_KEY, JSON.stringify(INITIAL_REQUESTS));
+      localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(INITIAL_TRADE_ACCOUNT));
+      window.dispatchEvent(new Event('procurly_requests_updated'));
+    }
   }
 }
 

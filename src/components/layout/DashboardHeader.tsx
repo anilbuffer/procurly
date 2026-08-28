@@ -35,18 +35,18 @@ export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
     {
       id: 1,
       title: 'Landed Quote Ready for Review',
-      desc: '2022 Ford Ranger Wildtrak (AH-P-000124) - Air vs Sea options ready.',
-      time: '15 mins ago',
+      desc: '2019 Toyota Hiace (AH-P-000123) - Air ($385) vs Sea ($240) ready.',
+      time: '5 mins ago',
       unread: true,
-      link: '/requests/req_102',
+      link: '/requests/req_123',
     },
     {
       id: 2,
       title: 'Flight NZ90 Landed in Auckland',
-      desc: '2021 Toyota Hilux Headlight (AH-P-000123) cleared Biosecurity.',
-      time: '2 hours ago',
+      desc: '2018 Subaru Outback Rear Axle (AH-P-000119) out for delivery.',
+      time: '1 hour ago',
       unread: false,
-      link: '/tracking/req_101',
+      link: '/tracking/req_119',
     },
   ];
 
@@ -133,11 +133,11 @@ export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
             className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
           >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-blue to-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
-              MH
+              DM
             </div>
             <div className="hidden md:block text-left text-xs">
-              <p className="font-bold text-slate-900 leading-tight">Marcus Henderson</p>
-              <p className="text-[10px] text-slate-500">Apex Auto Group</p>
+              <p className="font-bold text-slate-900 leading-tight">Dave Morrison</p>
+              <p className="text-[10px] text-slate-500">Premier Motors NZ</p>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
           </button>
@@ -145,8 +145,8 @@ export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
           {profileOpen && (
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-slide-up">
               <div className="px-4 py-2 border-b border-slate-100">
-                <p className="text-xs font-bold text-slate-900">Marcus Henderson</p>
-                <p className="text-[11px] text-slate-500">marcus.h@apexautocraft.co.nz</p>
+                <p className="text-xs font-bold text-slate-900">Dave Morrison</p>
+                <p className="text-[11px] text-slate-500">dave@premiermotors.co.nz</p>
                 <span className="inline-block mt-1 text-[10px] font-bold text-brand-blue bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                   Trade Credit: $50,000 (Approved)
                 </span>

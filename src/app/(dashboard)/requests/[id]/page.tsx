@@ -31,7 +31,7 @@ import {
 export default function RequestDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const requestId = params.id as string;
+  const requestId = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
 
   const [request, setRequest] = useState<PartRequest | null>(null);
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
@@ -39,6 +39,7 @@ export default function RequestDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = async () => {
+    if (!requestId) return;
     try {
       const data = await requestsService.getRequestById(requestId);
       setRequest(data);
@@ -238,87 +239,120 @@ export default function RequestDetailsPage() {
             </CardContent>
           </Card>
 
-          {/* Landed Cost Quotations Section */}
+          {/* Landed Cost Quotations / Freight Selection Section */}
           {request.quoteOptions && request.quoteOptions.length > 0 && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className={isQuoteReady ? "border-2 border-[#ed2025]/40 shadow-card" : ""}>
+              <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3">
                 <div>
-                  <CardTitle className="text-sm font-bold">Landed Cost Quotations</CardTitle>
-                  <CardDescription>Compare freight choices with all-inclusive NZD pricing</CardDescription>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-800">
+                      REQUEST DETAILED QUOTE: {request.referenceNumber}
+                    </span>
+                    {isQuoteReady && (
+                      <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 animate-pulse">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+                  <CardTitle className="text-base font-black text-slate-900 mt-1">
+                    FREIGHT SELECTION (Choose Shipping Option)
+                  </CardTitle>
                 </div>
                 {isQuoteReady && (
                   <Button
                     variant="primary"
                     size="sm"
                     onClick={() => setQuoteModalOpen(true)}
-                    className="text-xs font-bold"
+                    className="bg-[#ed2025] hover:bg-[#d3181d] text-white font-bold text-xs shadow-md tracking-wide"
                   >
-                    Compare & Approve
+                    Open Full Review Modal
                   </Button>
                 )}
               </CardHeader>
-              <CardContent className="p-6">
+              <CardContent className="p-6 space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {request.quoteOptions.map((opt) => {
-                    const isSelected = request.approvedQuoteId === opt.id;
+                    const isSelected = request.approvedQuoteId === opt.id || (!request.approvedQuoteId && opt.isRecommended);
                     const isAir = opt.type === 'air_express';
+                    const title = isAir ? 'AIR FREIGHT - FASTEST' : 'SEA FREIGHT - ECONOMY';
 
                     return (
                       <div
                         key={opt.id}
-                        className={`p-5 rounded-xl border-2 transition-all relative ${
+                        onClick={() => isQuoteReady && setQuoteModalOpen(true)}
+                        className={`p-5 rounded-2xl border-2 transition-all relative ${
+                          isQuoteReady ? 'cursor-pointer hover:border-slate-400' : ''
+                        } ${
                           isSelected
-                            ? 'border-brand-red bg-red-50/20 ring-2 ring-red-100'
+                            ? 'border-[#ed2025] bg-red-50/20 ring-2 ring-red-100 shadow-md'
                             : 'border-slate-200 bg-white'
                         }`}
                       >
                         {isSelected && (
-                          <span className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" /> Approved Option
+                          <span className="absolute top-3 right-3 text-[10px] font-black uppercase tracking-wider bg-[#ed2025] text-white px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
+                            {request.approvedQuoteId ? <CheckCircle2 className="w-3 h-3" /> : null}
+                            {request.approvedQuoteId ? 'Approved' : 'Recommended'}
                           </span>
                         )}
 
                         <div className="flex items-center gap-2 mb-2">
-                          <div className={`p-2 rounded-lg ${isAir ? 'bg-red-50 text-brand-red' : 'bg-blue-50 text-brand-blue'}`}>
+                          <div className={`p-2 rounded-xl ${isAir ? 'bg-red-50 text-[#ed2025]' : 'bg-blue-50 text-brand-blue'}`}>
                             {isAir ? <Plane className="w-4 h-4" /> : <Ship className="w-4 h-4" />}
                           </div>
                           <div>
-                            <h4 className="text-xs font-bold text-slate-900">{isAir ? 'Express Air' : 'Sea Freight'}</h4>
-                            <p className="text-[11px] text-slate-500">{opt.carrierName}</p>
+                            <h4 className="text-xs font-black text-slate-900">{title}</h4>
+                            <p className="text-[11px] text-slate-500">Transit Time: <strong>{opt.transitDays}</strong></p>
                           </div>
                         </div>
 
-                        <p className="text-2xl font-black text-slate-900 tracking-tight mt-2">
-                          {formatNZD(opt.totalLandedCostNZD)}
-                        </p>
-                        <p className="text-[11px] text-slate-500">All-Inclusive Landed NZD</p>
+                        <div className="mt-3">
+                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Landed Price:</span>
+                          <p className="text-2xl font-black text-slate-900 tracking-tight">
+                            {formatNZD(opt.totalLandedCostNZD)} NZD
+                          </p>
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 inline-block mt-1">
+                            Inc. Freight, Customs, GST
+                          </span>
+                        </div>
 
                         <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
-                          <div className="flex justify-between">
-                            <span>Transit:</span>
-                            <span className="font-bold text-slate-900">{opt.transitDays}</span>
-                          </div>
                           <div className="flex justify-between">
                             <span>Estimated Delivery:</span>
                             <span className="font-bold text-emerald-700">{opt.estimatedDeliveryDate}</span>
                           </div>
                           <div className="flex justify-between">
                             <span>Part Cost:</span>
-                            <span>{formatNZD(opt.partCostNZD)}</span>
+                            <span className="font-semibold text-slate-800">{formatNZD(opt.partCostNZD)}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Freight & Packing:</span>
-                            <span>{formatNZD(opt.freightCostNZD)}</span>
+                            <span>International Freight:</span>
+                            <span className="font-semibold text-slate-800">{formatNZD(opt.freightCostNZD)}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Customs, MPI & GST:</span>
-                            <span>{formatNZD(opt.dutiesAndBiosecurityNZD + opt.gstNZD)}</span>
+                            <span>Duties & GST (15%):</span>
+                            <span className="font-semibold text-slate-800">{formatNZD(opt.dutiesAndBiosecurityNZD + opt.gstNZD)}</span>
                           </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
+
+                {isQuoteReady && (
+                  <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+                    <p className="text-xs text-slate-500">
+                      Delivery Address: <strong>Premier Motors, 45 Great South Rd, Auckland</strong>
+                    </p>
+                    <Button
+                      variant="primary"
+                      size="md"
+                      onClick={() => setQuoteModalOpen(true)}
+                      className="w-full sm:w-auto bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-6 py-2.5 shadow-md"
+                    >
+                      Review & Confirm Freight
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -434,13 +468,13 @@ export default function RequestDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 text-xs space-y-2">
-              <p className="font-bold text-slate-900">{request.deliveryAddress.businessName}</p>
+              <p className="font-bold text-slate-900">{request.deliveryAddress?.businessName || 'Premier Motors NZ'}</p>
               <p className="text-slate-600">
-                {request.deliveryAddress.street}, {request.deliveryAddress.suburb}, {request.deliveryAddress.city} {request.deliveryAddress.postcode}
+                {request.deliveryAddress?.street || '45 Great South Rd'}, {request.deliveryAddress?.suburb || 'Penrose'}, {request.deliveryAddress?.city || 'Auckland'} {request.deliveryAddress?.postcode || '1061'}
               </p>
               <div className="pt-2 border-t border-slate-100 flex items-center gap-3 text-[11px] text-slate-500">
-                <span>Forklift: {request.deliveryAddress.hasForklift ? '✓ Yes' : 'No'}</span>
-                <span>Dock: {request.deliveryAddress.hasLoadingDock ? '✓ Yes' : 'No'}</span>
+                <span>Forklift: {request.deliveryAddress?.hasForklift ? '✓ Yes' : 'No'}</span>
+                <span>Dock: {request.deliveryAddress?.hasLoadingDock ? '✓ Yes' : 'No'}</span>
               </div>
             </CardContent>
           </Card>

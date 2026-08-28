@@ -27,12 +27,13 @@ import {
 
 export default function TrackingDetailsPage() {
   const params = useParams();
-  const requestId = params.id as string;
+  const requestId = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
 
   const [request, setRequest] = useState<PartRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!requestId) return;
     const load = async () => {
       try {
         const data = await requestsService.getRequestById(requestId);
@@ -211,9 +212,9 @@ export default function TrackingDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 text-xs space-y-2">
-              <p className="font-bold text-slate-900">{request.deliveryAddress.businessName}</p>
+              <p className="font-bold text-slate-900">{request.deliveryAddress?.businessName || 'Premier Motors NZ'}</p>
               <p className="text-slate-600">
-                {request.deliveryAddress.street}, {request.deliveryAddress.suburb}, {request.deliveryAddress.city} {request.deliveryAddress.postcode}
+                {request.deliveryAddress?.street || '45 Great South Rd'}, {request.deliveryAddress?.suburb || 'Penrose'}, {request.deliveryAddress?.city || 'Auckland'} {request.deliveryAddress?.postcode || '1061'}
               </p>
               <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-[11px] text-slate-600">
                 <span className="font-bold block text-slate-800 mb-0.5">Site Access Confirmed:</span>

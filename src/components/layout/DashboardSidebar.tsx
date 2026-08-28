@@ -25,6 +25,29 @@ export interface DashboardSidebarProps {
 
 export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const [activeCount, setActiveCount] = React.useState(8);
+  const [quotesReadyCount, setQuotesReadyCount] = React.useState(2);
+  const [trackingId, setTrackingId] = React.useState('req_119');
+
+  const loadCounts = async () => {
+    try {
+      const all = await requestsService.getRequests();
+      const active = all.filter((r) => r.status !== 'Delivered' && r.status !== 'Cancelled' && r.status !== 'Rejected').length;
+      const quotes = all.filter((r) => r.status === 'Quoted' || r.status === 'Quote Ready').length;
+      const shipped = all.find((r) => r.status === 'Shipped' || r.status.includes('In Transit') || r.status === 'Customs Clearance');
+      setActiveCount(active);
+      setQuotesReadyCount(quotes);
+      if (shipped) setTrackingId(shipped.id);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  React.useEffect(() => {
+    loadCounts();
+    window.addEventListener('procurly_requests_updated', loadCounts);
+    return () => window.removeEventListener('procurly_requests_updated', loadCounts);
+  }, []);
 
   const navItems = [
     {
@@ -36,18 +59,18 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
       label: 'All Part Requests',
       href: '/requests',
       icon: FileText,
-      badge: '4 Active',
+      badge: `${activeCount} Active`,
     },
     {
       label: 'Quotes & Approvals',
       href: '/quotes',
       icon: Clock,
-      badge: '1 Ready',
-      badgeColor: 'bg-brand-red text-white',
+      badge: quotesReadyCount > 0 ? `${quotesReadyCount} Ready` : undefined,
+      badgeColor: 'bg-[#ed2025] text-white',
     },
     {
       label: 'Live Tracking',
-      href: '/tracking/req_101',
+      href: `/tracking/${trackingId}`,
       icon: Compass,
     },
     {
@@ -82,14 +105,13 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
       {/* Primary Request Action */}
       <div className="p-4">
         <Link href="/requests/new" onClick={onCloseMobile}>
-          <Button
-            variant="primary"
-            size="md"
-            className="w-full justify-center shadow-md font-bold text-xs tracking-wide py-2.5"
-            leftIcon={<PlusCircle className="w-4 h-4" />}
+          <button
+            type="button"
+            className="w-full inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl shadow-glow transition-all active:scale-[0.98]"
           >
-            New Part Request
-          </Button>
+            <PlusCircle className="w-4 h-4 stroke-[2.5]" />
+            <span>+ New Part Request</span>
+          </button>
         </Link>
       </div>
 
@@ -162,7 +184,7 @@ export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
             <Building2 className="w-4 h-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-white truncate">Apex Precision Auto</p>
+            <p className="text-xs font-bold text-white truncate">Premier Motors NZ</p>
             <p className="text-[11px] text-emerald-400 flex items-center gap-1">
               <ShieldCheck className="w-3 h-3" />
               Verified Trade

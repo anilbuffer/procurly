@@ -1,12 +1,15 @@
 export type RequestStatus = 
-  | 'Sourcing' 
+  | 'Quoted'
   | 'Quote Ready' 
+  | 'Sourcing' 
   | 'Quote Approved' 
+  | 'Shipped'
   | 'In Transit - Air' 
   | 'In Transit - Sea' 
   | 'Customs Clearance' 
   | 'Delivered' 
-  | 'Cancelled';
+  | 'Cancelled'
+  | 'Rejected';
 
 export type PartCondition = 
   | 'New OEM' 
@@ -14,6 +17,9 @@ export type PartCondition =
   | 'Reconditioned' 
   | 'Certified Aftermarket' 
   | 'Any Verified Fitment';
+
+export type PartQualityPreference = 'Genuine OEM' | 'Aftermarket' | 'Reconditioned / Used';
+export type PartConditionPreference = 'New Only' | 'Used Acceptable';
 
 export type UrgencyLevel = 'Standard' | 'Urgent' | 'Critical (Vehicle Off Road)';
 
@@ -46,9 +52,11 @@ export interface PartItem {
   id: string;
   name: string;
   partNumber?: string;
-  category: string;
+  category?: string;
   quantity: number;
-  conditionRequired: PartCondition;
+  qualityPreference?: PartQualityPreference;
+  conditionPreference?: PartConditionPreference;
+  conditionRequired?: PartCondition;
   description?: string;
   damagePhotos?: string[];
   vehicleSide?: 'Front' | 'Rear' | 'Left (Passenger)' | 'Right (Driver)' | 'Engine Bay' | 'Underbody';
@@ -59,6 +67,7 @@ export interface VehicleInfo {
   year: number;
   make: string;
   model: string;
+  regoNumber?: string;
   subModel?: string;
   engineCode?: string;
   chassisCode?: string;
