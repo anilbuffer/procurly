@@ -422,14 +422,14 @@ export function DashboardSidebar({
               </Link>
 
               <Link
-                href="/company"
+                href="/operations/dashboard"
                 onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
+                className="flex items-center gap-2.5 px-4 py-2 text-cyan-300 hover:bg-slate-800 hover:text-cyan-200 transition-colors font-bold"
               >
-                <Shield className="w-4 h-4 text-slate-400" />
+                <ShieldCheck className="w-4 h-4 text-cyan-400" />
                 <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Security & Access</p>
-                  <p className="text-[10px] text-slate-500">MFA & login devices</p>
+                  <p className="font-bold text-xs">Operations Command Centre</p>
+                  <p className="text-[10px] text-slate-400">Internal procurement workspace</p>
                 </div>
               </Link>
             </div>
