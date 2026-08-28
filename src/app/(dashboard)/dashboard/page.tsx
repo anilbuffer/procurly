@@ -152,7 +152,7 @@ export default function CustomerPortalDashboard() {
       time: 'Yesterday · 04:15 PM',
       text: 'Shipment dispatched for AH-P-000118',
       icon: Truck,
-      color: 'text-brand-blue bg-blue-50',
+      color: 'text-[#2b4499] bg-blue-50',
       link: '/shipments/shp_118',
     },
   ];
@@ -172,12 +172,12 @@ export default function CustomerPortalDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       {/* 1. DASHBOARD HEADER */}
-      <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-brand-blue uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-black text-[#2b4499] uppercase tracking-wider bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
               Approved Trade Customer
             </span>
             <span className="text-[11px] text-slate-500 font-medium">
@@ -197,7 +197,7 @@ export default function CustomerPortalDashboard() {
           <Link href="/requests/new">
             <button
               type="button"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-glow transition-all active:scale-[0.98]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98]"
             >
               <PlusCircle className="w-4 h-4 stroke-[2.5]" />
               <span>+ New Parts Request</span>
@@ -209,7 +209,7 @@ export default function CustomerPortalDashboard() {
       {/* 2. DASHBOARD KPI CARDS (4 Clean Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Active Requests (08) */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-card flex items-start justify-between">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-start justify-between">
           <div className="space-y-1">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Active Requests
@@ -219,13 +219,13 @@ export default function CustomerPortalDashboard() {
               <span>+2 this month</span>
             </p>
           </div>
-          <div className="p-3 rounded-xl bg-blue-50 text-brand-blue">
+          <div className="p-3 rounded-xl bg-blue-50 text-[#2b4499]">
             <ClipboardList className="w-5 h-5" />
           </div>
         </div>
 
         {/* Card 2: Awaiting Your Action (02) — High Attention Styling */}
-        <div className="bg-gradient-to-br from-amber-50/90 to-amber-100/70 rounded-2xl p-5 border-2 border-amber-400 shadow-md ring-2 ring-amber-200/50 flex items-start justify-between relative overflow-hidden">
+        <div className="bg-gradient-to-br from-amber-50 to-amber-100/80 rounded-2xl p-5 border-2 border-amber-400 shadow-sm flex items-start justify-between relative overflow-hidden">
           <div className="space-y-1 relative z-10">
             <div className="flex items-center gap-1.5">
               <p className="text-xs font-black text-amber-900 uppercase tracking-wider">
@@ -242,7 +242,7 @@ export default function CustomerPortalDashboard() {
         </div>
 
         {/* Card 3: In Procurement (04) */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-card flex items-start justify-between">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-start justify-between">
           <div className="space-y-1">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               In Procurement
@@ -256,7 +256,7 @@ export default function CustomerPortalDashboard() {
         </div>
 
         {/* Card 4: In Transit (03) */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-card flex items-start justify-between">
+        <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-start justify-between">
           <div className="space-y-1">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               In Transit
@@ -264,14 +264,14 @@ export default function CustomerPortalDashboard() {
             <p className="text-3xl font-black text-slate-900 tracking-tight">03</p>
             <p className="text-xs font-medium text-slate-500">On the way</p>
           </div>
-          <div className="p-3 rounded-xl bg-blue-50 text-brand-blue">
+          <div className="p-3 rounded-xl bg-blue-50 text-[#2b4499]">
             <Truck className="w-5 h-5" />
           </div>
         </div>
       </div>
 
       {/* 3. ACTION REQUIRED SECTION (High Visual Priority) */}
-      <Card className="border-2 border-amber-300/80 bg-white shadow-card overflow-hidden">
+      <Card className="border-2 border-amber-300/80 bg-white shadow-sm overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50/50 pb-4 border-b border-amber-200/60">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shadow-sm">
@@ -326,7 +326,7 @@ export default function CustomerPortalDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Recent Requests (8 cols) */}
         <div className="lg:col-span-8">
-          <Card className="shadow-card border border-slate-200 h-full flex flex-col">
+          <Card className="shadow-sm border border-slate-200 h-full flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between pb-4">
               <div>
                 <CardTitle className="text-base font-black text-slate-900">
@@ -362,7 +362,7 @@ export default function CustomerPortalDashboard() {
                         <td className="px-5 py-4">
                           <Link
                             href={`/requests/${r.id}`}
-                            className="font-mono font-bold text-slate-900 group-hover:text-brand-blue"
+                            className="font-mono font-bold text-slate-900 group-hover:text-[#2b4499]"
                           >
                             {r.ref}
                           </Link>
@@ -411,7 +411,7 @@ export default function CustomerPortalDashboard() {
 
         {/* Procurement Activity (4 cols) */}
         <div className="lg:col-span-4">
-          <Card className="shadow-card border border-slate-200 h-full flex flex-col">
+          <Card className="shadow-sm border border-slate-200 h-full flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-black text-slate-900">
                 Procurement Activity
@@ -431,13 +431,13 @@ export default function CustomerPortalDashboard() {
                       className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all block group"
                     >
                       <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-xs ${item.color}`}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm ${item.color}`}
                       >
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] font-semibold text-slate-400">{item.time}</p>
-                        <p className="text-xs font-bold text-slate-900 group-hover:text-brand-blue transition-colors mt-0.5">
+                        <p className="text-xs font-bold text-slate-900 group-hover:text-[#2b4499] transition-colors mt-0.5">
                           {item.text}
                         </p>
                       </div>
@@ -446,12 +446,12 @@ export default function CustomerPortalDashboard() {
                 })}
               </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-100 p-2 bg-slate-50 rounded-xl flex items-center justify-between text-xs text-slate-600">
+              <div className="mt-4 pt-4 border-t border-slate-100 p-2.5 bg-slate-50 rounded-xl flex items-center justify-between text-xs text-slate-600">
                 <span className="flex items-center gap-1.5 font-semibold text-emerald-700">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   MPI Green-Lane Active
                 </span>
-                <Link href="/help" className="text-brand-blue font-bold hover:underline">
+                <Link href="/help" className="text-[#2b4499] font-bold hover:underline">
                   Support Desk
                 </Link>
               </div>
