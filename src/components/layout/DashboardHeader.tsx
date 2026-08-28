@@ -1,192 +1,243 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   Search,
   Bell,
   Menu,
-  CheckCircle2,
-  ChevronDown,
-  Sparkles,
-  ExternalLink,
+  CircleHelp,
 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { requestsService } from '@/services/requestsService';
+import { NotificationItem } from '@/types';
+import { GlobalSearchModal } from './GlobalSearchModal';
 
 export interface DashboardHeaderProps {
   onOpenMobileMenu: () => void;
 }
 
 export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const pathname = usePathname();
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/requests?q=${encodeURIComponent(searchQuery.trim())}`);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadNotifications = async () => {
+    try {
+      const list = await requestsService.getNotifications();
+      setNotifications(list);
+      setUnreadCount(list.filter((n) => !n.isRead).length);
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const notifications = [
-    {
-      id: 1,
-      title: 'Landed Quote Ready for Review',
-      desc: '2019 Toyota Hiace (AH-P-000123) - Air ($385) vs Sea ($240) ready.',
-      time: '5 mins ago',
-      unread: true,
-      link: '/requests/req_123',
-    },
-    {
-      id: 2,
-      title: 'Flight NZ90 Landed in Auckland',
-      desc: '2018 Subaru Outback Rear Axle (AH-P-000119) out for delivery.',
-      time: '1 hour ago',
-      unread: false,
-      link: '/tracking/req_119',
-    },
-  ];
+  useEffect(() => {
+    loadNotifications();
+    const handleUpdate = () => loadNotifications();
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    return () => window.removeEventListener('procurly_data_updated', handleUpdate);
+  }, []);
+
+  // Keyboard shortcut for Cmd/Ctrl + K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchModalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Compute Breadcrumb
+  const getBreadcrumbs = () => {
+    if (pathname === '/dashboard') return [{ label: 'Dashboard', href: '/dashboard' }];
+    if (pathname === '/requests') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Requests', href: '/requests' }];
+    if (pathname === '/requests/new') return [{ label: 'Requests', href: '/requests' }, { label: 'New Request', href: '/requests/new' }];
+    if (pathname.startsWith('/requests/')) {
+      const id = pathname.replace('/requests/', '');
+      return [{ label: 'Requests', href: '/requests' }, { label: id.toUpperCase(), href: pathname }];
+    }
+    if (pathname === '/orders') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Orders', href: '/orders' }];
+    if (pathname.startsWith('/orders/')) {
+      const id = pathname.replace('/orders/', '');
+      return [{ label: 'Orders', href: '/orders' }, { label: id.toUpperCase(), href: pathname }];
+    }
+    if (pathname === '/shipments') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Shipments', href: '/shipments' }];
+    if (pathname.startsWith('/shipments/')) {
+      const id = pathname.replace('/shipments/', '');
+      return [{ label: 'Shipments', href: '/shipments' }, { label: id.toUpperCase(), href: pathname }];
+    }
+    if (pathname === '/messages') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Messages', href: '/messages' }];
+    if (pathname === '/payments') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Payments', href: '/payments' }];
+    if (pathname === '/documents') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Documents', href: '/documents' }];
+    if (pathname === '/company') return [{ label: 'Account', href: '/company' }, { label: 'Company Profile', href: '/company' }];
+    if (pathname === '/team') return [{ label: 'Account', href: '/team' }, { label: 'Team Members', href: '/team' }];
+    if (pathname === '/notifications') return [{ label: 'Account', href: '/notifications' }, { label: 'Notifications', href: '/notifications' }];
+    if (pathname === '/help' || pathname === '/support') return [{ label: 'Support', href: '/help' }, { label: 'Help & Support', href: '/help' }];
+
+    return [{ label: 'Customer Portal', href: '/dashboard' }];
+  };
+
+  const breadcrumbs = getBreadcrumbs();
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-slate-200/90 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-subtle">
-      <div className="flex items-center gap-3 flex-1 max-w-xl">
-        {/* Mobile menu trigger */}
-        <button
-          onClick={onOpenMobileMenu}
-          className="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-          aria-label="Open sidebar"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-
-        {/* Global Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-            <Search className="w-4 h-4" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search by Request Ref (e.g. AH-P-000123), VIN, Part # or Vehicle..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-lg border border-slate-200 bg-slate-50/70 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-brand-blue focus:ring-1 focus:ring-brand-blue transition-all"
-          />
-        </form>
-      </div>
-
-      {/* Right Action Items */}
-      <div className="flex items-center gap-3">
-        {/* Live Freight Status Pill */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>NZ Customs Green-Lane Active</span>
-        </div>
-
-        {/* Notification Bell Dropdown */}
-        <div className="relative">
+    <>
+      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/90 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-subtle">
+        {/* Left: Mobile Menu Trigger + Breadcrumb */}
+        <div className="flex items-center gap-3 min-w-0">
           <button
-            onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-            aria-label="Notifications"
+            onClick={onOpenMobileMenu}
+            className="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            aria-label="Open navigation sidebar"
           >
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-brand-red ring-2 ring-white" />
+            <Menu className="w-5 h-5" />
           </button>
 
-          {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-slide-up">
-              <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-900">Notifications & Alerts</span>
-                <span className="text-[10px] font-bold text-brand-red bg-red-50 px-2 py-0.5 rounded-full">
-                  1 New Quote
-                </span>
-              </div>
-              <div className="divide-y divide-slate-100 max-h-72 overflow-y-auto">
-                {notifications.map((n) => (
-                  <Link
-                    key={n.id}
-                    href={n.link}
-                    onClick={() => setNotificationsOpen(false)}
-                    className={`block p-3.5 hover:bg-slate-50 transition-colors ${
-                      n.unread ? 'bg-red-50/30' : ''
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-xs font-bold text-slate-900">{n.title}</p>
-                      <span className="text-[10px] text-slate-400 shrink-0">{n.time}</span>
-                    </div>
-                    <p className="text-xs text-slate-600 mt-1">{n.desc}</p>
+          {/* Breadcrumbs */}
+          <nav className="flex items-center gap-1.5 text-xs text-slate-500 overflow-hidden font-medium" aria-label="Breadcrumb">
+            {breadcrumbs.map((crumb, idx) => (
+              <React.Fragment key={crumb.href + idx}>
+                {idx > 0 && <span className="text-slate-300">/</span>}
+                {idx === breadcrumbs.length - 1 ? (
+                  <span className="font-bold text-slate-900 truncate">{crumb.label}</span>
+                ) : (
+                  <Link href={crumb.href} className="hover:text-brand-blue hover:underline transition-colors truncate">
+                    {crumb.label}
                   </Link>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
+              </React.Fragment>
+            ))}
+          </nav>
         </div>
 
-        {/* Trade User Profile Dropdown */}
-        <div className="relative">
+        {/* Center: Global Search Trigger Button (Desktop & Tablet) */}
+        <div className="hidden sm:flex items-center justify-center flex-1 max-w-md mx-4">
           <button
-            onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+            onClick={() => setSearchModalOpen(true)}
+            className="w-full flex items-center justify-between px-3.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 text-xs hover:bg-white hover:border-slate-300 hover:text-slate-800 transition-all shadow-subtle group"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-blue to-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
-              DM
+            <div className="flex items-center gap-2.5">
+              <Search className="w-4 h-4 text-slate-400 group-hover:text-brand-blue transition-colors" />
+              <span>Search requests, orders or shipments...</span>
             </div>
-            <div className="hidden md:block text-left text-xs">
-              <p className="font-bold text-slate-900 leading-tight">Dave Morrison</p>
-              <p className="text-[10px] text-slate-500">Premier Motors NZ</p>
+            <div className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white rounded border border-slate-200 text-slate-400">
+                ⌘
+              </kbd>
+              <kbd className="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-white rounded border border-slate-200 text-slate-400">
+                K
+              </kbd>
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+        </div>
+
+        {/* Right: Search icon (mobile), Help & Notification Bell */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Search Icon */}
+          <button
+            onClick={() => setSearchModalOpen(true)}
+            className="sm:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+            aria-label="Search"
+          >
+            <Search className="w-5 h-5" />
           </button>
 
-          {profileOpen && (
-            <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50 animate-slide-up">
-              <div className="px-4 py-2 border-b border-slate-100">
-                <p className="text-xs font-bold text-slate-900">Dave Morrison</p>
-                <p className="text-[11px] text-slate-500">dave@premiermotors.co.nz</p>
-                <span className="inline-block mt-1 text-[10px] font-bold text-brand-blue bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
-                  Trade Credit: $50,000 (Approved)
-                </span>
+          {/* Help Link */}
+          <Link
+            href="/help"
+            className="p-2 rounded-lg text-slate-600 hover:text-brand-blue hover:bg-slate-100 transition-colors hidden md:flex items-center gap-1 text-xs font-semibold"
+            title="Help & Support"
+          >
+            <CircleHelp className="w-4 h-4" />
+            <span className="hidden xl:inline">Help</span>
+          </Link>
+
+          {/* Notification Bell Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setNotificationsOpen(!notificationsOpen)}
+              className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              aria-label="View notifications"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#ed2025] ring-2 ring-white animate-pulse" />
+              )}
+            </button>
+
+            {notificationsOpen && (
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50 animate-slide-up overflow-hidden">
+                <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                  <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                    Notifications Center
+                  </span>
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={async () => {
+                        await requestsService.markAllNotificationsRead();
+                        loadNotifications();
+                      }}
+                      className="text-[11px] font-bold text-brand-blue hover:underline"
+                    >
+                      Mark all as read
+                    </button>
+                  )}
+                </div>
+                <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <p className="p-6 text-center text-xs text-slate-400">No notifications</p>
+                  ) : (
+                    notifications.map((n) => (
+                      <Link
+                        key={n.id}
+                        href={n.linkUrl}
+                        onClick={async () => {
+                          await requestsService.markNotificationRead(n.id);
+                          setNotificationsOpen(false);
+                        }}
+                        className={`block p-3.5 hover:bg-slate-50 transition-colors ${
+                          !n.isRead ? 'bg-red-50/20' : ''
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5">
+                            {!n.isRead && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#ed2025] shrink-0" />
+                            )}
+                            <p className="text-xs font-bold text-slate-900">{n.title}</p>
+                          </div>
+                          <span className="text-[10px] font-medium text-slate-400 shrink-0">
+                            {n.timeAgo}
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-600 mt-1 pl-3">{n.description}</p>
+                      </Link>
+                    ))
+                  )}
+                </div>
+                <div className="px-4 py-2 border-t border-slate-100 bg-slate-50 text-center">
+                  <Link
+                    href="/notifications"
+                    onClick={() => setNotificationsOpen(false)}
+                    className="text-xs font-bold text-brand-blue hover:underline"
+                  >
+                    View All Notifications →
+                  </Link>
+                </div>
               </div>
-              <div className="py-1 text-xs">
-                <Link
-                  href="/settings"
-                  onClick={() => setProfileOpen(false)}
-                  className="block px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium"
-                >
-                  Trade Account Settings
-                </Link>
-                <Link
-                  href="/requests/new"
-                  onClick={() => setProfileOpen(false)}
-                  className="block px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium"
-                >
-                  Submit New Request
-                </Link>
-                <Link
-                  href="/"
-                  onClick={() => setProfileOpen(false)}
-                  className="block px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium"
-                >
-                  Visit Public Homepage
-                </Link>
-              </div>
-              <div className="border-t border-slate-100 pt-1">
-                <Link
-                  href="/login"
-                  onClick={() => setProfileOpen(false)}
-                  className="block px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50"
-                >
-                  Switch Demo Account / Logout
-                </Link>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Global Search Modal Triggered on Ctrl+K */}
+      <GlobalSearchModal isOpen={searchModalOpen} onClose={() => setSearchModalOpen(false)} />
+    </>
   );
 }

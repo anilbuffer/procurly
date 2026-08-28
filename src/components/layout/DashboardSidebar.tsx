@@ -1,214 +1,443 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
-  PlusCircle,
+  ClipboardList,
+  ShoppingBag,
+  Truck,
+  MessageSquare,
+  CreditCard,
   FileText,
-  Clock,
-  Compass,
-  Settings,
-  ShieldCheck,
   Building2,
-  PhoneCall,
+  Users,
+  Bell,
+  CircleHelp,
+  PlusCircle,
+  ChevronLeft,
+  ChevronRight,
   LogOut,
+  ShieldCheck,
   Box,
+  User,
+  Settings,
+  Shield,
+  MapPin,
+  ChevronUp,
+  CreditCard as PaymentIcon,
 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
 import { requestsService } from '@/services/requestsService';
 
 export interface DashboardSidebarProps {
   onCloseMobile?: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
+export function DashboardSidebar({
+  onCloseMobile,
+  isCollapsed = false,
+  onToggleCollapse,
+}: DashboardSidebarProps) {
   const pathname = usePathname();
-  const [activeCount, setActiveCount] = React.useState(8);
-  const [quotesReadyCount, setQuotesReadyCount] = React.useState(2);
-  const [trackingId, setTrackingId] = React.useState('req_119');
+  const [requestsActionCount, setRequestsActionCount] = useState(2);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(2);
+  const [unreadNotifsCount, setUnreadNotifsCount] = useState(2);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
-  const loadCounts = async () => {
+  const loadData = async () => {
     try {
-      const all = await requestsService.getRequests();
-      const active = all.filter((r) => r.status !== 'Delivered' && r.status !== 'Cancelled' && r.status !== 'Rejected').length;
-      const quotes = all.filter((r) => r.status === 'Quoted' || r.status === 'Quote Ready').length;
-      const shipped = all.find((r) => r.status === 'Shipped' || r.status.includes('In Transit') || r.status === 'Customs Clearance');
-      setActiveCount(active);
-      setQuotesReadyCount(quotes);
-      if (shipped) setTrackingId(shipped.id);
+      const [reqs, notifs] = await Promise.all([
+        requestsService.getRequests(),
+        requestsService.getNotifications(),
+      ]);
+
+      const actionCount = reqs.filter(
+        (r) =>
+          r.status === 'Quote Ready' ||
+          r.status === 'Quoted' ||
+          r.status === 'Awaiting Customer Approval' ||
+          r.status === 'Payment Failed' ||
+          r.paymentStatus === 'Awaiting Payment' ||
+          r.paymentStatus === 'Payment Failed'
+      ).length;
+
+      setRequestsActionCount(actionCount);
+      setUnreadNotifsCount(notifs.filter((n) => !n.isRead).length);
     } catch (err) {
       console.error(err);
     }
   };
 
-  React.useEffect(() => {
-    loadCounts();
-    window.addEventListener('procurly_requests_updated', loadCounts);
-    return () => window.removeEventListener('procurly_requests_updated', loadCounts);
+  useEffect(() => {
+    loadData();
+    const handleUpdate = () => loadData();
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+    };
   }, []);
 
-  const navItems = [
+  // Handle outside click to close profile popover
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const mainNavItems = [
     {
-      label: 'Dashboard Overview',
+      label: 'Dashboard',
       href: '/dashboard',
       icon: LayoutDashboard,
     },
     {
-      label: 'All Part Requests',
+      label: 'Requests',
       href: '/requests',
+      icon: ClipboardList,
+      badge: requestsActionCount > 0 ? `${requestsActionCount}` : undefined,
+      badgeAttention: true,
+    },
+    {
+      label: 'Orders',
+      href: '/orders',
+      icon: ShoppingBag,
+    },
+    {
+      label: 'Shipments',
+      href: '/shipments',
+      icon: Truck,
+    },
+    {
+      label: 'Messages',
+      href: '/messages',
+      icon: MessageSquare,
+      badge: unreadMessagesCount > 0 ? `${unreadMessagesCount}` : undefined,
+    },
+    {
+      label: 'Payments',
+      href: '/payments',
+      icon: CreditCard,
+    },
+    {
+      label: 'Documents',
+      href: '/documents',
       icon: FileText,
-      badge: `${activeCount} Active`,
-    },
-    {
-      label: 'Quotes & Approvals',
-      href: '/quotes',
-      icon: Clock,
-      badge: quotesReadyCount > 0 ? `${quotesReadyCount} Ready` : undefined,
-      badgeColor: 'bg-[#ed2025] text-white',
-    },
-    {
-      label: 'Live Tracking',
-      href: `/tracking/${trackingId}`,
-      icon: Compass,
-    },
-    {
-      label: 'Trade Settings',
-      href: '/settings',
-      icon: Settings,
     },
   ];
 
+  const accountNavItems = [
+    {
+      label: 'Company',
+      href: '/company',
+      icon: Building2,
+    },
+    {
+      label: 'Team',
+      href: '/team',
+      icon: Users,
+    },
+    {
+      label: 'Notifications',
+      href: '/notifications',
+      icon: Bell,
+      badge: unreadNotifsCount > 0 ? `${unreadNotifsCount}` : undefined,
+    },
+  ];
+
+  const supportNavItems = [
+    {
+      label: 'Help & Support',
+      href: '/help',
+      icon: CircleHelp,
+    },
+  ];
+
+  const renderNavLink = (item: {
+    label: string;
+    href: string;
+    icon: any;
+    badge?: string;
+    badgeAttention?: boolean;
+  }) => {
+    const Icon = item.icon;
+    const isActive =
+      item.href === '/dashboard'
+        ? pathname === '/dashboard'
+        : pathname.startsWith(item.href);
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={onCloseMobile}
+        title={isCollapsed ? item.label : undefined}
+        className={cn(
+          'flex items-center rounded-xl text-xs font-semibold transition-all relative group',
+          isCollapsed ? 'justify-center p-3' : 'justify-between px-3.5 py-2.5',
+          isActive
+            ? 'bg-slate-800/90 text-white font-bold shadow-sm border-l-2 border-[#ed2025]'
+            : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+        )}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <Icon
+            className={cn(
+              'w-4 h-4 shrink-0 transition-colors',
+              isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+            )}
+          />
+          {!isCollapsed && <span className="truncate">{item.label}</span>}
+        </div>
+
+        {/* Badge */}
+        {item.badge && (
+          <span
+            className={cn(
+              'text-[10px] font-bold rounded-full transition-all',
+              isCollapsed
+                ? 'absolute top-1 right-1 w-4 h-4 flex items-center justify-center'
+                : 'px-2 py-0.5',
+              item.badgeAttention
+                ? 'bg-[#ed2025] text-white shadow-sm'
+                : 'bg-brand-blue text-white'
+            )}
+          >
+            {item.badge}
+          </span>
+        )}
+      </Link>
+    );
+  };
+
   return (
-    <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full border-r border-slate-800 shrink-0">
+    <aside
+      className={cn(
+        'bg-slate-900 text-slate-300 flex flex-col h-full max-h-screen border-r border-slate-800 transition-all duration-250 select-none relative overflow-hidden',
+        isCollapsed ? 'w-[72px]' : 'w-64'
+      )}
+    >
       {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-red to-brand-red-dark flex items-center justify-center text-white font-black text-lg shadow-sm">
-            <Box className="w-5 h-5 stroke-[2.5]" />
+      <div className="p-4 border-b border-slate-800/80 flex items-center justify-between min-h-[65px] shrink-0 bg-slate-900">
+        <Link href="/dashboard" className="flex items-center gap-2.5 group overflow-hidden">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#ed2025] to-[#b31317] flex items-center justify-center text-white font-black text-sm shadow-md shrink-0">
+            <Box className="w-4 h-4 stroke-[2.5]" />
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-lg font-black text-white tracking-tight">Procurly</span>
-              <span className="text-[10px] font-bold text-red-400 bg-red-950/80 px-1 py-0.2 rounded border border-red-800">
-                PORTAL
+          {!isCollapsed && (
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base font-black text-white tracking-tight">PROCURly</span>
+              </div>
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block -mt-0.5">
+                CUSTOMER PORTAL
               </span>
             </div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block -mt-0.5">
-              by Autohub NZ
-            </span>
-          </div>
+          )}
         </Link>
+
+        {/* Collapse toggle (Desktop only) */}
+        {onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label="Toggle sidebar collapse"
+          >
+            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
+        )}
       </div>
 
-      {/* Primary Request Action */}
-      <div className="p-4">
-        <Link href="/requests/new" onClick={onCloseMobile}>
+      {/* Primary CTA Button: + New Parts Request */}
+      <div className="p-3 shrink-0 bg-slate-900">
+        <Link href="/requests/new" onClick={onCloseMobile} className="block">
           <button
             type="button"
-            className="w-full inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-bold text-xs uppercase tracking-wider py-3 rounded-xl shadow-glow transition-all active:scale-[0.98]"
+            className={cn(
+              'w-full inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-glow transition-all active:scale-[0.98]',
+              isCollapsed ? 'py-3 px-0' : 'py-3 px-3'
+            )}
+            title={isCollapsed ? 'New Parts Request' : undefined}
           >
-            <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-            <span>+ New Part Request</span>
+            <PlusCircle className="w-4 h-4 stroke-[2.5] shrink-0" />
+            {!isCollapsed && <span>+ New Parts Request</span>}
           </button>
         </Link>
       </div>
 
-      {/* Navigation Links */}
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-          Main Navigation
+      {/* Navigation Sections */}
+      <nav className="flex-1 px-3 py-2 space-y-4 overflow-y-auto custom-scrollbar">
+        {/* MAIN */}
+        <div className="space-y-1">
+          {!isCollapsed && (
+            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
+              Main
+            </div>
+          )}
+          {mainNavItems.map(renderNavLink)}
         </div>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive =
-            item.href === '/dashboard'
-              ? pathname === '/dashboard'
-              : pathname.startsWith(item.href);
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onCloseMobile}
-              className={cn(
-                'flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group',
-                isActive
-                  ? 'bg-brand-blue text-white shadow-sm'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <Icon
-                  className={cn(
-                    'w-4 h-4 transition-colors',
-                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'
-                  )}
-                />
-                <span>{item.label}</span>
-              </div>
-              {item.badge && (
-                <span
-                  className={cn(
-                    'text-[10px] font-bold px-2 py-0.5 rounded-full',
-                    item.badgeColor || (isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300')
-                  )}
-                >
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-
-        <div className="pt-4 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-          Support & Desk
+        {/* ACCOUNT */}
+        <div className="space-y-1 pt-2 border-t border-slate-800/60">
+          {!isCollapsed && (
+            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
+              Account
+            </div>
+          )}
+          {accountNavItems.map(renderNavLink)}
         </div>
-        <div className="px-3 py-2 bg-slate-800/40 rounded-xl border border-slate-800 space-y-2">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-            <PhoneCall className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Dedicated Desk</span>
-          </div>
-          <p className="text-[11px] text-slate-400">
-            Brendon Davies <br />
-            <span className="text-slate-300 font-mono">09 525 6814</span>
-          </p>
+
+        {/* SUPPORT */}
+        <div className="space-y-1 pt-2 border-t border-slate-800/60">
+          {!isCollapsed && (
+            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
+              Support
+            </div>
+          )}
+          {supportNavItems.map(renderNavLink)}
         </div>
       </nav>
 
-      {/* Trade Account Box */}
-      <div className="p-4 border-t border-slate-800/80 bg-slate-950/60">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-brand-blue/30 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
-            <Building2 className="w-4 h-4" />
+      {/* Bottom Customer User Profile Section (Sole Location in App) */}
+      <div ref={profileRef} className="p-3 border-t border-slate-800/80 bg-slate-950 shrink-0 relative mt-auto">
+        <button
+          type="button"
+          onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+          className={cn(
+            'w-full flex items-center rounded-xl p-2 cursor-pointer hover:bg-slate-800/70 transition-all text-left group',
+            isCollapsed ? 'justify-center' : 'gap-3',
+            profileDropdownOpen ? 'bg-slate-800/90 ring-1 ring-slate-700' : ''
+          )}
+          title={isCollapsed ? 'AutoCare Auckland (James Wilson)' : undefined}
+          aria-label="User Profile & Settings"
+        >
+          {/* Customer Avatar AC */}
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-blue to-blue-600 text-white font-black text-xs flex items-center justify-center shadow-md shrink-0 ring-2 ring-blue-400/30">
+            AC
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-white truncate">Premier Motors NZ</p>
-            <p className="text-[11px] text-emerald-400 flex items-center gap-1">
-              <ShieldCheck className="w-3 h-3" />
-              Verified Trade
-            </p>
-            <p className="text-[10px] text-slate-500 font-mono mt-0.5">NZBN: 9429048291034</p>
-          </div>
-        </div>
 
-        <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between">
-          <Link
-            href="/login"
-            className="text-[11px] text-slate-400 hover:text-red-400 flex items-center gap-1.5 transition-colors"
+          {!isCollapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">
+                AutoCare Auckland
+              </p>
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                <span className="truncate">James Wilson</span>
+                <span>•</span>
+                <span className="text-emerald-400 font-semibold flex items-center gap-0.5 shrink-0">
+                  <ShieldCheck className="w-3 h-3" /> Trade
+                </span>
+              </div>
+            </div>
+          )}
+
+          {!isCollapsed && (
+            <ChevronUp
+              className={cn(
+                'w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-transform duration-200 shrink-0',
+                profileDropdownOpen ? 'rotate-180' : ''
+              )}
+            />
+          )}
+        </button>
+
+        {/* Enhanced Profile Menu Popover */}
+        {profileDropdownOpen && (
+          <div
+            className={cn(
+              'absolute bottom-full mb-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl py-2 z-50 text-xs text-slate-300 animate-slide-up',
+              isCollapsed ? 'left-2 w-64' : 'left-3 right-3'
+            )}
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Switch / Logout</span>
-          </Link>
-          <Link
-            href="/"
-            className="text-[11px] text-slate-400 hover:text-white transition-colors"
-          >
-            Public Site →
-          </Link>
-        </div>
+            {/* Header Info */}
+            <div className="px-4 py-3 border-b border-slate-800/80 bg-slate-950/60">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-bold text-white text-xs truncate">AutoCare Auckland</span>
+                <span className="text-[9px] font-black uppercase text-brand-blue bg-blue-950/80 px-1.5 py-0.2 rounded border border-blue-800 shrink-0">
+                  Trade Admin
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">james@autocareauckland.co.nz</p>
+              <div className="mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
+                <span className="text-slate-400">Approved Credit:</span>
+                <span className="font-bold text-emerald-400">$50,000 Verified</span>
+              </div>
+            </div>
+
+            {/* Navigation Links */}
+            <div className="py-1.5">
+              <Link
+                href="/company"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <Building2 className="w-4 h-4 text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Company Profile & Hubs</p>
+                  <p className="text-[10px] text-slate-500">Legal entity, NZBN, GST & addresses</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/team"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <Users className="w-4 h-4 text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Team Members</p>
+                  <p className="text-[10px] text-slate-500">Manage workshop manager access</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/payments"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <PaymentIcon className="w-4 h-4 text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Trade Billing & Receipts</p>
+                  <p className="text-[10px] text-slate-500">20th Mth Following credit limit</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/company"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <Shield className="w-4 h-4 text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Security & Access</p>
+                  <p className="text-[10px] text-slate-500">MFA & login devices</p>
+                </div>
+              </Link>
+            </div>
+
+            {/* Sign Out */}
+            <div className="border-t border-slate-800 pt-1">
+              <Link
+                href="/login"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-red-400 hover:bg-red-950/40 hover:text-red-300 font-bold transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );

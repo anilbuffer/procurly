@@ -5,28 +5,27 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { PartRequest, QuoteOption } from '@/types';
-import { formatNZD } from '@/lib/utils';
 import { requestsService } from '@/services/requestsService';
+import { formatNZD, formatDate } from '@/lib/utils';
 import {
   Plane,
   Ship,
-  ShieldCheck,
   CheckCircle2,
+  ShieldCheck,
+  Building2,
+  Car,
   Clock,
   ArrowRight,
-  Info,
-  MapPin,
-  FileCheck2,
-  AlertCircle,
-  X,
-  ChevronDown,
-  ChevronUp,
+  AlertTriangle,
+  Lock,
+  FileCheck,
 } from 'lucide-react';
+import { PaymentModal } from '@/components/ui/PaymentModal';
 
 export interface QuoteComparisonModalProps {
   isOpen: boolean;
   onClose: () => void;
-  request: PartRequest;
+  request: PartRequest | null;
   onApproved?: () => void;
 }
 
@@ -36,340 +35,247 @@ export function QuoteComparisonModal({
   request,
   onApproved,
 }: QuoteComparisonModalProps) {
-  const quoteOptions = request.quoteOptions || [];
-  
-  // Find recommended or first quote
-  const defaultOption = quoteOptions.find((q) => q.isRecommended) || quoteOptions[0];
-  
-  const [selectedQuoteId, setSelectedQuoteId] = useState<string>(
-    request.approvedQuoteId || defaultOption?.id || ''
-  );
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showBreakdown, setShowBreakdown] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
-  const [rejectMode, setRejectMode] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
-  const [isRejecting, setIsRejecting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successState, setSuccessState] = useState(false);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string>('');
+  const [confirmInfoChecked, setConfirmInfoChecked] = useState(false);
+  const [acceptTermsChecked, setAcceptTermsChecked] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [acceptedRequest, setAcceptedRequest] = useState<PartRequest | null>(null);
 
-  // Sync state when request changes
   React.useEffect(() => {
-    if (request.quoteOptions && request.quoteOptions.length > 0) {
-      setSelectedQuoteId(request.approvedQuoteId || request.quoteOptions[0].id);
+    if (request?.quoteOptions && request.quoteOptions.length > 0) {
+      const rec = request.quoteOptions.find((q) => q.isRecommended) || request.quoteOptions[0];
+      setSelectedQuoteId(rec.id);
     }
+    setConfirmInfoChecked(false);
+    setAcceptTermsChecked(false);
   }, [request]);
 
-  const selectedQuote = quoteOptions.find((q) => q.id === selectedQuoteId) || defaultOption;
+  if (!request) return null;
 
-  const handleApprove = async () => {
-    if (!termsAccepted) {
-      setErrorMsg('Please accept the Procurement Terms & Conditions to confirm your order.');
-      return;
-    }
-    if (!selectedQuoteId) return;
+  const quoteOptions = request.quoteOptions || [];
+  const selectedQuote = quoteOptions.find((q) => q.id === selectedQuoteId) || quoteOptions[0];
 
-    setErrorMsg('');
-    setIsApproving(true);
+  const handleAcceptAndContinue = async () => {
+    if (!confirmInfoChecked || !acceptTermsChecked) return;
+
+    setIsSubmitting(true);
     try {
-      await requestsService.approveQuote(request.id, selectedQuoteId);
-      setSuccessState(true);
-      setTimeout(() => {
-        if (onApproved) onApproved();
-        onClose();
-        setSuccessState(false);
-      }, 1400);
-    } catch (err) {
-      console.error(err);
-      setErrorMsg('An error occurred while confirming the quote.');
-    } finally {
-      setIsApproving(false);
-    }
-  };
+      const { request: updatedReq } = await requestsService.acceptQuote(request.id, selectedQuoteId, {
+        acceptedBy: 'James Wilson (AutoCare Auckland)',
+        termsVersion: 'v2.4-2026',
+      });
 
-  const handleReject = async () => {
-    setIsRejecting(true);
-    try {
-      await requestsService.rejectQuote(request.id, rejectReason);
+      setAcceptedRequest(updatedReq);
       if (onApproved) onApproved();
-      onClose();
-      setRejectMode(false);
+      // Open Payment Modal
+      setPaymentModalOpen(true);
     } catch (err) {
       console.error(err);
     } finally {
-      setIsRejecting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const deliveryAddr = request.deliveryAddress || {
-    businessName: 'Premier Motors',
-    street: '45 Great South Rd',
-    suburb: 'Penrose',
-    city: 'Auckland',
+  const handlePaymentCompleted = () => {
+    setPaymentModalOpen(false);
+    onClose();
   };
-
-  const primaryPart = request.parts[0];
-  const partDisplay = primaryPart
-    ? `${primaryPart.name}${primaryPart.conditionRequired ? ` (${primaryPart.conditionRequired})` : primaryPart.qualityPreference ? ` (${primaryPart.qualityPreference})` : ''}`
-    : request.title;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={`QUOTE REVIEW & FREIGHT SELECTION`}
-      description={`Reference: ${request.referenceNumber}`}
-      maxWidth="3xl"
-    >
-      <div className="space-y-5">
-        {/* Success Splash Animation */}
-        {successState && (
-          <div className="p-6 bg-emerald-50 border border-emerald-300 rounded-2xl text-center space-y-3 animate-fade-in">
-            <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center mx-auto shadow-md">
-              <CheckCircle2 className="w-7 h-7" />
+    <>
+      <Modal isOpen={isOpen && !paymentModalOpen} onClose={onClose} size="xl" title={`Review Landed Quotation — ${request.referenceNumber}`}>
+        <div className="space-y-6">
+          {/* 1. Header Overview Banner */}
+          <div className="p-4 bg-slate-900 text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-800">
+                  {request.referenceNumber}
+                </span>
+                <span className="text-xs text-slate-300">
+                  Vehicle: {request.vehicle.year} {request.vehicle.make} {request.vehicle.model}
+                </span>
+              </div>
+              <h3 className="text-base font-black text-white mt-1">
+                {request.parts[0]?.name || request.title}
+              </h3>
+              <p className="text-[11px] text-slate-400 font-mono">
+                VIN: {request.vehicle.vin} • Qty: {request.parts[0]?.quantity || 1} • {request.parts[0]?.qualityPreference || 'Genuine OEM'}
+              </p>
             </div>
-            <h3 className="text-lg font-black text-emerald-900">
-              Quote Confirmed & Trade Payment Processed!
-            </h3>
-            <p className="text-xs text-emerald-700 max-w-md mx-auto">
-              Total <strong>{formatNZD(selectedQuote?.totalLandedCostNZD || 0)} NZD</strong> charged to Premier Motors NZ trade account. Overseas packaging and export customs clearance initiated.
-            </p>
+            <div className="text-left sm:text-right shrink-0">
+              <span className="text-[10px] font-bold text-slate-400 uppercase block">Total Landed Price:</span>
+              <span className="text-2xl font-black text-white tracking-tight">
+                {selectedQuote ? formatNZD(selectedQuote.totalLandedCostNZD) : '--'}
+              </span>
+              <span className="text-[10px] text-emerald-400 block font-semibold">Inc. Freight, Customs, GST</span>
+            </div>
           </div>
-        )}
 
-        {!successState && (
-          <>
-            {/* Top Detail Card */}
-            <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-card border border-slate-800 space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-black uppercase tracking-wider text-red-400 bg-red-950/80 px-2.5 py-0.5 rounded border border-red-800">
-                  REQUEST DETAILED QUOTE: {request.referenceNumber}
-                </span>
-                <span className="text-[11px] font-bold text-slate-400">
-                  Sourced by Autohub Global
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1 border-t border-slate-800 text-xs">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Vehicle:</span>
-                  <span className="font-bold text-white">
-                    {request.vehicle.make} {request.vehicle.model} {request.vehicle.year}{' '}
-                    <span className="font-mono text-slate-300 text-[11px]">(VIN: {request.vehicle.vin})</span>
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Requested Part:</span>
-                  <span className="font-bold text-white">
-                    {partDisplay}
-                  </span>
-                </div>
-              </div>
+          {/* 2. Freight Selection Cards */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-black text-slate-900 uppercase tracking-wider">
+                Select Freight Method:
+              </label>
+              <span className="text-[11px] text-slate-500 font-medium">All options include door-to-door delivery</span>
             </div>
 
-            {/* FREIGHT SELECTION Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-[#ed2025]" />
-                  FREIGHT SELECTION (Choose Shipping Option):
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowBreakdown(!showBreakdown)}
-                  className="text-[11px] font-semibold text-brand-blue hover:underline flex items-center gap-1"
-                >
-                  <span>{showBreakdown ? 'Hide cost breakdown' : 'Show itemized breakdown'}</span>
-                  {showBreakdown ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                </button>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {quoteOptions.map((opt) => {
+                const isSelected = opt.id === selectedQuoteId;
+                const isAir = opt.type === 'air' || opt.type === 'air_express';
 
-              {/* Freight Radio Options */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {quoteOptions.map((opt) => {
-                  const isSelected = selectedQuoteId === opt.id;
-                  const isAir = opt.type === 'air_express' || opt.type === 'air_standard';
-                  const titleLabel = isAir ? 'AIR FREIGHT - FASTEST' : 'SEA FREIGHT - ECONOMY';
-                  const badgeColor = isAir ? 'bg-red-100 text-red-800 border-red-200' : 'bg-blue-100 text-blue-800 border-blue-200';
+                return (
+                  <div
+                    key={opt.id}
+                    onClick={() => setSelectedQuoteId(opt.id)}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all relative ${
+                      isSelected
+                        ? 'border-[#ed2025] bg-red-50/20 ring-2 ring-red-100 shadow-md'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    {opt.isRecommended && (
+                      <span className="absolute top-3 right-3 text-[10px] font-black uppercase tracking-wider bg-[#ed2025] text-white px-2.5 py-0.5 rounded-full shadow-sm">
+                        Recommended
+                      </span>
+                    )}
 
-                  return (
-                    <div
-                      key={opt.id}
-                      onClick={() => setSelectedQuoteId(opt.id)}
-                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
-                        isSelected
-                          ? 'border-[#ed2025] bg-red-50/20 ring-2 ring-red-100 shadow-md'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="radio"
-                            name="freightOption"
-                            checked={isSelected}
-                            onChange={() => setSelectedQuoteId(opt.id)}
-                            className="w-4 h-4 text-[#ed2025] focus:ring-[#ed2025] cursor-pointer"
-                          />
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-black text-slate-900 tracking-tight">
-                                {titleLabel}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-500 mt-0.5">
-                              Transit Time: <strong>{opt.transitDays}</strong>
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className={`p-2 rounded-xl ${isAir ? 'bg-red-50 text-[#ed2025]' : 'bg-blue-50 text-brand-blue'}`}>
-                          {isAir ? <Plane className="w-4 h-4" /> : <Ship className="w-4 h-4" />}
-                        </div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                          isAir ? 'bg-red-50 text-[#ed2025]' : 'bg-blue-50 text-brand-blue'
+                        }`}
+                      >
+                        {isAir ? <Plane className="w-5 h-5" /> : <Ship className="w-5 h-5" />}
                       </div>
-
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-baseline justify-between">
-                        <div>
-                          <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Landed Price:</span>
-                          <span className="text-xl font-black text-slate-900">
-                            {formatNZD(opt.totalLandedCostNZD)} NZD
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                          Inc. Freight, Customs, GST
-                        </span>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900">{opt.name}</h4>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          Estimated delivery: <strong>{opt.transitDays}</strong>
+                        </p>
                       </div>
-
-                      {/* Expandable Breakdown */}
-                      {showBreakdown && (
-                        <div className="mt-3 pt-3 border-t border-slate-100 text-[11px] space-y-1 text-slate-600 bg-slate-50 p-2.5 rounded-lg">
-                          <div className="flex justify-between">
-                            <span>Part Sourcing Cost:</span>
-                            <span className="font-semibold text-slate-800">{formatNZD(opt.partCostNZD)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>International Freight:</span>
-                            <span className="font-semibold text-slate-800">{formatNZD(opt.freightCostNZD)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>NZ Customs & MPI:</span>
-                            <span className="font-semibold text-slate-800">{formatNZD(opt.dutiesAndBiosecurityNZD)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span>NZ GST (15%):</span>
-                            <span className="font-semibold text-slate-800">{formatNZD(opt.gstNZD)}</span>
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  );
-                })}
+
+                    <div className="mt-2 pt-2 border-t border-slate-100 flex items-baseline justify-between">
+                      <span className="text-xs text-slate-500">Total Landed:</span>
+                      <span className="text-lg font-black text-slate-900">
+                        {formatNZD(opt.totalLandedCostNZD)}
+                      </span>
+                    </div>
+
+                    {opt.notes && (
+                      <p className="text-[10px] text-slate-500 mt-2 bg-slate-50 p-2 rounded-lg border border-slate-200/60">
+                        {opt.notes}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 3. Transparent Landed Cost Breakdown (Strictly Customer Visible) */}
+          {selectedQuote && (
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                  Cost Breakdown — {selectedQuote.name}
+                </span>
+                <span className="text-[10px] font-bold text-slate-500">Guaranteed Landed Price (NZD)</span>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex justify-between text-slate-700">
+                  <span>Part Specification Cost:</span>
+                  <span className="font-mono font-semibold">{formatNZD(selectedQuote.partCostNZD)}</span>
+                </div>
+                <div className="flex justify-between text-slate-700">
+                  <span>International & Regional Freight:</span>
+                  <span className="font-mono font-semibold">{formatNZD(selectedQuote.freightCostNZD)}</span>
+                </div>
+                <div className="flex justify-between text-slate-700">
+                  <span>Procurement & Logistics Coordination Service:</span>
+                  <span className="font-mono font-semibold">{formatNZD(selectedQuote.procurementServiceNZD || 50.0)}</span>
+                </div>
+                <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-black text-slate-900">
+                  <span>TOTAL LANDED (Door-to-Door):</span>
+                  <span className="font-mono text-base text-[#ed2025]">{formatNZD(selectedQuote.totalLandedCostNZD)}</span>
+                </div>
               </div>
             </div>
+          )}
 
-            {/* DELIVERY ADDRESS Section */}
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start gap-3 text-xs">
-              <MapPin className="w-4 h-4 text-brand-blue shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold text-slate-900 block">DELIVERY ADDRESS:</span>
-                <span className="text-slate-700">
-                  {deliveryAddr.businessName}, {deliveryAddr.street}, {deliveryAddr.city}
-                </span>
-                <span className="text-[10px] text-slate-500 block mt-0.5">
-                  Direct courier to workshop • Lift and loading dock verified
-                </span>
-              </div>
+          {/* 4. Verification Checkboxes & Acceptance */}
+          <div className="p-4 bg-white rounded-2xl border border-slate-200 space-y-3">
+            <div className="flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-wider">
+              <FileCheck className="w-4 h-4 text-brand-blue" />
+              <span>Confirm Your Procurement</span>
             </div>
 
-            {/* Terms & Conditions Checkbox */}
-            <div className="p-3.5 rounded-xl border border-slate-200 bg-white space-y-2">
-              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+            <div className="space-y-2.5 pt-1">
+              <label className="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={termsAccepted}
-                  onChange={(e) => {
-                    setTermsAccepted(e.target.checked);
-                    if (e.target.checked) setErrorMsg('');
-                  }}
-                  className="w-4 h-4 rounded text-[#ed2025] focus:ring-[#ed2025] mt-0.5 cursor-pointer"
+                  checked={confirmInfoChecked}
+                  onChange={(e) => setConfirmInfoChecked(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-300 text-[#ed2025] focus:ring-[#ed2025]"
                 />
-                <span className="text-xs text-slate-800 leading-snug">
-                  I accept the <strong>Procurement Terms & Conditions</strong> and authorize Procurly / Autohub NZ to charge my trade credit account on dispatch.
+                <span>
+                  I confirm the vehicle information ({request.vehicle.year} {request.vehicle.make} {request.vehicle.model}, VIN {request.vehicle.vin}) and requested part specifications are correct.
                 </span>
               </label>
 
-              {errorMsg && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-red-600 pl-6">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
+              <label className="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={acceptTermsChecked}
+                  onChange={(e) => setAcceptTermsChecked(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-300 text-[#ed2025] focus:ring-[#ed2025]"
+                />
+                <span>
+                  I accept the <strong>Procurly Procurement Terms & Conditions</strong> and authorize Autohub to coordinate overseas procurement on behalf of <strong>AutoCare Auckland</strong>.
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* 5. Footer Actions */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-100">
+            <div className="flex items-center gap-2 text-[11px] text-slate-500">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Records user James Wilson • Timestamp • Quote version</span>
             </div>
 
-            {/* Reject Form (if triggered) */}
-            {rejectMode && (
-              <div className="p-4 rounded-xl bg-red-50 border border-red-200 space-y-3 animate-fade-in">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-red-900">Reason for Rejecting Quote</h4>
-                  <button
-                    type="button"
-                    onClick={() => setRejectMode(false)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <textarea
-                  rows={2}
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="e.g. Sourced locally, price exceeds budget, customer declined job..."
-                  className="w-full text-xs p-2.5 rounded-lg border border-red-300 bg-white focus:outline-none focus:border-red-500"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => setRejectMode(false)}>
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 border-red-300 hover:bg-red-100"
-                    isLoading={isRejecting}
-                    onClick={handleReject}
-                  >
-                    Confirm Rejection
-                  </Button>
-                </div>
-              </div>
-            )}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Button variant="outline" size="md" onClick={onClose} disabled={isSubmitting}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                disabled={!confirmInfoChecked || !acceptTermsChecked || isSubmitting}
+                isLoading={isSubmitting}
+                onClick={handleAcceptAndContinue}
+                className="bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-6 shadow-md"
+              >
+                Accept & Continue →
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
-            {/* Modal Bottom Actions */}
-            {!rejectMode && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setRejectMode(true)}
-                  className="text-xs font-bold text-slate-500 hover:text-red-600 py-2 px-3 transition-colors"
-                >
-                  [ Reject Quote ]
-                </button>
-
-                <Button
-                  variant="primary"
-                  size="lg"
-                  isLoading={isApproving}
-                  onClick={handleApprove}
-                  className={`w-full sm:w-auto font-black text-xs uppercase tracking-wider px-6 py-3 shadow-lg transition-all ${
-                    termsAccepted ? 'bg-[#ed2025] hover:bg-[#d3181d]' : 'opacity-90'
-                  }`}
-                >
-                  CONFIRM & PAY {selectedQuote ? formatNZD(selectedQuote.totalLandedCostNZD) : '$385.00'}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </Modal>
+      {/* Linked Payment Modal on Acceptance */}
+      <PaymentModal
+        isOpen={paymentModalOpen}
+        onClose={handlePaymentCompleted}
+        payment={null}
+        request={acceptedRequest || request}
+        onPaymentSuccess={handlePaymentCompleted}
+      />
+    </>
   );
 }

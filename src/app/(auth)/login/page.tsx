@@ -10,7 +10,7 @@ import { requestsService } from '@/services/requestsService';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('dave@premiermotors.co.nz');
+  const [email, setEmail] = useState('james@autocareauckland.co.nz');
   const [password, setPassword] = useState('••••••••••••');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,32 +23,24 @@ export default function LoginPage() {
     }, 400);
   };
 
-  const handleQuickDemo = async (type: 'premier' | 'apex') => {
+  const handleQuickDemo = async (type: 'autocare' | 'apex') => {
     setIsLoading(true);
-    if (type === 'premier') {
+    if (type === 'autocare') {
       await requestsService.resetToDefaults();
     } else {
-      await requestsService.updateTradeAccount({
+      await requestsService.updateCompanyProfile({
         legalBusinessName: 'Apex Precision Automotive Group Ltd',
         tradingName: 'Apex Euro & Japanese Specialists',
         businessType: 'Collision Repairer',
         nzbn: '9429048291034',
-        deliverySetup: {
-          street: '18 Church Street',
-          suburb: 'Onehunga',
-          city: 'Auckland',
-          postcode: '1061',
-          hasForklift: true,
-          hasLoadingDock: true,
-          openingHours: 'Mon-Fri 7:00 AM - 5:30 PM',
-        },
+        branchCount: 2,
       });
     }
     router.push('/dashboard');
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden font-sans">
       {/* Background aesthetic glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-brand-blue/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-brand-red/10 blur-[100px] pointer-events-none" />
@@ -60,9 +52,9 @@ export default function LoginPage() {
             <Box className="w-6 h-6 stroke-[2.5]" />
           </div>
           <div className="text-left">
-            <span className="text-2xl font-black text-white tracking-tight block">Procurly</span>
+            <span className="text-2xl font-black text-white tracking-tight block">PROCURly</span>
             <span className="text-xs font-bold text-brand-blue-subtle uppercase tracking-widest block -mt-1">
-              Trade Portal by Autohub
+              Customer Portal by Autohub
             </span>
           </div>
         </Link>
@@ -116,7 +108,7 @@ export default function LoginPage() {
               className="w-full font-bold text-xs tracking-wide shadow-md bg-[#ed2025] hover:bg-[#d3181d] text-white"
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
-              Sign In (Premier Motors NZ)
+              Sign In (AutoCare Auckland)
             </Button>
           </form>
 
@@ -128,14 +120,14 @@ export default function LoginPage() {
             <div className="grid grid-cols-1 gap-2">
               <button
                 type="button"
-                onClick={() => handleQuickDemo('premier')}
+                onClick={() => handleQuickDemo('autocare')}
                 className="w-full p-2.5 rounded-lg border border-red-200 bg-red-50/40 hover:bg-red-50 hover:border-red-300 flex items-center justify-between text-left transition-all text-xs"
               >
                 <div className="flex items-center gap-2.5">
                   <Wrench className="w-4 h-4 text-[#ed2025]" />
                   <div>
-                    <span className="font-bold text-slate-900 block">Premier Motors NZ</span>
-                    <span className="text-[10px] text-slate-500">45 Great South Rd, Auckland • Active Requests (8)</span>
+                    <span className="font-bold text-slate-900 block">AutoCare Auckland</span>
+                    <span className="text-[10px] text-slate-500">12 Example Street, Penrose • Active Requests (8)</span>
                   </div>
                 </div>
                 <ArrowRight className="w-3.5 h-3.5 text-[#ed2025]" />

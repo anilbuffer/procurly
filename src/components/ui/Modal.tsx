@@ -11,6 +11,7 @@ export interface ModalProps {
   description?: string;
   children: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl';
 }
 
 export function Modal({
@@ -19,7 +20,8 @@ export function Modal({
   title,
   description,
   children,
-  maxWidth = 'lg',
+  maxWidth,
+  size,
 }: ModalProps) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -40,6 +42,8 @@ export function Modal({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  const resolvedWidth = size || maxWidth || 'lg';
 
   const maxWidths = {
     sm: 'max-w-sm',
@@ -63,7 +67,7 @@ export function Modal({
       <div
         className={cn(
           'relative w-full bg-white rounded-2xl shadow-2xl border border-slate-200 z-10 overflow-hidden animate-slide-up my-8',
-          maxWidths[maxWidth]
+          maxWidths[resolvedWidth]
         )}
       >
         {(title || description) && (

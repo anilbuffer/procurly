@@ -1,16 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { requestsService } from '@/services/requestsService';
-import { PartQualityPreference, PartConditionPreference, UrgencyLevel } from '@/types';
+import {
+  PartQualityPreference,
+  PartConditionPreference,
+  PartCondition,
+  DeliveryAddress,
+  PartRequest,
+} from '@/types';
 import {
   Car,
   FileCheck,
-  Camera,
   UploadCloud,
   X,
   Sparkles,
@@ -19,9 +23,13 @@ import {
   Plus,
   Minus,
   FileText,
-  Info,
   ArrowRight,
+  ArrowLeft,
+  Building2,
   ShieldCheck,
+  MapPin,
+  Clock,
+  Layers,
 } from 'lucide-react';
 
 const PRESET_VEHICLES = [
@@ -37,35 +45,21 @@ const PRESET_VEHICLES = [
     transmission: 'Automatic',
     partName: 'Left Front Lower Control Arm',
     partOEM: '48069-26150',
-    notes: 'Must include bushings and lower ball joint intact.',
+    notes: 'Must include factory rubber bushings and lower ball joint intact.',
   },
   {
-    label: 'Nissan Leaf 2021',
-    make: 'Nissan',
-    model: 'Leaf',
+    label: 'Mazda CX-5 2021',
+    make: 'Mazda',
+    model: 'CX-5',
     year: 2021,
-    vin: 'ZE1-0428910000000',
-    rego: 'NPL419',
-    engine: 'EM57 Electric Motor',
-    variant: 'e+ G 62kWh',
-    transmission: 'EV / Direct Drive',
-    partName: 'Headlight Assembly (RHS)',
-    partOEM: '26010-5SK0A',
+    vin: 'JM7KF2W7A00192837',
+    rego: 'MZD521',
+    engine: 'PY-VPS 2.5L AWD',
+    variant: 'GSX',
+    transmission: 'Automatic',
+    partName: 'Front Headlamp (LED Projector RHS)',
+    partOEM: 'KB8A-51-031',
     notes: 'Auto-leveling LED type with integrated DRL.',
-  },
-  {
-    label: 'Subaru Outback 2018',
-    make: 'Subaru',
-    model: 'Outback',
-    year: 2018,
-    vin: 'JF1BS99C8K0182741',
-    rego: 'LQE384',
-    engine: 'FB25 2.5L Boxer',
-    variant: '2.5i Premium AWD',
-    transmission: 'CVT (Continuously Variable)',
-    partName: 'Rear Axle Assembly',
-    partOEM: '28411-AL010',
-    notes: 'Zero backlash required on differential.',
   },
   {
     label: 'Ford Ranger 2022',
@@ -75,31 +69,21 @@ const PRESET_VEHICLES = [
     vin: 'MNAEY0FF8NW601934',
     rego: 'PRG902',
     engine: 'YN2X 2.0L Bi-Turbo',
-    variant: 'Wildtrak Bi-Turbo 4x4',
+    variant: 'Wildtrak 4x4',
     transmission: 'Automatic',
     partName: 'Bi-Turbo Intercooler Assembly',
     partOEM: 'JB3G-9L440-BD',
-    notes: 'Include cold side outlet hose if available.',
+    notes: 'Include cold side outlet hose.',
   },
-];
-
-const SUGGESTED_PARTS = [
-  'Left Front Lower Control Arm',
-  'Headlight Assembly (RHS)',
-  'Rear Axle Assembly',
-  'Intercooler Core Assembly',
-  'High-Voltage On-Board Charger (OBC)',
-  'Power Steering Rack',
-  'Electronic Damping Control Strut',
-  'Brake Caliper Assembly',
 ];
 
 export function NewPartRequestWizard() {
   const router = useRouter();
+  const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [submittedRequest, setSubmittedRequest] = useState<PartRequest | null>(null);
 
-  // Section A: Vehicle Details
+  // Step 01 — Vehicle Details
   const [vehicle, setVehicle] = useState({
     make: 'Toyota',
     model: 'Hiace',
@@ -109,40 +93,89 @@ export function NewPartRequestWizard() {
     engineCode: '1KD-FTV',
     subModel: 'ZX Grand Cabin',
     transmission: 'Automatic',
+    driveConfiguration: 'RWD',
   });
 
-  // Section B: Part Specifications
+  // Step 02 — Part Specification
   const [part, setPart] = useState({
     name: 'Left Front Lower Control Arm',
     partNumber: '48069-26150',
     quantity: 1,
-    qualityPreference: 'Genuine OEM' as PartQualityPreference,
-    conditionPreference: 'New Only' as PartConditionPreference,
+    qualityPreference: 'Genuine' as PartQualityPreference,
+    aftermarketPreference: 'No Preference',
+    conditionRequirement: 'New' as PartCondition,
   });
 
-  // Section C: Media & Attachments
+  // Step 03 — Supporting Information
   const [attachments, setAttachments] = useState<
     { id: string; name: string; size: string; type: string; url: string }[]
   >([
     {
       id: 'att_1',
-      name: 'suspension_damage_lh.jpg',
-      size: '2.4 MB',
+      name: 'control_arm_schematic.jpg',
+      size: '1.8 MB',
       type: 'image/jpeg',
       url: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=400&q=80',
     },
     {
       id: 'att_2',
-      name: 'vin_compliance_plate.png',
-      size: '1.1 MB',
+      name: 'chassis_vin_plate.png',
+      size: '1.2 MB',
       type: 'image/png',
       url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=400&q=80',
     },
   ]);
-  const [customerNotes, setCustomerNotes] = useState('Must include bushings and lower ball joint intact.');
+  const [additionalNotes, setAdditionalNotes] = useState(
+    'Must include factory rubber bushings and lower ball joint intact.'
+  );
 
-  // Errors
+  // Step 04 — Delivery Address
+  const [savedAddresses, setSavedAddresses] = useState<DeliveryAddress[]>([
+    {
+      id: 'addr_1',
+      businessName: 'Auckland Branch',
+      street: '12 Example Street',
+      suburb: 'Penrose',
+      city: 'Auckland',
+      postcode: '1061',
+      country: 'New Zealand',
+      isDefault: true,
+      hasForklift: true,
+      hasLoadingDock: true,
+    },
+    {
+      id: 'addr_2',
+      businessName: 'North Shore Service Hub',
+      street: '88 Bush Road',
+      suburb: 'Rosedale',
+      city: 'Auckland',
+      postcode: '0632',
+      country: 'New Zealand',
+      isDefault: false,
+      hasForklift: true,
+      hasLoadingDock: false,
+    },
+  ]);
+  const [selectedAddressId, setSelectedAddressId] = useState('addr_1');
+  const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
+  const [newAddressForm, setNewAddressForm] = useState({
+    businessName: '',
+    street: '',
+    suburb: '',
+    city: 'Auckland',
+    postcode: '',
+  });
+
+  // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const steps = [
+    { num: 1, label: '01 Vehicle' },
+    { num: 2, label: '02 Part' },
+    { num: 3, label: '03 Supporting Info' },
+    { num: 4, label: '04 Delivery' },
+    { num: 5, label: '05 Review' },
+  ];
 
   const handleApplyPreset = (preset: (typeof PRESET_VEHICLES)[0]) => {
     setVehicle({
@@ -154,665 +187,960 @@ export function NewPartRequestWizard() {
       engineCode: preset.engine,
       subModel: preset.variant,
       transmission: preset.transmission,
+      driveConfiguration: 'RWD',
     });
     setPart((prev) => ({
       ...prev,
       name: preset.partName,
       partNumber: preset.partOEM,
     }));
-    setCustomerNotes(preset.notes);
+    setAdditionalNotes(preset.notes);
     setErrors({});
   };
 
-  const handleVinChange = (val: string) => {
-    // Sanitize to uppercase alphanumeric
-    const clean = val.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-    setVehicle((prev) => ({ ...prev, vin: clean }));
-    if (errors.vin) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next.vin;
-        return next;
-      });
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFiles(Array.from(e.dataTransfer.files));
-    }
-  };
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFiles(Array.from(e.target.files));
-    }
-  };
-
-  const handleFiles = (files: File[]) => {
-    const newItems = files.map((file, idx) => ({
-      id: `att_${Date.now()}_${idx}`,
-      name: file.name,
-      size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-      type: file.type,
-      url: URL.createObjectURL(file),
-    }));
-    setAttachments((prev) => [...prev, ...newItems]);
-  };
-
-  const removeAttachment = (id: string) => {
-    setAttachments((prev) => prev.filter((a) => a.id !== id));
-  };
-
-  const validateForm = () => {
+  const validateStep = (step: number) => {
     const errs: Record<string, string> = {};
-    if (!vehicle.make.trim()) errs.make = 'Make is required';
-    if (!vehicle.model.trim()) errs.model = 'Model is required';
-    if (!vehicle.year) errs.year = 'Year is required';
-    if (!vehicle.vin.trim()) {
-      errs.vin = 'Full 17-character VIN or Chassis number is required';
-    } else if (vehicle.vin.length < 9) {
-      errs.vin = 'VIN or Chassis number must be valid';
+    if (step === 1) {
+      if (!vehicle.make.trim()) errs.make = 'Vehicle Make is required';
+      if (!vehicle.model.trim()) errs.model = 'Vehicle Model is required';
+      if (!vehicle.year) errs.year = 'Vehicle Year is required';
+      if (!vehicle.vin.trim()) {
+        errs.vin = 'VIN / Chassis number is required for accurate EPC fitment';
+      } else if (vehicle.vin.length < 8) {
+        errs.vin = 'Please enter a valid VIN or chassis number';
+      }
+    } else if (step === 2) {
+      if (!part.name.trim()) errs.partName = 'Part Name is required';
+      if (part.quantity < 1) errs.quantity = 'Quantity must be at least 1';
     }
-
-    if (!part.name.trim()) errs.partName = 'Part Name / Title is required';
-    if (part.quantity < 1) errs.quantity = 'Quantity must be at least 1';
-
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) {
+  const handleNext = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep((prev) => Math.min(5, prev + 1));
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
     }
+  };
 
+  const handleBack = () => {
+    setCurrentStep((prev) => Math.max(1, prev - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      const newItems = files.map((file, idx) => ({
+        id: `att_${Date.now()}_${idx}`,
+        name: file.name,
+        size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        type: file.type,
+        url: URL.createObjectURL(file),
+      }));
+      setAttachments((prev) => [...prev, ...newItems]);
+    }
+  };
+
+  const handleSaveNewAddress = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAddressForm.businessName || !newAddressForm.street || !newAddressForm.city) return;
+
+    const newAddr: DeliveryAddress = {
+      id: `addr_${Date.now()}`,
+      businessName: newAddressForm.businessName,
+      street: newAddressForm.street,
+      suburb: newAddressForm.suburb,
+      city: newAddressForm.city,
+      postcode: newAddressForm.postcode,
+      country: 'New Zealand',
+      isDefault: false,
+    };
+
+    setSavedAddresses((prev) => [...prev, newAddr]);
+    setSelectedAddressId(newAddr.id!);
+    setIsAddingNewAddress(false);
+    setNewAddressForm({ businessName: '', street: '', suburb: '', city: 'Auckland', postcode: '' });
+  };
+
+  const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const account = await requestsService.getTradeAccount();
+      const chosenAddress = savedAddresses.find((a) => a.id === selectedAddressId) || savedAddresses[0];
 
       const created = await requestsService.createRequest({
-        title: `${part.name} (${part.qualityPreference})`,
+        title: part.name,
         urgency: 'Urgent',
         vehicle: {
           make: vehicle.make,
           model: vehicle.model,
           year: Number(vehicle.year),
-          vin: vehicle.vin,
-          regoNumber: vehicle.regoNumber || undefined,
+          vin: vehicle.vin.toUpperCase(),
+          regoNumber: vehicle.regoNumber ? vehicle.regoNumber.toUpperCase() : undefined,
           engineCode: vehicle.engineCode || undefined,
           subModel: vehicle.subModel || undefined,
           transmission: vehicle.transmission || undefined,
+          driveConfiguration: vehicle.driveConfiguration || undefined,
           originMarket: 'Japan',
         },
         parts: [
           {
             id: `p_${Date.now()}`,
             name: part.name,
-            partNumber: part.partNumber || undefined,
+            partNumber: part.partNumber ? part.partNumber.toUpperCase() : undefined,
             quantity: part.quantity,
             qualityPreference: part.qualityPreference,
-            conditionPreference: part.conditionPreference,
-            conditionRequired: part.conditionPreference === 'New Only' ? 'New OEM' : 'Grade A Used',
-            description: customerNotes,
+            conditionPreference: part.conditionRequirement === 'New' ? 'New Only' : 'Used Acceptable',
+            conditionRequired: part.conditionRequirement,
+            description: additionalNotes,
             damagePhotos: attachments.map((a) => a.url),
           },
         ],
         deliveryAddress: {
-          businessName: account.legalBusinessName || 'Premier Motors NZ',
-          street: account.deliverySetup?.street || '45 Great South Rd',
-          suburb: account.deliverySetup?.suburb || 'Penrose',
-          city: account.deliverySetup?.city || 'Auckland',
-          postcode: account.deliverySetup?.postcode || '1061',
-          hasForklift: account.deliverySetup?.hasForklift ?? true,
-          hasLoadingDock: account.deliverySetup?.hasLoadingDock ?? true,
-          deliveryNotes: 'Direct courier delivery to workshop.',
+          businessName: chosenAddress.businessName,
+          street: chosenAddress.street,
+          suburb: chosenAddress.suburb,
+          city: chosenAddress.city,
+          postcode: chosenAddress.postcode,
+          hasForklift: chosenAddress.hasForklift ?? true,
+          hasLoadingDock: chosenAddress.hasLoadingDock ?? true,
+          deliveryNotes: 'AutoCare Auckland Workshop Inwards',
         },
       });
 
-      router.push(`/requests/${created.id}`);
+      setSubmittedRequest(created);
     } catch (err) {
       console.error(err);
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Top Header & Fast Preset Bar */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-card space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black uppercase tracking-wider bg-red-100 text-[#ed2025] px-2.5 py-0.5 rounded-full border border-red-200">
-                Fitment Verified Engine
-              </span>
-              <span className="text-xs text-slate-500 font-medium">Autohub Direct Procurement</span>
-            </div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">
-              Submit Part Request
-            </h1>
-            <p className="text-xs text-slate-600">
-              Structured 3-step engine designed to eliminate fitment mismatch and calculate instant landed NZD quotes.
-            </p>
-          </div>
-
-          {/* Quick Presets */}
-          <div className="space-y-1 sm:text-right">
-            <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 sm:justify-end">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Autofill Sample Fleet Vehicle:
-            </span>
-            <div className="flex flex-wrap gap-1.5 sm:justify-end">
-              {PRESET_VEHICLES.map((p) => (
-                <button
-                  key={p.label}
-                  type="button"
-                  onClick={() => handleApplyPreset(p)}
-                  className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-brand-blue hover:text-white transition-all border border-slate-200"
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
+  // SUCCESS STATE VIEW
+  if (submittedRequest) {
+    return (
+      <div className="bg-white rounded-2xl p-8 sm:p-12 border border-slate-200 shadow-card text-center space-y-6 max-w-2xl mx-auto animate-slide-up">
+        <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-md">
+          <CheckCircle2 className="w-10 h-10 stroke-[2.5]" />
         </div>
-      </div>
 
-      {/* SECTION A: VEHICLE DETAILS */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-card space-y-6">
-        <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-brand-blue text-white flex items-center justify-center font-bold text-xs shadow-sm">
-              A
-            </div>
-            <div>
-              <h2 className="text-base font-black text-slate-900 tracking-tight">
-                Section A: Vehicle Details
-              </h2>
-              <p className="text-xs text-slate-500">
-                Mandatory fitment specifications and chassis identifiers
-              </p>
-            </div>
-          </div>
-          <span className="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full border border-red-200">
-            * Mandatory Fields Required
+        <div className="space-y-2">
+          <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+            Request Submitted
           </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Make */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              Make <span className="text-[#ed2025]">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Toyota, Nissan, Subaru"
-              value={vehicle.make}
-              onChange={(e) => setVehicle({ ...vehicle, make: e.target.value })}
-              className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
-                errors.make
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                  : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
-              }`}
-            />
-            {errors.make && <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.make}</p>}
-          </div>
-
-          {/* Model */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              Model <span className="text-[#ed2025]">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Hiace, Leaf, Outback"
-              value={vehicle.model}
-              onChange={(e) => setVehicle({ ...vehicle, model: e.target.value })}
-              className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
-                errors.model
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                  : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
-              }`}
-            />
-            {errors.model && <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.model}</p>}
-          </div>
-
-          {/* Year */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              Year <span className="text-[#ed2025]">*</span>
-            </label>
-            <select
-              value={vehicle.year}
-              onChange={(e) => setVehicle({ ...vehicle, year: Number(e.target.value) })}
-              className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-blue-100"
-            >
-              {Array.from({ length: 27 }, (_, i) => 2026 - i).map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* VIN / Chassis Number with Character Count */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-bold text-slate-800">
-                Full 17-Character VIN / Chassis <span className="text-[#ed2025]">*</span>
-              </label>
-              <span
-                className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
-                  vehicle.vin.length === 17
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : vehicle.vin.length > 0
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-slate-100 text-slate-500'
-                }`}
-              >
-                {vehicle.vin.length}/17
-              </span>
-            </div>
-            <input
-              type="text"
-              placeholder="e.g. JTEBR32P10029384"
-              value={vehicle.vin}
-              onChange={(e) => handleVinChange(e.target.value)}
-              className={`w-full px-3.5 py-2 text-xs font-mono rounded-xl border bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 uppercase tracking-wider ${
-                errors.vin
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                  : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
-              }`}
-            />
-            {errors.vin && <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.vin}</p>}
-          </div>
-        </div>
-
-        {/* Optional Sub-fields */}
-        <div className="pt-3 border-t border-slate-100">
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">
-            Optional Fitment Accuracy Details
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight">
+            Your parts request has been successfully submitted to Autohub.
+          </h2>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Our procurement team will begin reviewing your request and coordinate sourcing through our supplier network.
           </p>
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Registration Number */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Registration Number (NZ Plate)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. KMR892"
-                value={vehicle.regoNumber}
-                onChange={(e) => setVehicle({ ...vehicle, regoNumber: e.target.value.toUpperCase() })}
-                className="w-full px-3.5 py-2 text-xs uppercase font-mono rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-blue"
-              />
-            </div>
+        {/* Request Card Badge */}
+        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 max-w-sm mx-auto text-left space-y-2 text-xs">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Request Number:</span>
+            <span className="font-mono font-black text-slate-900">{submittedRequest.referenceNumber}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Vehicle:</span>
+            <span className="font-bold text-slate-900">
+              {submittedRequest.vehicle.year} {submittedRequest.vehicle.make} {submittedRequest.vehicle.model}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Part:</span>
+            <span className="font-semibold text-slate-800">{submittedRequest.parts[0]?.name}</span>
+          </div>
+          <div className="flex justify-between items-center pt-1 border-t border-slate-200">
+            <span className="text-slate-500">Status:</span>
+            <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+              Sourcing & Quote Ready
+            </span>
+          </div>
+        </div>
 
-            {/* Engine Code */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Engine Code
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. 1KD-FTV, FB25, EM57"
-                value={vehicle.engineCode}
-                onChange={(e) => setVehicle({ ...vehicle, engineCode: e.target.value })}
-                className="w-full px-3.5 py-2 text-xs font-mono rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-blue"
-              />
-            </div>
+        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link href={`/requests/${submittedRequest.id}`} className="w-full sm:w-auto">
+            <button
+              type="button"
+              className="w-full sm:w-auto bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-xl shadow-md"
+            >
+              View Request →
+            </button>
+          </Link>
+          <Link href="/requests" className="w-full sm:w-auto">
+            <Button variant="outline" size="md" className="w-full sm:w-auto text-xs font-bold">
+              Return to Requests List
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-            {/* Variant */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Variant / SubModel
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. ZX Grand Cabin, Wildtrak"
-                value={vehicle.subModel}
-                onChange={(e) => setVehicle({ ...vehicle, subModel: e.target.value })}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-blue"
-              />
-            </div>
+  return (
+    <div className="space-y-6">
+      {/* Top Header & Presets Bar */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-card flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase tracking-wider bg-red-100 text-[#ed2025] px-2 py-0.5 rounded-full border border-red-200">
+              Guided Sourcing Wizard
+            </span>
+            <span className="text-xs text-slate-500 font-medium">Autohub Customer Portal</span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">
+            New Part Request
+          </h1>
+          <p className="text-xs text-slate-500">
+            Precision 5-step procurement wizard for trade customers.
+          </p>
+        </div>
 
-            {/* Transmission type */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Transmission Type
-              </label>
-              <select
-                value={vehicle.transmission}
-                onChange={(e) => setVehicle({ ...vehicle, transmission: e.target.value })}
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:border-brand-blue"
+        {/* Quick Sample Presets */}
+        <div className="space-y-1 sm:text-right">
+          <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 sm:justify-end">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Autofill Trade Example:
+          </span>
+          <div className="flex flex-wrap gap-1.5 sm:justify-end">
+            {PRESET_VEHICLES.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => handleApplyPreset(p)}
+                className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-brand-blue hover:text-white transition-all border border-slate-200"
               >
-                <option value="Automatic">Automatic (Torque Converter)</option>
-                <option value="Manual">Manual</option>
-                <option value="CVT (Continuously Variable)">CVT (Continuously Variable)</option>
-                <option value="Dual-Clutch / DCT / DSG">Dual-Clutch / DCT / DSG</option>
-                <option value="EV / Direct Drive">EV / Direct Drive Single-Speed</option>
-              </select>
-            </div>
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* SECTION B: PART SPECIFICATIONS */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-card space-y-6">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-          <div className="w-8 h-8 rounded-xl bg-brand-blue text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            B
-          </div>
-          <div>
-            <h2 className="text-base font-black text-slate-900 tracking-tight">
-              Section B: Part Specifications
-            </h2>
-            <p className="text-xs text-slate-500">
-              Component naming, OEM factory codes, and quality grade preferences
-            </p>
-          </div>
-        </div>
+      {/* Progress Indicator: 01 Vehicle -> 02 Part -> 03 Supporting Info -> 04 Delivery -> 05 Review */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-card overflow-x-auto">
+        <div className="flex items-center justify-between min-w-[550px]">
+          {steps.map((s, idx) => {
+            const isCurrent = currentStep === s.num;
+            const isCompleted = currentStep > s.num;
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Part Name / Title */}
-          <div className="md:col-span-2 space-y-2">
-            <label className="block text-xs font-bold text-slate-800">
-              Part Name / Title <span className="text-[#ed2025]">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Left Front Lower Control Arm"
-              value={part.name}
-              onChange={(e) => setPart({ ...part, name: e.target.value })}
-              className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
-                errors.partName
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                  : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
-              }`}
-            />
-            {errors.partName && (
-              <p className="text-[11px] font-semibold text-red-600">{errors.partName}</p>
-            )}
-
-            {/* Quick Suggestions */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              <span className="text-[10px] text-slate-400 font-bold">Quick suggestions:</span>
-              {SUGGESTED_PARTS.slice(0, 4).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setPart({ ...part, name: s })}
-                  className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-0.5 rounded transition-colors"
+            return (
+              <React.Fragment key={s.num}>
+                <div
+                  onClick={() => s.num < currentStep && setCurrentStep(s.num)}
+                  className={`flex items-center gap-2 cursor-pointer transition-all ${
+                    isCurrent
+                      ? 'text-[#ed2025] font-black'
+                      : isCompleted
+                      ? 'text-emerald-700 font-bold'
+                      : 'text-slate-400 font-medium'
+                  }`}
                 >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Quantity Required */}
-          <div>
-            <label className="block text-xs font-bold text-slate-800 mb-2">
-              Quantity Required <span className="text-[#ed2025]">*</span>
-            </label>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPart({ ...part, quantity: Math.max(1, part.quantity - 1) })}
-                className="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700"
-              >
-                <Minus className="w-4 h-4" />
-              </button>
-              <input
-                type="number"
-                min="1"
-                max="99"
-                value={part.quantity}
-                onChange={(e) => setPart({ ...part, quantity: Math.max(1, Number(e.target.value)) })}
-                className="w-16 text-center font-bold text-xs py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:border-brand-blue"
-              />
-              <button
-                type="button"
-                onClick={() => setPart({ ...part, quantity: part.quantity + 1 })}
-                className="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Part OEM Number */}
-        <div>
-          <label className="block text-xs font-bold text-slate-800 mb-1">
-            Part OEM Number (If known)
-          </label>
-          <div className="relative max-w-md">
-            <input
-              type="text"
-              placeholder="e.g. 48069-26150, 26010-5SK0A"
-              value={part.partNumber}
-              onChange={(e) => setPart({ ...part, partNumber: e.target.value.toUpperCase() })}
-              className="w-full px-3.5 py-2 text-xs font-mono uppercase rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:border-brand-blue"
-            />
-          </div>
-          <p className="text-[11px] text-slate-500 mt-1">
-            If unknown, Autohub parts specialists will cross-reference with official factory EPC schematics using your VIN.
-          </p>
-        </div>
-
-        {/* Preference Radio Selectors */}
-        <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Quality Preference */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Quality Preference:
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(['Genuine OEM', 'Aftermarket', 'Reconditioned / Used'] as PartQualityPreference[]).map(
-                (q) => {
-                  const isChecked = part.qualityPreference === q;
-                  return (
-                    <label
-                      key={q}
-                      className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-all ${
-                        isChecked
-                          ? 'border-[#ed2025] bg-red-50/30 text-red-950 font-bold shadow-sm'
-                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="qualityPreference"
-                        checked={isChecked}
-                        onChange={() => setPart({ ...part, qualityPreference: q })}
-                        className="sr-only"
-                      />
-                      <span className="text-xs block">{q}</span>
-                    </label>
-                  );
-                }
-              )}
-            </div>
-          </div>
-
-          {/* Condition Preference */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Condition Preference:
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {(['New Only', 'Used Acceptable'] as PartConditionPreference[]).map((c) => {
-                const isChecked = part.conditionPreference === c;
-                return (
-                  <label
-                    key={c}
-                    className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-all ${
-                      isChecked
-                        ? 'border-brand-blue bg-blue-50/30 text-blue-950 font-bold shadow-sm'
-                        : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                      isCurrent
+                        ? 'bg-[#ed2025] text-white shadow-sm'
+                        : isCompleted
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
                     }`}
                   >
-                    <input
-                      type="radio"
-                      name="conditionPreference"
-                      checked={isChecked}
-                      onChange={() => setPart({ ...part, conditionPreference: c })}
-                      className="sr-only"
-                    />
-                    <span className="text-xs block">{c}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+                    {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : s.num}
+                  </div>
+                  <span className="text-xs whitespace-nowrap">{s.label}</span>
+                </div>
+                {idx < steps.length - 1 && (
+                  <div
+                    className={`flex-1 h-0.5 mx-3 transition-colors ${
+                      currentStep > s.num ? 'bg-emerald-400' : 'bg-slate-200'
+                    }`}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
 
-      {/* SECTION C: MEDIA & ATTACHMENTS */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-card space-y-6">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
-          <div className="w-8 h-8 rounded-xl bg-brand-blue text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            C
-          </div>
-          <div>
-            <h2 className="text-base font-black text-slate-900 tracking-tight">
-              Section C: Media & Attachments
-            </h2>
-            <p className="text-xs text-slate-500">
-              Drag-and-drop damage photos, VIN compliance plate, or schematics (.jpg, .png, .pdf)
-            </p>
-          </div>
-        </div>
-
-        {/* Drag and Drop Zone */}
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-2xl p-8 text-center transition-all ${
-            isDragging
-              ? 'border-[#ed2025] bg-red-50/50 scale-[1.01]'
-              : 'border-slate-300 bg-slate-50 hover:bg-slate-100/60'
-          }`}
-        >
-          <input
-            type="file"
-            id="fileUploader"
-            multiple
-            accept=".jpg,.jpeg,.png,.pdf"
-            onChange={handleFileInput}
-            className="sr-only"
-          />
-          <div className="max-w-sm mx-auto space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center mx-auto text-brand-blue">
-              <UploadCloud className="w-6 h-6" />
+      {/* STEP CONTENT CONTAINER */}
+      <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-card space-y-6">
+        {/* ================= STEP 01: VEHICLE ================= */}
+        {currentStep === 1 && (
+          <div className="space-y-6 animate-slide-up">
+            <div className="pb-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                  Step 01 — Tell us about the vehicle
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Required vehicle identification details for factory EPC parts cataloguing
+                </p>
+              </div>
+              <span className="text-[11px] font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-full border border-red-200">
+                * Required Fields
+              </span>
             </div>
-            <div>
-              <p className="text-xs font-bold text-slate-800">
-                Drag and drop files here, or{' '}
-                <label
-                  htmlFor="fileUploader"
-                  className="text-brand-blue hover:underline cursor-pointer font-bold"
-                >
-                  browse from device
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Make */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                  Make <span className="text-[#ed2025]">*</span>
                 </label>
-              </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Supports damage photos, VIN plate scans, or wiring schematics (.jpg, .png, .pdf up to 25MB)
-              </p>
-            </div>
-          </div>
-        </div>
+                <input
+                  type="text"
+                  placeholder="e.g. Toyota, Mazda, Ford"
+                  value={vehicle.make}
+                  onChange={(e) => setVehicle({ ...vehicle, make: e.target.value })}
+                  className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
+                    errors.make
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                      : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
+                  }`}
+                />
+                {errors.make && <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.make}</p>}
+              </div>
 
-        {/* Uploaded Files Preview List */}
-        {attachments.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs font-bold text-slate-700">Uploaded Attachments ({attachments.length}):</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {attachments.map((file) => (
-                <div
-                  key={file.id}
-                  className="p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-subtle"
+              {/* Model */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                  Model <span className="text-[#ed2025]">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Hiace, CX-5, Ranger"
+                  value={vehicle.model}
+                  onChange={(e) => setVehicle({ ...vehicle, model: e.target.value })}
+                  className={`w-full px-3.5 py-2 text-xs rounded-xl border bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
+                    errors.model
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                      : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
+                  }`}
+                />
+                {errors.model && <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.model}</p>}
+              </div>
+
+              {/* Year */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                  Year <span className="text-[#ed2025]">*</span>
+                </label>
+                <select
+                  value={vehicle.year}
+                  onChange={(e) => setVehicle({ ...vehicle, year: Number(e.target.value) })}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:border-brand-blue"
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center shrink-0">
-                      <FileText className="w-4 h-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-slate-900 truncate">{file.name}</p>
-                      <p className="text-[10px] text-slate-500">{file.size}</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeAttachment(file.id)}
-                    className="p-1 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  {Array.from({ length: 27 }, (_, i) => 2026 - i).map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* VIN / Chassis Number */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-bold text-slate-800">
+                    VIN / Chassis Number <span className="text-[#ed2025]">*</span>
+                  </label>
+                  <span className="text-[10px] font-mono font-bold text-slate-400">
+                    {vehicle.vin.length} chars
+                  </span>
                 </div>
-              ))}
+                <input
+                  type="text"
+                  placeholder="e.g. JTEBR32P10029384"
+                  value={vehicle.vin}
+                  onChange={(e) => setVehicle({ ...vehicle, vin: e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '') })}
+                  className={`w-full px-3.5 py-2 text-xs font-mono uppercase rounded-xl border bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
+                    errors.vin
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                      : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
+                  }`}
+                />
+                {errors.vin && <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.vin}</p>}
+              </div>
+            </div>
+
+            {/* Optional Sub-fields */}
+            <div className="pt-4 border-t border-slate-100">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-3">
+                Optional Fitment Accuracy Details
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Registration (Plate)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. KMR892"
+                    value={vehicle.regoNumber}
+                    onChange={(e) => setVehicle({ ...vehicle, regoNumber: e.target.value.toUpperCase() })}
+                    className="w-full px-3 py-2 text-xs uppercase font-mono rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Engine Type / Code</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1KD-FTV 3.0L"
+                    value={vehicle.engineCode}
+                    onChange={(e) => setVehicle({ ...vehicle, engineCode: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Variant / SubModel</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. ZX Grand Cabin"
+                    value={vehicle.subModel}
+                    onChange={(e) => setVehicle({ ...vehicle, subModel: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Transmission</label>
+                  <select
+                    value={vehicle.transmission}
+                    onChange={(e) => setVehicle({ ...vehicle, transmission: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none"
+                  >
+                    <option value="Automatic">Automatic</option>
+                    <option value="Manual">Manual</option>
+                    <option value="CVT">CVT</option>
+                    <option value="Dual-Clutch / DSG">Dual-Clutch / DSG</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">Drive Configuration</label>
+                  <select
+                    value={vehicle.driveConfiguration}
+                    onChange={(e) => setVehicle({ ...vehicle, driveConfiguration: e.target.value })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-800 focus:bg-white focus:outline-none"
+                  >
+                    <option value="RWD">RWD</option>
+                    <option value="FWD">FWD</option>
+                    <option value="4WD">4WD</option>
+                    <option value="AWD">AWD</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Customer Notes Box */}
-        <div className="space-y-2 pt-2">
-          <label className="block text-xs font-bold text-slate-800">
-            Customer Notes & Fitment Instructions
-          </label>
-          <textarea
-            rows={3}
-            value={customerNotes}
-            onChange={(e) => setCustomerNotes(e.target.value)}
-            placeholder="e.g. Must include bushings, mounting bolts, and lower ball joint intact. Sourcing for urgent customer on hoist."
-            className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:border-brand-blue"
-          />
-          <p className="text-[11px] text-slate-500">
-            Provide any specific requirements for your workshop foreman.
-          </p>
-        </div>
-      </div>
+        {/* ================= STEP 02: PART ================= */}
+        {currentStep === 2 && (
+          <div className="space-y-6 animate-slide-up">
+            <div className="pb-4 border-b border-slate-100">
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                Step 02 — What part do you need?
+              </h2>
+              <p className="text-xs text-slate-500">
+                Specify component names, OEM numbers, quality grade, and required condition
+              </p>
+            </div>
 
-      {/* SUBMISSION BAR */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="space-y-1 text-center sm:text-left">
-          <div className="flex items-center gap-2 justify-center sm:justify-start text-xs font-bold text-emerald-400">
-            <ShieldCheck className="w-4 h-4" />
-            <span>Fitment Certified & Guaranteed by Autohub</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Part Name */}
+              <div className="md:col-span-2 space-y-1.5">
+                <label className="block text-xs font-bold text-slate-800">
+                  Part Name <span className="text-[#ed2025]">*</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Left Front Lower Control Arm"
+                  value={part.name}
+                  onChange={(e) => setPart({ ...part, name: e.target.value })}
+                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl border bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:ring-2 ${
+                    errors.partName
+                      ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                      : 'border-slate-200 focus:border-brand-blue focus:ring-blue-100'
+                  }`}
+                />
+                {errors.partName && (
+                  <p className="text-[11px] font-semibold text-red-600">{errors.partName}</p>
+                )}
+              </div>
+
+              {/* Quantity */}
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                  Quantity <span className="text-[#ed2025]">*</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPart({ ...part, quantity: Math.max(1, part.quantity - 1) })}
+                    className="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={part.quantity}
+                    onChange={(e) => setPart({ ...part, quantity: Math.max(1, Number(e.target.value)) })}
+                    className="w-16 text-center font-bold text-xs py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setPart({ ...part, quantity: part.quantity + 1 })}
+                    className="w-9 h-9 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-700"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Part OEM Number */}
+            <div>
+              <label className="block text-xs font-bold text-slate-800 mb-1">
+                Part Number (If known)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 48069-26150"
+                value={part.partNumber}
+                onChange={(e) => setPart({ ...part, partNumber: e.target.value.toUpperCase() })}
+                className="w-full max-w-md px-3.5 py-2 text-xs font-mono uppercase rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                If unknown, Autohub will cross-reference the exact OEM part code from vehicle chassis.
+              </p>
+            </div>
+
+            {/* Preferences: Quality & Condition Requirement */}
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Genuine vs Aftermarket Preference */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Quality Preference:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['Genuine', 'Aftermarket', 'No Preference'] as PartQualityPreference[]).map((q) => {
+                    const isChecked = part.qualityPreference === q;
+                    return (
+                      <label
+                        key={q}
+                        className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-all ${
+                          isChecked
+                            ? 'border-[#ed2025] bg-red-50/30 text-red-950 font-bold shadow-sm'
+                            : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="qualityPreference"
+                          checked={isChecked}
+                          onChange={() => setPart({ ...part, qualityPreference: q })}
+                          className="sr-only"
+                        />
+                        <span className="text-xs block">{q}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Condition Requirement: New, Used, Reconditioned, No Preference */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Condition Requirement:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {(['New', 'Used', 'Reconditioned', 'No Preference'] as PartCondition[]).map((c) => {
+                    const isChecked = part.conditionRequirement === c;
+                    return (
+                      <label
+                        key={c}
+                        className={`p-3 rounded-xl border-2 text-center cursor-pointer transition-all ${
+                          isChecked
+                            ? 'border-brand-blue bg-blue-50/30 text-blue-950 font-bold shadow-sm'
+                            : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="conditionRequirement"
+                          checked={isChecked}
+                          onChange={() => setPart({ ...part, conditionRequirement: c })}
+                          className="sr-only"
+                        />
+                        <span className="text-xs block">{c}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-slate-300">
-            Submitting will initiate Japanese and European stock queries and calculate landed NZD quotes.
-          </p>
-        </div>
+        )}
 
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          isLoading={isSubmitting}
-          rightIcon={<ArrowRight className="w-4 h-4" />}
-          className="w-full sm:w-auto bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-8 py-3.5 shadow-glow"
-        >
-          Submit Part Request
-        </Button>
+        {/* ================= STEP 03: SUPPORTING INFO ================= */}
+        {currentStep === 3 && (
+          <div className="space-y-6 animate-slide-up">
+            <div className="pb-4 border-b border-slate-100">
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                Step 03 — Supporting Information
+              </h2>
+              <p className="text-xs text-slate-500">
+                Help us identify the right part by uploading photos, documents, or notes
+              </p>
+            </div>
+
+            {/* Drag and Drop Component */}
+            <div className="border-2 border-dashed border-slate-300 hover:border-[#ed2025] bg-slate-50 hover:bg-red-50/20 rounded-2xl p-8 text-center transition-all">
+              <input
+                type="file"
+                id="wizardFileUpload"
+                multiple
+                accept=".jpg,.jpeg,.png,.pdf"
+                onChange={handleFileUpload}
+                className="sr-only"
+              />
+              <div className="max-w-sm mx-auto space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center mx-auto text-brand-blue">
+                  <UploadCloud className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-800">
+                    <label
+                      htmlFor="wizardFileUpload"
+                      className="text-brand-blue hover:underline cursor-pointer font-bold"
+                    >
+                      Drop files here or browse
+                    </label>
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-1 font-medium">
+                    Supported: JPG · PNG · PDF (Maximum 10MB per file)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Uploaded Files Chips */}
+            {attachments.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-slate-700">Uploaded Attachments ({attachments.length}):</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {attachments.map((file) => (
+                    <div
+                      key={file.id}
+                      className="p-3 rounded-xl border border-slate-200 bg-white flex items-center justify-between gap-3 shadow-subtle"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center shrink-0">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate">{file.name}</p>
+                          <p className="text-[10px] text-slate-500">{file.size}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAttachments((prev) => prev.filter((a) => a.id !== file.id))}
+                        className="p-1 text-slate-400 hover:text-red-600 rounded-lg hover:bg-slate-100 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Additional Notes Textarea */}
+            <div className="space-y-2 pt-2">
+              <label className="block text-xs font-bold text-slate-800">
+                Additional Notes
+              </label>
+              <textarea
+                rows={3}
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                placeholder="Tell us anything else that may help our procurement team..."
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:outline-none focus:border-brand-blue"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* ================= STEP 04: DELIVERY ================= */}
+        {currentStep === 4 && (
+          <div className="space-y-6 animate-slide-up">
+            <div className="pb-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                  Step 04 — Where should we deliver it?
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Select a saved workshop address or add a new delivery destination
+                </p>
+              </div>
+
+              {!isAddingNewAddress && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsAddingNewAddress(true)}
+                  leftIcon={<Plus className="w-3.5 h-3.5" />}
+                >
+                  + Add Delivery Address
+                </Button>
+              )}
+            </div>
+
+            {/* Saved Addresses Radio Selection */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {savedAddresses.map((addr) => {
+                const isSelected = addr.id === selectedAddressId;
+
+                return (
+                  <label
+                    key={addr.id}
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${
+                      isSelected
+                        ? 'border-[#ed2025] bg-red-50/20 ring-2 ring-red-100 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="deliveryAddressSelection"
+                      checked={isSelected}
+                      onChange={() => setSelectedAddressId(addr.id!)}
+                      className="mt-1"
+                    />
+                    <div className="space-y-1 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900">{addr.businessName}</span>
+                        {addr.isDefault && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-600">{addr.street}</p>
+                      <p className="text-slate-600">{addr.suburb ? `${addr.suburb}, ` : ''}{addr.city}, {addr.postcode || 'New Zealand'}</p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+
+            {/* Inline Add Address Form */}
+            {isAddingNewAddress && (
+              <form onSubmit={handleSaveNewAddress} className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-4">
+                <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                  Add New Workshop Delivery Address
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Branch / Location Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. West Auckland Depot"
+                      value={newAddressForm.businessName}
+                      onChange={(e) => setNewAddressForm({ ...newAddressForm, businessName: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+                      required
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold text-slate-700 mb-1">Street Address</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 50 Lincoln Road"
+                      value={newAddressForm.street}
+                      onChange={(e) => setNewAddressForm({ ...newAddressForm, street: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Suburb</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Henderson"
+                      value={newAddressForm.suburb}
+                      onChange={(e) => setNewAddressForm({ ...newAddressForm, suburb: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">City</label>
+                    <input
+                      type="text"
+                      value={newAddressForm.city}
+                      onChange={(e) => setNewAddressForm({ ...newAddressForm, city: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">Postcode</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 0612"
+                      value={newAddressForm.postcode}
+                      onChange={(e) => setNewAddressForm({ ...newAddressForm, postcode: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button variant="outline" size="sm" onClick={() => setIsAddingNewAddress(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="primary" size="sm" type="submit">
+                    Save Address
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* ================= STEP 05: REVIEW ================= */}
+        {currentStep === 5 && (
+          <div className="space-y-6 animate-slide-up">
+            <div className="pb-4 border-b border-slate-100">
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                Step 05 — Review & Submit
+              </h2>
+              <p className="text-xs text-slate-500">
+                Please review your request specifications before transmitting to Autohub procurement
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+              {/* Vehicle Card */}
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-blue block">
+                  Vehicle Summary
+                </span>
+                <p className="text-sm font-black text-slate-900">
+                  {vehicle.year} {vehicle.make} {vehicle.model}
+                </p>
+                <div className="space-y-1 text-slate-600">
+                  <p>VIN: <span className="font-mono font-bold text-slate-900">{vehicle.vin}</span></p>
+                  {vehicle.regoNumber && <p>Plate: <span className="font-mono font-bold">{vehicle.regoNumber}</span></p>}
+                  {vehicle.engineCode && <p>Engine: {vehicle.engineCode}</p>}
+                  {vehicle.subModel && <p>Variant: {vehicle.subModel}</p>}
+                </div>
+              </div>
+
+              {/* Requested Part Card */}
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-blue block">
+                  Requested Part
+                </span>
+                <p className="text-sm font-black text-slate-900">{part.name}</p>
+                <div className="space-y-1 text-slate-600">
+                  <p>Quantity: <span className="font-bold text-slate-900">{part.quantity}</span></p>
+                  <p>Preference: <span className="font-bold text-slate-900">{part.qualityPreference}</span></p>
+                  <p>Condition: <span className="font-bold text-slate-900">{part.conditionRequirement}</span></p>
+                  {part.partNumber && <p>Part OEM #: <span className="font-mono">{part.partNumber}</span></p>}
+                </div>
+              </div>
+
+              {/* Attachments Card */}
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-blue block">
+                  Attachments & Notes
+                </span>
+                <p className="font-bold text-slate-900">
+                  {attachments.length} files attached
+                </p>
+                {additionalNotes ? (
+                  <p className="text-slate-600 italic bg-white p-2.5 rounded-lg border border-slate-200">
+                    &ldquo;{additionalNotes}&rdquo;
+                  </p>
+                ) : (
+                  <p className="text-slate-400">No additional notes provided.</p>
+                )}
+              </div>
+
+              {/* Delivery Destination Card */}
+              <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-blue block">
+                  Delivery Destination
+                </span>
+                {(() => {
+                  const addr = savedAddresses.find((a) => a.id === selectedAddressId) || savedAddresses[0];
+                  return (
+                    <div>
+                      <p className="text-sm font-black text-slate-900">{addr.businessName}</p>
+                      <p className="text-slate-600">{addr.street}</p>
+                      <p className="text-slate-600">{addr.suburb ? `${addr.suburb}, ` : ''}{addr.city}</p>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* Fitment Guarantee Banner */}
+            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 flex items-center gap-3">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+              <div>
+                <p className="font-bold">100% Fitment Certified Guarantee by Autohub</p>
+                <p className="text-[11px] text-emerald-700">
+                  Upon submission, Autohub specialists will verify the part specifications against factory EPC schematics and generate landed quotations within hours.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEPPER NAVIGATION BUTTONS */}
+        <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+          <div>
+            {currentStep > 1 && (
+              <Button
+                variant="outline"
+                size="md"
+                onClick={handleBack}
+                leftIcon={<ArrowLeft className="w-4 h-4" />}
+                className="text-xs font-bold"
+              >
+                Back
+              </Button>
+            )}
+          </div>
+
+          <div>
+            {currentStep < 5 ? (
+              <button
+                type="button"
+                onClick={handleNext}
+                className="inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-6 py-3 rounded-xl shadow-md transition-all active:scale-[0.98]"
+              >
+                <span>Continue →</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-8 py-3.5 rounded-xl shadow-glow transition-all active:scale-[0.98]"
+              >
+                <span>{isSubmitting ? 'Submitting Request...' : 'Submit Parts Request'}</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
-    </form>
+    </div>
   );
 }

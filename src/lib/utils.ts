@@ -49,14 +49,16 @@ export function getStatusBadgeVariant(status: string): {
   dot: string;
 } {
   switch (status) {
-    case 'Quoted':
     case 'Quote Ready':
+    case 'Quoted':
+    case 'Awaiting Customer Approval':
       return {
         bg: 'bg-amber-50 text-amber-900',
         text: 'text-amber-900',
         border: 'border-amber-300',
         dot: 'bg-amber-500 animate-pulse',
       };
+    case 'Customer Approved':
     case 'Quote Approved':
       return {
         bg: 'bg-indigo-50 text-indigo-700',
@@ -64,8 +66,46 @@ export function getStatusBadgeVariant(status: string): {
         border: 'border-indigo-200',
         dot: 'bg-indigo-600',
       };
-    case 'Shipped':
+    case 'Awaiting Payment':
+      return {
+        bg: 'bg-amber-50 text-amber-800',
+        text: 'text-amber-800',
+        border: 'border-amber-300',
+        dot: 'bg-amber-500 animate-pulse',
+      };
+    case 'Payment Pending':
+      return {
+        bg: 'bg-blue-50 text-blue-700',
+        text: 'text-blue-700',
+        border: 'border-blue-200',
+        dot: 'bg-blue-500 animate-pulse',
+      };
+    case 'Payment Received':
+    case 'Credit Approved':
+      return {
+        bg: 'bg-emerald-50 text-emerald-700',
+        text: 'text-emerald-700',
+        border: 'border-emerald-200',
+        dot: 'bg-emerald-600',
+      };
+    case 'Payment Failed':
+      return {
+        bg: 'bg-red-50 text-red-700',
+        text: 'text-red-700',
+        border: 'border-red-300',
+        dot: 'bg-red-600 animate-pulse',
+      };
+    case 'Ordered From Supplier':
+    case 'Received At Shipping Facility':
+      return {
+        bg: 'bg-sky-50 text-sky-800',
+        text: 'text-sky-800',
+        border: 'border-sky-200',
+        dot: 'bg-sky-600',
+      };
+    case 'In Transit':
     case 'In Transit - Air':
+    case 'Shipped':
       return {
         bg: 'bg-blue-50 text-brand-blue',
         text: 'text-brand-blue',
@@ -79,6 +119,7 @@ export function getStatusBadgeVariant(status: string): {
         border: 'border-cyan-200',
         dot: 'bg-cyan-600 animate-pulse',
       };
+    case 'Arrived In New Zealand':
     case 'Customs Clearance':
       return {
         bg: 'bg-purple-50 text-purple-800',
@@ -86,7 +127,15 @@ export function getStatusBadgeVariant(status: string): {
         border: 'border-purple-200',
         dot: 'bg-purple-600 animate-pulse',
       };
+    case 'Out For Delivery':
+      return {
+        bg: 'bg-emerald-50 text-emerald-800',
+        text: 'text-emerald-800',
+        border: 'border-emerald-300',
+        dot: 'bg-emerald-600 animate-pulse',
+      };
     case 'Delivered':
+    case 'Completed':
       return {
         bg: 'bg-emerald-50 text-emerald-700',
         text: 'text-emerald-700',
@@ -94,14 +143,25 @@ export function getStatusBadgeVariant(status: string): {
         dot: 'bg-emerald-500',
       };
     case 'Sourcing':
+    case 'Request Submitted':
       return {
         bg: 'bg-slate-100 text-slate-700',
         text: 'text-slate-700',
         border: 'border-slate-300',
         dot: 'bg-slate-500 animate-pulse',
       };
-    case 'Rejected':
+    case 'On Hold':
+    case 'Procurement Exception':
+    case 'Logistics Exception':
+      return {
+        bg: 'bg-amber-100 text-amber-900',
+        text: 'text-amber-900',
+        border: 'border-amber-300',
+        dot: 'bg-amber-600',
+      };
     case 'Cancelled':
+    case 'Rejected':
+    case 'Refunded':
       return {
         bg: 'bg-red-50 text-red-700',
         text: 'text-red-700',
@@ -115,5 +175,47 @@ export function getStatusBadgeVariant(status: string): {
         border: 'border-slate-200',
         dot: 'bg-slate-400',
       };
+  }
+}
+
+export function getStatusDescription(status: string): string {
+  switch (status) {
+    case 'Request Submitted':
+      return 'Your parts request has been catalogued and assigned to Autohub procurement.';
+    case 'Sourcing':
+      return 'Autohub parts specialists are sourcing verified OEM/aftermarket options across supplier networks.';
+    case 'Quote Ready':
+      return 'Quote Ready — Review and approve your quotation to proceed with payment and procurement.';
+    case 'Awaiting Customer Approval':
+      return 'Quote ready for trade review. Select your preferred freight option to proceed.';
+    case 'Customer Approved':
+      return 'Quotation approved. Preparing for trade payment / credit verification.';
+    case 'Awaiting Payment':
+      return 'Payment is required before procurement and dispatch can begin.';
+    case 'Payment Pending':
+      return 'Your payment is being verified by the banking gateway.';
+    case 'Payment Received':
+      return 'Payment confirmed. Autohub procurement team is placing the supplier order.';
+    case 'Ordered From Supplier':
+      return 'Order officially locked with authorized supplier. Preparing for warehouse dispatch.';
+    case 'Received At Shipping Facility':
+      return 'Part received, inspected for fitment quality, and packed for international transit.';
+    case 'In Transit':
+    case 'In Transit - Air':
+      return 'Consignment is in flight / international transit to New Zealand.';
+    case 'In Transit - Sea':
+      return 'Consignment is onboard maritime consolidated carrier to Ports of Auckland.';
+    case 'Arrived In New Zealand':
+      return 'Vessel / flight arrived in Auckland. Handed over for biosecurity and customs processing.';
+    case 'Customs Clearance':
+      return 'MPI biosecurity check and NZ Customs tariff clearance in progress.';
+    case 'Out For Delivery':
+      return 'Dispatched on express metro courier van for delivery to your workshop.';
+    case 'Delivered':
+      return 'Package safely received and signed for at your workshop address.';
+    case 'Payment Failed':
+      return 'Payment could not be completed. Please retry payment to avoid procurement delay.';
+    default:
+      return 'Currently being processed by Autohub.';
   }
 }
