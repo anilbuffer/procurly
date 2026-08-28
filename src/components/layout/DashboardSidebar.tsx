@@ -429,7 +429,31 @@ export function DashboardSidebar({
                 <ShieldCheck className="w-4 h-4 text-cyan-400" />
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-xs">Operations Command Centre</p>
-                  <p className="text-[10px] text-slate-400">Internal procurement workspace</p>
+                  <p className="text-[10px] text-slate-400">Internal operations workspace</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/finance/dashboard"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-emerald-300 hover:bg-slate-800 hover:text-emerald-200 transition-colors font-bold"
+              >
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Finance Control Centre</p>
+                  <p className="text-[10px] text-slate-400">Payments, credits & treasury</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/procurement/dashboard"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-sky-300 hover:bg-slate-800 hover:text-sky-200 transition-colors font-bold"
+              >
+                <ShieldCheck className="w-4 h-4 text-sky-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Procurement Command Centre</p>
+                  <p className="text-[10px] text-slate-400">Sourcing & supplier POs</p>
                 </div>
               </Link>
             </div>

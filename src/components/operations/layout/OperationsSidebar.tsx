@@ -465,6 +465,30 @@ export function OperationsSidebar({
                   <p className="text-[10px] text-slate-400">Switch to workshop view</p>
                 </div>
               </Link>
+
+              <Link
+                href="/finance/dashboard"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-emerald-300 hover:bg-slate-800 hover:text-emerald-200 transition-colors font-bold"
+              >
+                <ExternalLink className="w-4 h-4 text-emerald-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Finance Portal</p>
+                  <p className="text-[10px] text-slate-400">Switch to financial control</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/procurement/dashboard"
+                onClick={() => setProfileDropdownOpen(false)}
+                className="flex items-center gap-2.5 px-4 py-2 text-sky-300 hover:bg-slate-800 hover:text-sky-200 transition-colors font-bold"
+              >
+                <ExternalLink className="w-4 h-4 text-sky-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-xs">Procurement Portal</p>
+                  <p className="text-[10px] text-slate-400">Switch to sourcing & POs</p>
+                </div>
+              </Link>
             </div>
 
             {/* Sign Out */}

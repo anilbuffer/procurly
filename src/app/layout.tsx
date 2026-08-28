@@ -6,6 +6,7 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -13,6 +14,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   variable: '--font-heading',
   display: 'swap',
   weight: ['400', '500', '600', '700', '800'],
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
@@ -59,8 +61,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${plusJakartaSans.variable}`}>
-      <body className="min-h-screen bg-brand-canvas text-brand-text-primary antialiased flex flex-col font-sans">
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${plusJakartaSans.variable}`}>
+      <body suppressHydrationWarning className="min-h-screen bg-brand-canvas text-brand-text-primary antialiased flex flex-col font-sans">
         {children}
       </body>
     </html>

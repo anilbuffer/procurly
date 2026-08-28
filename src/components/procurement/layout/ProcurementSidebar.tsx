@@ -412,6 +412,20 @@ export function ProcurementSidebar({
                 <ExternalLink className="w-3 h-3" />
                 <span>Switch to Customer Portal</span>
               </Link>
+              <Link
+                href="/finance/dashboard"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Switch to Finance Portal</span>
+              </Link>
+              <Link
+                href="/operations/dashboard"
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" />
+                <span>Switch to Operations Portal</span>
+              </Link>
             </div>
           </div>
         )}
