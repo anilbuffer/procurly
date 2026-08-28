@@ -18,6 +18,7 @@ import {
   Box,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { requestsService } from '@/services/requestsService';
 
 export interface DashboardSidebarProps {
   onCloseMobile?: () => void;
