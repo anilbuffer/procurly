@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -32,7 +32,7 @@ import { StatusChangeModal } from '@/components/operations/layout/StatusChangeMo
 import { QuickCreateModal } from '@/components/operations/layout/QuickCreateModal';
 import { cn } from '@/lib/utils';
 
-export default function OperationsRequestsPage() {
+function OperationsRequestsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialStatusFilter = searchParams.get('status') || 'All';
@@ -622,5 +622,13 @@ export default function OperationsRequestsPage() {
       {/* Quick Create Modal */}
       <QuickCreateModal isOpen={isQuickCreateOpen} onClose={() => setIsQuickCreateOpen(false)} />
     </div>
+  );
+}
+
+export default function OperationsRequestsPage() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-xs text-slate-400">Loading requests...</div>}>
+      <OperationsRequestsContent />
+    </Suspense>
   );
 }
