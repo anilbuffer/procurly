@@ -12,6 +12,7 @@ import {
   NotificationItem,
   ChatMessage,
   DeliveryAddress,
+  WorkspaceUser,
 } from '@/types';
 import {
   INITIAL_REQUESTS,
@@ -32,6 +33,22 @@ const PAYMENTS_KEY = 'procurly_payments_v3';
 const DOCUMENTS_KEY = 'procurly_documents_v3';
 const TEAM_KEY = 'procurly_team_v3';
 const NOTIFICATIONS_KEY = 'procurly_notifications_v3';
+const CURRENT_USER_KEY = 'procurly_current_user_v3';
+
+export const DEFAULT_WORKSPACE_USER: WorkspaceUser = {
+  id: 'usr_customer_1',
+  name: 'James Wilson',
+  email: 'james@autocareauckland.co.nz',
+  role: 'Customer',
+  roleTitle: 'Trade Dealership Manager',
+  deskName: 'Trade Desk',
+  organization: 'AutoCare Auckland (Verified Dealership)',
+  avatar: 'AC',
+  badge: 'Dealership / Repairer',
+  permissions: ['Submit Requests', 'Approve Quotes', 'Online & 20th Billing', 'Track Deliveries'],
+  mfaEnabled: true,
+  defaultRoute: '/dashboard',
+};
 
 class MockRequestsService {
   private isBrowser(): boolean {
@@ -674,6 +691,20 @@ class MockRequestsService {
     return { requests, orders, shipments, documents };
   }
 
+  // =================== USER SESSION ===================
+  async getCurrentUser(): Promise<WorkspaceUser> {
+    return this.getItem<WorkspaceUser>(CURRENT_USER_KEY, DEFAULT_WORKSPACE_USER);
+  }
+
+  async setCurrentUser(user: WorkspaceUser): Promise<WorkspaceUser> {
+    if (this.isBrowser()) {
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      window.dispatchEvent(new Event('procurly_user_updated'));
+      window.dispatchEvent(new Event('procurly_data_updated'));
+    }
+    return user;
+  }
+
   // =================== RESET ===================
   async resetToDefaults(): Promise<void> {
     if (this.isBrowser()) {
@@ -685,6 +716,8 @@ class MockRequestsService {
       localStorage.setItem(DOCUMENTS_KEY, JSON.stringify(INITIAL_DOCUMENTS));
       localStorage.setItem(TEAM_KEY, JSON.stringify(INITIAL_TEAM_MEMBERS));
       localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(INITIAL_NOTIFICATIONS));
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(DEFAULT_WORKSPACE_USER));
+      window.dispatchEvent(new Event('procurly_user_updated'));
       window.dispatchEvent(new Event('procurly_data_updated'));
       window.dispatchEvent(new Event('procurly_requests_updated'));
     }

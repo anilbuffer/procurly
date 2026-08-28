@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -18,14 +18,18 @@ import {
   ArrowRight,
   CheckCircle2,
   AlertCircle,
-  KeyRound,
-  ShieldAlert,
   Sparkles,
   Smartphone,
-  Info,
   Check,
+  RotateCcw,
+  KeyRound,
+  Radio,
+  ArrowLeft,
+  X,
+  Shield,
+  Layers,
 } from 'lucide-react';
-import { UserRole } from '@/types';
+import { UserRole, WorkspaceUser } from '@/types';
 import { requestsService } from '@/services/requestsService';
 
 interface RoleConfig {
@@ -37,6 +41,10 @@ interface RoleConfig {
   organization: string;
   icon: React.ElementType;
   badge: string;
+  roleTitle: string;
+  phoneMasked: string;
+  defaultRoute: string;
+  portalName: string;
   description: string;
   mfaRequired: boolean;
   permissions: string[];
@@ -52,8 +60,12 @@ const WORKSPACE_ROLES: RoleConfig[] = [
     organization: 'AutoCare Auckland (Verified Dealership)',
     icon: Building2,
     badge: 'Dealership / Repairer',
+    roleTitle: 'Trade Dealership Manager',
+    phoneMasked: '+64 21 ••• •821',
+    defaultRoute: '/dashboard',
+    portalName: 'Customer Trade Portal',
     description: 'Submit parts requests, review landed NZD quotes, approve orders & live tracking.',
-    mfaRequired: false,
+    mfaRequired: true,
     permissions: ['Submit Requests', 'Approve Quotes', 'Online & 20th Billing', 'Track Deliveries'],
   },
   {
@@ -65,8 +77,12 @@ const WORKSPACE_ROLES: RoleConfig[] = [
     organization: 'Autohub Auckland Hub & Dispatch',
     icon: Truck,
     badge: 'Logistics Ops',
+    roleTitle: 'Logistics & MPI Compliance Lead',
+    phoneMasked: '+64 27 ••• •492',
+    defaultRoute: '/shipments',
+    portalName: 'Logistics & MPI Clearance Hub',
     description: 'Manage NZ customs clearance, MPI biosecurity releases, air/sea freight & courier dispatch.',
-    mfaRequired: false,
+    mfaRequired: true,
     permissions: ['MPI Inspection', 'Customs Entry', 'Flight Manifests', 'Warehouse Dispatch'],
   },
   {
@@ -78,6 +94,10 @@ const WORKSPACE_ROLES: RoleConfig[] = [
     organization: 'Autohub Global Parts Procurement',
     icon: Compass,
     badge: 'Sourcing Specialist',
+    roleTitle: 'Senior Parts Sourcing Specialist',
+    phoneMasked: '+64 21 ••• •114',
+    defaultRoute: '/requests',
+    portalName: 'Global Sourcing & Bidding Desk',
     description: 'Coordinate supplier bidding across Japan, Europe & USA with fitment validation.',
     mfaRequired: true,
     permissions: ['Supplier Bidding', 'Landed Cost Engine', 'OEM Verification', 'Quote Issuance'],
@@ -91,6 +111,10 @@ const WORKSPACE_ROLES: RoleConfig[] = [
     organization: 'Autohub Trade Accounts & Credit',
     icon: CreditCard,
     badge: 'Trade Accounts',
+    roleTitle: 'Trade Accounts & Credit Officer',
+    phoneMasked: '+64 22 ••• •905',
+    defaultRoute: '/payments',
+    portalName: 'Trade Accounts & Billing Portal',
     description: 'Review 20th month trade credit lines, NZBN validations, GST duty & merchant clearing.',
     mfaRequired: true,
     permissions: ['Trade Credit Approvals', '20th Month Billing', 'GST Clearance', 'Payment Reconciliation'],
@@ -104,6 +128,10 @@ const WORKSPACE_ROLES: RoleConfig[] = [
     organization: 'Autohub Platform Administration',
     icon: Sliders,
     badge: 'Super Admin',
+    roleTitle: 'Enterprise System Administrator',
+    phoneMasked: '+64 21 ••• •001',
+    defaultRoute: '/company',
+    portalName: 'System Control & Security Console',
     description: 'Manage user access control, rate engine margins, security auditing and system configs.',
     mfaRequired: true,
     permissions: ['Global RBAC', 'Rate Engine Margins', 'Audit Logs', 'Security & MFA Rules'],
@@ -119,16 +147,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState(WORKSPACE_ROLES[0].password);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
-  // Security Suite State
-  const [mfaEnabled, setMfaEnabled] = useState(false);
-  const [mfaCode, setMfaCode] = useState('482910');
+  // Full Screen Modal State for Two-Factor Auth (MFA Ready)
+  const [isMfaModalOpen, setIsMfaModalOpen] = useState(false);
+
+  // MFA 6-Digit OTP State
+  const DEMO_OTP = '482910';
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [isAutoFilling, setIsAutoFilling] = useState(false);
+  const [isVerifyingMfa, setIsVerifyingMfa] = useState(false);
+  const [mfaSuccess, setMfaSuccess] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(30);
+
+  // Security Suite & Lockout State
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isLockedOut, setIsLockedOut] = useState(false);
   const [lockoutTimer, setLockoutTimer] = useState(0);
   const [errorMessage, setErrorMessage] = useState('');
+  const [mfaModalError, setMfaModalError] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
+
+  // Input references for 6 OTP boxes
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const currentRoleConfig = WORKSPACE_ROLES.find((r) => r.role === selectedRole) || WORKSPACE_ROLES[0];
 
@@ -137,8 +178,10 @@ export default function LoginPage() {
     setSelectedRole(config.role);
     setEmail(config.email);
     setPassword(config.password);
-    setMfaEnabled(config.mfaRequired);
+    setOtpDigits(['', '', '', '', '', '']);
     setErrorMessage('');
+    setMfaModalError('');
+    setIsMfaModalOpen(false);
     setSuccessNotice(`Auto-filled credentials for ${config.role} (${config.name})`);
     setTimeout(() => setSuccessNotice(''), 3500);
   };
@@ -176,8 +219,29 @@ export default function LoginPage() {
     return () => clearInterval(interval);
   }, [isLockedOut, lockoutTimer]);
 
-  // Login Submit Handler
-  const handleLogin = async (e: React.FormEvent) => {
+  // Resend OTP Countdown Timer Effect (inside modal)
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isMfaModalOpen && resendCountdown > 0) {
+      interval = setInterval(() => {
+        setResendCountdown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isMfaModalOpen, resendCountdown]);
+
+  // Auto-focus first OTP input when opening MFA modal
+  useEffect(() => {
+    if (isMfaModalOpen) {
+      const timer = setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [isMfaModalOpen]);
+
+  // Handle Initial "SIGN IN" Form Submission
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
 
@@ -191,14 +255,146 @@ export default function LoginPage() {
       return;
     }
 
-    if (mfaEnabled && mfaCode.length < 6) {
-      setErrorMessage('Please enter the 6-digit MFA verification code.');
-      return;
+    setIsSigningIn(true);
+
+    // Simulate enterprise validation and open Full Screen Two-Factor Auth Modal
+    setTimeout(() => {
+      setIsSigningIn(false);
+      setIsMfaModalOpen(true);
+      setOtpDigits(['', '', '', '', '', '']);
+      setMfaSuccess(false);
+      setResendCountdown(30);
+      setMfaModalError('');
+    }, 450);
+  };
+
+  // OTP Input Handlers
+  const handleOtpChange = (index: number, value: string) => {
+    const cleanVal = value.replace(/\D/g, '');
+    if (!cleanVal && value !== '') return;
+
+    const newDigits = [...otpDigits];
+
+    if (cleanVal.length === 1) {
+      newDigits[index] = cleanVal;
+      setOtpDigits(newDigits);
+      if (index < 5) {
+        otpInputRefs.current[index + 1]?.focus();
+      }
+    } else if (cleanVal.length > 1) {
+      const pasted = cleanVal.slice(0, 6).split('');
+      pasted.forEach((char, i) => {
+        if (i < 6) newDigits[i] = char;
+      });
+      setOtpDigits(newDigits);
+      const targetFocus = Math.min(5, pasted.length);
+      otpInputRefs.current[targetFocus]?.focus();
+    } else {
+      newDigits[index] = '';
+      setOtpDigits(newDigits);
     }
 
-    setIsLoading(true);
+    const fullCode = newDigits.join('');
+    if (fullCode.length === 6 && !newDigits.includes('')) {
+      triggerMfaVerification(fullCode);
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      if (!otpDigits[index] && index > 0) {
+        const newDigits = [...otpDigits];
+        newDigits[index - 1] = '';
+        setOtpDigits(newDigits);
+        otpInputRefs.current[index - 1]?.focus();
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    } else if (e.key === 'Escape') {
+      setIsMfaModalOpen(false);
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pastedData) return;
+
+    const newDigits = [...otpDigits];
+    pastedData.split('').forEach((char, i) => {
+      if (i < 6) newDigits[i] = char;
+    });
+    setOtpDigits(newDigits);
+
+    const focusIdx = Math.min(5, pastedData.length);
+    otpInputRefs.current[focusIdx]?.focus();
+
+    if (pastedData.length === 6) {
+      triggerMfaVerification(pastedData);
+    }
+  };
+
+  // Auto-Fill OTP Demo Function with Sequential Typing Animation
+  const handleAutoFillOtp = () => {
+    if (isAutoFilling || isVerifyingMfa || mfaSuccess) return;
+
+    setIsAutoFilling(true);
+    setMfaModalError('');
+    const digits = DEMO_OTP.split('');
+    const current = ['', '', '', '', '', ''];
+    setOtpDigits(current);
+
+    digits.forEach((digit, index) => {
+      setTimeout(() => {
+        current[index] = digit;
+        setOtpDigits([...current]);
+        otpInputRefs.current[index]?.focus();
+
+        if (index === 5) {
+          setIsAutoFilling(false);
+          setTimeout(() => {
+            triggerMfaVerification(DEMO_OTP);
+          }, 150);
+        }
+      }, index * 75);
+    });
+  };
+
+  // Trigger MFA Verification and Redirect to Respective Portal
+  const triggerMfaVerification = async (code: string) => {
+    if (isVerifyingMfa || mfaSuccess) return;
+
+    setIsVerifyingMfa(true);
+    setMfaModalError('');
 
     try {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      setMfaSuccess(true);
+
+      const userSession: WorkspaceUser = {
+        id: `usr_${currentRoleConfig.role.toLowerCase()}_1`,
+        name: currentRoleConfig.name,
+        email: currentRoleConfig.email,
+        role: currentRoleConfig.role,
+        roleTitle: currentRoleConfig.roleTitle,
+        deskName: currentRoleConfig.deskName,
+        organization: currentRoleConfig.organization,
+        avatar: currentRoleConfig.name
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase(),
+        badge: currentRoleConfig.badge,
+        permissions: currentRoleConfig.permissions,
+        mfaEnabled: true,
+        defaultRoute: currentRoleConfig.defaultRoute,
+      };
+
+      await requestsService.setCurrentUser(userSession);
+
       if (selectedRole === 'Customer') {
         await requestsService.resetToDefaults();
       } else {
@@ -211,23 +407,23 @@ export default function LoginPage() {
       }
 
       setTimeout(() => {
-        setIsLoading(false);
-        router.push('/dashboard');
-      }, 600);
+        router.push(currentRoleConfig.defaultRoute);
+      }, 700);
     } catch (err) {
       console.error(err);
-      setIsLoading(false);
-      const newAttempts = failedAttempts + 1;
-      setFailedAttempts(newAttempts);
-
-      if (newAttempts >= 5) {
-        setIsLockedOut(true);
-        setLockoutTimer(30);
-        setErrorMessage('Account locked: 5 consecutive failed attempts. Security cooldown active for 30s.');
-      } else {
-        setErrorMessage(`Invalid credentials. Attempt ${newAttempts} of 5 before account lockout.`);
-      }
+      setIsVerifyingMfa(false);
+      setMfaModalError('MFA verification failed. Please try again.');
     }
+  };
+
+  // Resend MFA Code
+  const handleResendCode = () => {
+    if (resendCountdown > 0) return;
+    setResendCountdown(30);
+    setOtpDigits(['', '', '', '', '', '']);
+    setSuccessNotice(`New MFA code dispatched to ${currentRoleConfig.phoneMasked}`);
+    setTimeout(() => setSuccessNotice(''), 3500);
+    otpInputRefs.current[0]?.focus();
   };
 
   // Quick Simulation Helper for Account Lockout Demo
@@ -244,12 +440,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 font-sans text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-slate-950 font-sans text-slate-900 overflow-x-hidden relative">
       {/* ========================================================================= */}
-      {/* LEFT SECTION (~62% Desktop): Role Switcher & Enterprise Showcase Hero     */}
+      {/* LEFT SECTION (~60% Desktop): Role Switcher & Enterprise Showcase Hero     */}
       {/* ========================================================================= */}
-      <div className="lg:w-[62%] relative flex flex-col justify-between p-6 sm:p-10 lg:p-14 overflow-hidden bg-gradient-to-br from-slate-950 via-[#131d3f] to-[#0d1633] text-white min-h-[580px] lg:min-h-screen">
-        {/* Background Accent Gradients & Grid Pattern */}
+      <div className="lg:w-[60%] relative flex flex-col justify-between p-6 sm:p-10 lg:p-14 overflow-hidden bg-gradient-to-br from-slate-950 via-[#131d3f] to-[#0d1633] text-white min-h-[580px] lg:min-h-screen">
         <div className="absolute inset-0 bg-[radial-gradient(#2b4499_1px,transparent_1px)] [background-size:24px_24px] opacity-15 pointer-events-none" />
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-brand-blue/30 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-10 left-1/3 w-[500px] h-[350px] bg-[#ed2025]/15 rounded-full blur-[140px] pointer-events-none" />
@@ -262,7 +457,7 @@ export default function LoginPage() {
               <span>SELECT WORKSPACE ROLE:</span>
             </div>
             <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline-block">
-              Auto-fills demo credentials
+              Auto-fills credentials & portal destinations
             </span>
           </div>
 
@@ -311,7 +506,6 @@ export default function LoginPage() {
             })}
           </div>
 
-          {/* Success Toast Notice on Auto-Fill */}
           {successNotice && (
             <div className="p-2.5 rounded-lg bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs flex items-center gap-2 animate-fade-in shadow-lg">
               <Check className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -338,7 +532,6 @@ export default function LoginPage() {
             Automate vehicle parts procurement across Japan, Europe & USA. Generate instant landed NZD quotations with MPI biosecurity compliance and track door-to-door delivery with enterprise precision.
           </p>
 
-          {/* Feature Pills */}
           <div className="flex flex-wrap gap-2.5 pt-2">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700/60 text-xs font-semibold text-slate-200 backdrop-blur-sm">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
@@ -383,11 +576,11 @@ export default function LoginPage() {
       </div>
 
       {/* ========================================================================= */}
-      {/* RIGHT SECTION (~38% Desktop): Clean Authentication Card & Security Form   */}
+      {/* RIGHT SECTION (~40% Desktop): Clean Authentication Card                   */}
       {/* ========================================================================= */}
-      <div className="lg:w-[38%] bg-white flex flex-col justify-between p-6 sm:p-10 lg:p-12 shadow-2xl relative z-20 min-h-screen">
-        {/* Top Header / Brand Logo */}
+      <div className="lg:w-[40%] bg-white flex flex-col justify-between p-6 sm:p-10 lg:p-12 shadow-2xl relative z-20 min-h-screen">
         <div className="space-y-6">
+          {/* Brand Logo & Version Tag */}
           <div className="flex items-center justify-between">
             <Link href="/" className="inline-flex items-center gap-2.5 group">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#ed2025] to-[#b31317] flex items-center justify-center text-white font-black text-xl shadow-md group-hover:scale-105 transition-transform">
@@ -403,18 +596,24 @@ export default function LoginPage() {
               </div>
             </Link>
 
-            <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
-              Enterprise v2.4
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                MFA Ready
+              </span>
+              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                v2.4
+              </span>
+            </div>
           </div>
 
-          {/* Welcome Heading */}
+          {/* Heading */}
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              Welcome <span className="inline-block animate-bounce">👋</span>
+              Sign In <span className="inline-block animate-bounce">👋</span>
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Please sign in to your trade portal account to continue.
+              Select a workspace role above or enter credentials. Two-Factor Authentication (MFA) will verify next.
             </p>
           </div>
 
@@ -438,7 +637,7 @@ export default function LoginPage() {
             </span>
           </div>
 
-          {/* Form Error / Lockout Banner */}
+          {/* Form Error Banner */}
           {errorMessage && (
             <div
               className={`p-3 rounded-xl text-xs flex items-start gap-2.5 ${
@@ -455,12 +654,12 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Authentication Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
-            {/* Email Address Field */}
+          {/* Credentials Form */}
+          <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+            {/* Email Address */}
             <div className="space-y-1.5">
               <label className="block text-xs font-bold text-slate-700">
-                Email Address
+                Work Email Address
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -469,7 +668,7 @@ export default function LoginPage() {
                 <input
                   type="email"
                   required
-                  disabled={isLockedOut || isLoading}
+                  disabled={isLockedOut || isSigningIn}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@dealership.co.nz"
@@ -478,7 +677,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Password Field with Show/Hide & Complexity */}
+            {/* Password */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold text-slate-700">
@@ -498,7 +697,7 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  disabled={isLockedOut || isLoading}
+                  disabled={isLockedOut || isSigningIn}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
@@ -514,12 +713,10 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              {/* Password Strength Progress Bar */}
               <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden mt-1.5">
                 <div className={`h-full transition-all duration-300 ${getComplexityLabel().bar}`} />
               </div>
 
-              {/* Requirements Chips */}
               <div className="grid grid-cols-2 gap-1 pt-1 text-[10px] text-slate-500 font-medium">
                 <span className={`flex items-center gap-1 ${hasMinLength ? 'text-emerald-600 font-bold' : ''}`}>
                   <CheckCircle2 className={`w-3 h-3 ${hasMinLength ? 'text-emerald-500' : 'text-slate-300'}`} />
@@ -540,42 +737,18 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* MFA Ready Verification Step */}
-            <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/90 space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-brand-blue" />
-                  <span className="text-xs font-bold text-slate-800">
-                    Two-Factor Auth (MFA Ready)
-                  </span>
+            {/* MFA Notice Pill */}
+            <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 text-brand-blue" />
+                <div>
+                  <p className="text-xs font-bold text-blue-950">Two-Factor Auth (MFA Ready)</p>
+                  <p className="text-[10px] text-blue-700">Full screen security challenge follows sign in</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={mfaEnabled}
-                    onChange={(e) => setMfaEnabled(e.target.checked)}
-                    className="sr-only peer"
-                  />
-                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-blue" />
-                </label>
               </div>
-
-              {mfaEnabled && (
-                <div className="space-y-1.5 pt-1 animate-fade-in">
-                  <div className="flex items-center justify-between text-[11px] text-slate-500">
-                    <span>Enter 6-digit Authenticator / SMS Code:</span>
-                    <span className="text-brand-blue font-mono font-bold">Auto-ready</span>
-                  </div>
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={mfaCode}
-                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="482910"
-                    className="w-full text-center tracking-[0.35em] font-mono text-base font-black py-2 bg-white border border-blue-200 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue"
-                  />
-                </div>
-              )}
+              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-blue bg-white px-2 py-0.5 rounded border border-blue-200 shadow-xs">
+                Enabled
+              </span>
             </div>
 
             {/* Remember Me & Forgot Password */}
@@ -599,16 +772,16 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Primary Submit Button */}
+            {/* Primary SIGN IN Button */}
             <button
               type="submit"
-              disabled={isLockedOut || isLoading}
-              className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white shadow-lg flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-[#ed2025] to-[#d3181d] hover:from-[#d3181d] hover:to-[#b31317] hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              disabled={isLockedOut || isSigningIn}
+              className="w-full py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white shadow-lg flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-[#ed2025] to-[#d3181d] hover:from-[#d3181d] hover:to-[#b31317] hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
-              {isLoading ? (
+              {isSigningIn ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Authenticating Workspace...</span>
+                  <span>Verifying Credentials...</span>
                 </>
               ) : isLockedOut ? (
                 <>
@@ -641,7 +814,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Register / Sign Up Prompt */}
+          {/* Register Prompt */}
           <div className="space-y-3 pt-2">
             <div className="relative flex items-center justify-center">
               <div className="border-t border-slate-200 w-full" />
@@ -666,6 +839,235 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* ========================================================================= */}
+      {/* FULL SCREEN MODAL: TWO-FACTOR AUTH (MFA READY)                            */}
+      {/* ========================================================================= */}
+      {isMfaModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/85 backdrop-blur-xl animate-fade-in">
+          {/* Modal Overlay Click Backdrop */}
+          <div
+            className="absolute inset-0 bg-gradient-to-tr from-slate-950 via-slate-900/90 to-blue-950/60 opacity-90"
+            onClick={() => !isVerifyingMfa && !mfaSuccess && setIsMfaModalOpen(false)}
+          />
+
+          {/* Glowing Ambient Light Orbs */}
+          <div className="absolute top-1/4 left-1/3 w-80 h-80 bg-cyan-500/20 rounded-full blur-[100px] pointer-events-none" />
+          <div className="absolute bottom-1/4 right-1/3 w-80 h-80 bg-[#ed2025]/15 rounded-full blur-[100px] pointer-events-none" />
+
+          {/* Modal Dialog Card */}
+          <div
+            className="relative z-10 w-full max-w-lg bg-slate-900 border border-slate-700/90 rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(0,0,0,0.85)] text-white animate-slide-up space-y-6 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Close Button & Security Level */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-[10px] font-black tracking-wider uppercase">
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                <span>MFA Ready · Two-Factor Verification</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMfaModalOpen(false)}
+                disabled={isVerifyingMfa || mfaSuccess}
+                className="w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors disabled:opacity-30"
+                aria-label="Close MFA verification modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Heading */}
+            <div className="space-y-1">
+              <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                <span>Enter Verification Code</span>
+                <span className="text-cyan-400 text-lg font-mono">🔐</span>
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                A 6-digit security token has been dispatched to your authenticator app & mobile ending in{' '}
+                <strong className="text-white font-mono">{currentRoleConfig.phoneMasked}</strong>.
+              </p>
+            </div>
+
+            {/* Role Context & Destination Portal Banner */}
+            <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-cyan-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 shadow-md">
+                    {currentRoleConfig.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>{currentRoleConfig.name}</span>
+                      <span className="text-[10px] font-semibold text-cyan-300">({currentRoleConfig.role})</span>
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-mono truncate max-w-[220px]">
+                      {currentRoleConfig.email}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950/90 px-2 py-0.5 rounded border border-emerald-700">
+                  {currentRoleConfig.badge}
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px]">
+                <span className="text-slate-400">Destination Portal:</span>
+                <span className="font-bold text-cyan-300 flex items-center gap-1">
+                  <span>{currentRoleConfig.portalName}</span>
+                  <span className="text-[10px] font-mono text-slate-400">({currentRoleConfig.defaultRoute})</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Error Banner inside Modal */}
+            {mfaModalError && (
+              <div className="p-3 rounded-xl bg-red-950/80 border border-red-500/50 text-red-300 text-xs flex items-center gap-2 animate-fade-in">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>{mfaModalError}</span>
+              </div>
+            )}
+
+            {/* Simulated Live Authenticator/SMS Toast with 1-Click Action */}
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-brand-blue/20 to-emerald-500/15 border border-blue-400/30 flex items-center justify-between gap-3 shadow-inner">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-cyan-500 text-slate-950 flex items-center justify-center shrink-0 shadow-sm">
+                  <KeyRound className="w-3.5 h-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                    <span>Simulated Authenticator Token:</span>
+                    <span className="font-mono text-cyan-300 font-black tracking-wider text-xs">482 910</span>
+                  </p>
+                  <p className="text-[10px] text-slate-300">Auto-fill ready for instant test verification</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleAutoFillOtp}
+                disabled={isAutoFilling || isVerifyingMfa || mfaSuccess}
+                className="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-[11px] shrink-0 flex items-center gap-1 shadow-md transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              >
+                <Sparkles className="w-3 h-3 text-slate-950 animate-pulse" />
+                <span>Fill Code</span>
+              </button>
+            </div>
+
+            {/* 6-Digit OTP Box Inputs */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-300">
+                <span>Enter 6-Digit Security PIN</span>
+                <span className="text-[10px] text-cyan-400 font-mono">Auto-advance active</span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 sm:gap-2.5">
+                {otpDigits.map((digit, index) => (
+                  <input
+                    key={index}
+                    ref={(el) => {
+                      otpInputRefs.current[index] = el;
+                    }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    disabled={isAutoFilling || isVerifyingMfa || mfaSuccess}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                    onPaste={handleOtpPaste}
+                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center font-mono text-2xl font-black rounded-2xl border transition-all focus:outline-none ${
+                      digit
+                        ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300 ring-2 ring-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                        : 'border-slate-700 bg-slate-950/90 text-white focus:bg-slate-900 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20'
+                    } ${mfaSuccess ? 'border-emerald-400 bg-emerald-950/60 text-emerald-300' : ''}`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Primary Action Buttons: Auto-Fill + Verify */}
+            <div className="space-y-3 pt-1">
+              {/* Auto Fill Demo Button */}
+              <button
+                type="button"
+                onClick={handleAutoFillOtp}
+                disabled={isAutoFilling || isVerifyingMfa || mfaSuccess}
+                className="w-full py-3.5 px-4 rounded-2xl font-black text-xs uppercase tracking-wider text-slate-950 bg-gradient-to-r from-cyan-400 to-cyan-300 hover:from-cyan-300 hover:to-cyan-200 border border-cyan-300/40 shadow-[0_0_20px_rgba(34,211,238,0.25)] flex items-center justify-center gap-2 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50"
+              >
+                <Sparkles className="w-4 h-4 text-slate-950" />
+                <span>
+                  {isAutoFilling ? 'Auto-typing token (482910)...' : '⚡ Auto-Fill Demo OTP & Enter Portal (482910)'}
+                </span>
+              </button>
+
+              {/* Verify & Access Button */}
+              <button
+                type="button"
+                onClick={() => triggerMfaVerification(otpDigits.join(''))}
+                disabled={isAutoFilling || isVerifyingMfa || mfaSuccess || otpDigits.join('').length < 6}
+                className="w-full py-3.5 px-4 rounded-2xl font-bold text-xs uppercase tracking-wider text-white shadow-xl flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-[#ed2025] to-[#d3181d] hover:from-[#d3181d] hover:to-[#b31317] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+              >
+                {mfaSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-300 animate-pulse" />
+                    <span>MFA Verified! Redirecting to {currentRoleConfig.portalName}...</span>
+                  </>
+                ) : isVerifyingMfa ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Verifying Security Token...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Verify & Enter {currentRoleConfig.role} Portal</span>
+                    <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Resend Code & Helper Options */}
+            <div className="flex items-center justify-between text-xs pt-2 text-slate-400 border-t border-slate-800">
+              <div className="flex items-center gap-1.5">
+                <Radio className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Didn&apos;t receive token?</span>
+              </div>
+
+              {resendCountdown > 0 ? (
+                <span className="font-mono text-slate-400 text-[11px]">
+                  Resend in <strong className="text-cyan-300">{resendCountdown}s</strong>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendCode}
+                  className="font-bold text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Resend New Code</span>
+                </button>
+              )}
+            </div>
+
+            {/* Back to Sign In / Cancel */}
+            <div className="text-center pt-1">
+              <button
+                type="button"
+                onClick={() => setIsMfaModalOpen(false)}
+                disabled={isVerifyingMfa || mfaSuccess}
+                className="text-xs text-slate-400 hover:text-white transition-colors underline disabled:opacity-50"
+              >
+                ← Back to credentials / switch account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

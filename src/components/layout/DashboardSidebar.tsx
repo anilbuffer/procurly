@@ -29,7 +29,8 @@ import {
   ChevronUp,
   CreditCard as PaymentIcon,
 } from 'lucide-react';
-import { requestsService } from '@/services/requestsService';
+import { requestsService, DEFAULT_WORKSPACE_USER } from '@/services/requestsService';
+import { WorkspaceUser } from '@/types';
 
 export interface DashboardSidebarProps {
   onCloseMobile?: () => void;
@@ -43,6 +44,7 @@ export function DashboardSidebar({
   onToggleCollapse,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const [currentUser, setCurrentUser] = useState<WorkspaceUser>(DEFAULT_WORKSPACE_USER);
   const [requestsActionCount, setRequestsActionCount] = useState(2);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(2);
   const [unreadNotifsCount, setUnreadNotifsCount] = useState(2);
@@ -51,10 +53,15 @@ export function DashboardSidebar({
 
   const loadData = async () => {
     try {
-      const [reqs, notifs] = await Promise.all([
+      const [reqs, notifs, usr] = await Promise.all([
         requestsService.getRequests(),
         requestsService.getNotifications(),
+        requestsService.getCurrentUser(),
       ]);
+
+      if (usr) {
+        setCurrentUser(usr);
+      }
 
       const actionCount = reqs.filter(
         (r) =>
@@ -78,9 +85,11 @@ export function DashboardSidebar({
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_data_updated', handleUpdate);
     window.addEventListener('procurly_requests_updated', handleUpdate);
+    window.addEventListener('procurly_user_updated', handleUpdate);
     return () => {
       window.removeEventListener('procurly_data_updated', handleUpdate);
       window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_user_updated', handleUpdate);
     };
   }, []);
 
@@ -308,7 +317,7 @@ export function DashboardSidebar({
         </div>
       </nav>
 
-      {/* Bottom Customer User Profile Section (Sole Location in App) */}
+      {/* Bottom Workspace User Profile Section (Sole Location in App) */}
       <div ref={profileRef} className="p-3 border-t border-slate-800/80 bg-slate-950 shrink-0 relative mt-auto">
         <button
           type="button"
@@ -318,24 +327,24 @@ export function DashboardSidebar({
             isCollapsed ? 'justify-center' : 'gap-3',
             profileDropdownOpen ? 'bg-slate-800/90 ring-1 ring-slate-700' : ''
           )}
-          title={isCollapsed ? 'AutoCare Auckland (James Wilson)' : undefined}
+          title={isCollapsed ? `${currentUser.organization} (${currentUser.name})` : undefined}
           aria-label="User Profile & Settings"
         >
-          {/* Customer Avatar AC */}
+          {/* User Avatar Initials */}
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-blue to-blue-600 text-white font-black text-xs flex items-center justify-center shadow-md shrink-0 ring-2 ring-blue-400/30">
-            AC
+            {currentUser.avatar || 'AC'}
           </div>
 
           {!isCollapsed && (
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-white truncate group-hover:text-red-400 transition-colors">
-                AutoCare Auckland
+                {currentUser.name}
               </p>
               <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-                <span className="truncate">James Wilson</span>
+                <span className="truncate text-cyan-300 font-semibold">{currentUser.role}</span>
                 <span>•</span>
                 <span className="text-emerald-400 font-semibold flex items-center gap-0.5 shrink-0">
-                  <ShieldCheck className="w-3 h-3" /> Trade
+                  <ShieldCheck className="w-3 h-3" /> {currentUser.badge.split('/')[0].trim()}
                 </span>
               </div>
             </div>
@@ -362,15 +371,15 @@ export function DashboardSidebar({
             {/* Header Info */}
             <div className="px-4 py-3 border-b border-slate-800/80 bg-slate-950/60">
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-bold text-white text-xs truncate">AutoCare Auckland</span>
+                <span className="font-bold text-white text-xs truncate">{currentUser.organization}</span>
                 <span className="text-[9px] font-black uppercase text-brand-blue bg-blue-950/80 px-1.5 py-0.2 rounded border border-blue-800 shrink-0">
-                  Trade Admin
+                  {currentUser.role}
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400">james@autocareauckland.co.nz</p>
+              <p className="text-[11px] text-slate-400 truncate">{currentUser.email}</p>
               <div className="mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
-                <span className="text-slate-400">Approved Credit:</span>
-                <span className="font-bold text-emerald-400">$50,000 Verified</span>
+                <span className="text-slate-400">Desk / Role:</span>
+                <span className="font-bold text-emerald-400">{currentUser.deskName}</span>
               </div>
             </div>
 
