@@ -32,7 +32,7 @@ export function DocumentPreviewModal({ isOpen, onClose, document }: DocumentPrev
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl" title={document.title}>
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl" title={document.title}>
       <div className="space-y-6">
         {/* Document Header Bar */}
         <div className="flex items-center justify-between bg-slate-100 p-3 rounded-xl">
@@ -53,7 +53,7 @@ export function DocumentPreviewModal({ isOpen, onClose, document }: DocumentPrev
         </div>
 
         {/* Printable Document Paper Card */}
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-card space-y-6 text-slate-900 font-sans">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-card space-y-6 text-slate-900 font-sans">
           {/* Top Brand Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-200 gap-4">
             <div className="flex items-center gap-3">

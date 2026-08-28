@@ -194,14 +194,14 @@ export default function HowItWorksPage() {
           <p className="text-sm text-slate-600 max-w-xl mx-auto">
             Submit a part request in seconds or register your trade account for instant quote generation.
           </p>
-          <div className="pt-2 flex justify-center gap-4">
-            <Link href="/requests/new">
-              <Button variant="primary" size="lg" className="font-bold text-xs">
+          <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <Link href="/requests/new" className="w-full sm:w-auto">
+              <Button variant="primary" size="lg" className="w-full sm:w-auto font-bold text-xs">
                 Submit a Request Now
               </Button>
             </Link>
-            <Link href="/register">
-              <Button variant="outline" size="lg" className="font-bold text-xs">
+            <Link href="/register" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto font-bold text-xs">
                 Register Trade Account
               </Button>
             </Link>

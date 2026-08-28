@@ -84,7 +84,7 @@ export function QuoteComparisonModal({
 
   return (
     <>
-      <Modal isOpen={isOpen && !paymentModalOpen} onClose={onClose} size="xl" title={`Review Landed Quotation — ${request.referenceNumber}`}>
+      <Modal isOpen={isOpen && !paymentModalOpen} onClose={onClose} size="3xl" title={`Review Landed Quotation — ${request.referenceNumber}`}>
         <div className="space-y-6">
           {/* 1. Header Overview Banner */}
           <div className="p-4 bg-slate-900 text-white rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
@@ -131,11 +131,10 @@ export function QuoteComparisonModal({
                   <div
                     key={opt.id}
                     onClick={() => setSelectedQuoteId(opt.id)}
-                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all relative ${
-                      isSelected
+                    className={`p-5 rounded-2xl border-2 cursor-pointer transition-all relative ${isSelected
                         ? 'border-[#ed2025] bg-red-50/20 ring-2 ring-red-100 shadow-md'
                         : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     {opt.isRecommended && (
                       <span className="absolute top-3 right-3 text-[10px] font-black uppercase tracking-wider bg-[#ed2025] text-white px-2.5 py-0.5 rounded-full shadow-sm">
@@ -145,9 +144,8 @@ export function QuoteComparisonModal({
 
                     <div className="flex items-center gap-3 mb-3">
                       <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                          isAir ? 'bg-red-50 text-[#ed2025]' : 'bg-blue-50 text-brand-blue'
-                        }`}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center ${isAir ? 'bg-red-50 text-[#ed2025]' : 'bg-blue-50 text-brand-blue'
+                          }`}
                       >
                         {isAir ? <Plane className="w-5 h-5" /> : <Ship className="w-5 h-5" />}
                       </div>

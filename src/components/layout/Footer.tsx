@@ -8,34 +8,36 @@ export function Footer() {
     <footer className="bg-brand-blue-navy text-white border-t border-slate-800">
       {/* Top Banner / Value Strip */}
       <div className="border-b border-slate-800/80 py-8 px-4 sm:px-6 lg:px-8 bg-slate-950/40">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 text-slate-300">
-          <div className="flex items-center gap-3.5 p-4 rounded-xl bg-white/5 border border-white/10">
-            <div className="p-2.5 rounded-lg bg-brand-red/20 text-brand-red">
-              <ShieldCheck className="w-6 h-6" />
+        <div className="max-w-7xl mx-auto">
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-950/60 backdrop-blur-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-800/80 overflow-hidden shadow-xl">
+            <div className="flex items-center gap-4 p-5 sm:p-6 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+              <div className="p-3 rounded-xl bg-brand-red/20 text-brand-red shrink-0 border border-brand-red/30 shadow-sm">
+                <ShieldCheck className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h4 className="text-white text-sm font-heading font-bold">100% Fitment Guaranteed</h4>
+                <p className="text-xs text-slate-400 mt-0.5">Physical VIN validation prior to overseas dispatch.</p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-white text-sm font-bold">100% Fitment Guaranteed</h4>
-              <p className="text-xs text-slate-400">Physical VIN validation prior to overseas dispatch.</p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-3.5 p-4 rounded-xl bg-white/5 border border-white/10">
-            <div className="p-2.5 rounded-lg bg-brand-blue/30 text-blue-400">
-              <CheckCircle2 className="w-6 h-6" />
+            <div className="flex items-center gap-4 p-5 sm:p-6 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+              <div className="p-3 rounded-xl bg-brand-blue/30 text-blue-400 shrink-0 border border-blue-500/30 shadow-sm">
+                <CheckCircle2 className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h4 className="text-white text-sm font-heading font-bold">Transparent Landed Pricing</h4>
+                <p className="text-xs text-slate-400 mt-0.5">Single all-inclusive NZD quote. No surprise customs fees.</p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-white text-sm font-bold">Transparent Landed Pricing</h4>
-              <p className="text-xs text-slate-400">Single all-inclusive NZD quote. No surprise customs fees.</p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-3.5 p-4 rounded-xl bg-white/5 border border-white/10">
-            <div className="p-2.5 rounded-lg bg-emerald-500/20 text-emerald-400">
-              <MapPin className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-white text-sm font-bold">Nationwide Door Delivery</h4>
-              <p className="text-xs text-slate-400">Direct courier to workshops across North & South Island.</p>
+            <div className="flex items-center gap-4 p-5 sm:p-6 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
+              <div className="p-3 rounded-xl bg-emerald-500/20 text-emerald-400 shrink-0 border border-emerald-500/30 shadow-sm">
+                <MapPin className="w-6 h-6 stroke-[2.2]" />
+              </div>
+              <div>
+                <h4 className="text-white text-sm font-heading font-bold">Nationwide Door Delivery</h4>
+                <p className="text-xs text-slate-400 mt-0.5">Direct courier to workshops across North & South Island.</p>
+              </div>
             </div>
           </div>
         </div>

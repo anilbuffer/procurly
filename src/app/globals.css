@@ -20,6 +20,10 @@
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
+
+  h1, h2, h3, h4, .font-heading {
+    font-family: var(--font-heading), var(--font-inter), system-ui, sans-serif;
+  }
 }
 
 /* Custom scrollbar */
@@ -61,17 +65,39 @@
 
 /* Glassmorphism helpers */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
 }
 
 .glass-dark {
-  background: rgba(15, 23, 42, 0.92);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Grid overlay */
+.bg-grid-tech {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+.bg-grid-light {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
 }
 
 /* Accent Gradients */
@@ -85,6 +111,28 @@
 
 .gradient-subtle {
   background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+}
+
+.gradient-cta-mesh {
+  background: linear-gradient(135deg, #131d3f 0%, #1e306e 40%, #2b4499 75%, #1c2a5c 100%);
+}
+
+/* Button Polish Utilities */
+.btn-red-polished {
+  background: linear-gradient(180deg, #f03237 0%, #ed2025 50%, #d3181d 100%);
+  box-shadow: 0 4px 14px 0 rgba(237, 32, 37, 0.39), inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-red-polished:hover {
+  background: linear-gradient(180deg, #fa454a 0%, #f03237 50%, #db1a1f 100%);
+  box-shadow: 0 6px 20px 0 rgba(237, 32, 37, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-red-polished:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px 0 rgba(237, 32, 37, 0.35), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
 }
 
 /* Pulse badge ring */
@@ -106,3 +154,4 @@
 .animate-ring-pulse {
   animation: ringPulse 2s infinite;
 }
+

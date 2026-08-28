@@ -151,7 +151,7 @@ export default function RequestsPage() {
             className="inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-5 py-3 rounded-xl shadow-glow transition-all active:scale-[0.98]"
           >
             <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-            <span>+ New Parts Request</span>
+            <span>New Parts Request</span>
           </button>
         </Link>
       </div>
@@ -167,11 +167,10 @@ export default function RequestsPage() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
-                  className={`pb-3 px-3 text-xs font-bold border-b-2 transition-all shrink-0 flex items-center gap-1.5 ${
-                    isActive
+                  className={`pb-3 px-3 text-xs font-bold border-b-2 transition-all shrink-0 flex items-center gap-1.5 ${isActive
                       ? 'border-[#ed2025] text-[#ed2025]'
                       : 'border-transparent text-slate-500 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   <span>{t.label}</span>
                   {t.id === 'Awaiting Action' && awaitingActionCount > 0 && (

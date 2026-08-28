@@ -72,7 +72,7 @@ export function PaymentModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} size="lg" title="Complete Procurement Payment">
+    <Modal isOpen={isOpen} onClose={handleClose} size="xl" title="Complete Procurement Payment">
       {isSuccess ? (
         <div className="text-center py-6 space-y-5">
           <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto animate-fade-in shadow-md">
@@ -142,11 +142,10 @@ export function PaymentModal({
 
             {/* Option 1: Approved Trade Credit Account */}
             <label
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${
-                selectedMethod === 'Approved Trade Credit (20th Mth Following)'
+              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${selectedMethod === 'Approved Trade Credit (20th Mth Following)'
                   ? 'border-[#ed2025] bg-red-50/30 ring-2 ring-red-100 shadow-sm'
                   : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
+                }`}
             >
               <input
                 type="radio"
@@ -175,11 +174,10 @@ export function PaymentModal({
 
             {/* Option 2: Credit Card */}
             <label
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${
-                selectedMethod === 'Credit Card (Visa/Mastercard)'
+              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${selectedMethod === 'Credit Card (Visa/Mastercard)'
                   ? 'border-[#ed2025] bg-red-50/30 ring-2 ring-red-100 shadow-sm'
                   : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
+                }`}
             >
               <input
                 type="radio"
@@ -206,11 +204,10 @@ export function PaymentModal({
 
             {/* Option 3: Account2Account / Poli */}
             <label
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${
-                selectedMethod === 'Account2Account Bank Transfer'
+              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${selectedMethod === 'Account2Account Bank Transfer'
                   ? 'border-[#ed2025] bg-red-50/30 ring-2 ring-red-100 shadow-sm'
                   : 'border-slate-200 hover:border-slate-300 bg-white'
-              }`}
+                }`}
             >
               <input
                 type="radio"

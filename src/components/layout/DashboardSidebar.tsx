@@ -279,7 +279,7 @@ export function DashboardSidebar({
             title={isCollapsed ? 'New Parts Request' : undefined}
           >
             <PlusCircle className="w-4 h-4 stroke-[2.5] shrink-0" />
-            {!isCollapsed && <span>+ New Parts Request</span>}
+            {!isCollapsed && <span>New Parts Request</span>}
           </button>
         </Link>
       </div>

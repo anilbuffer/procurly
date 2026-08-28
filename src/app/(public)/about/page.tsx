@@ -92,14 +92,14 @@ export default function AboutPage() {
           <p className="text-sm text-slate-600 max-w-xl mx-auto">
             Join hundreds of verified New Zealand automotive businesses using Procurly for hassle-free global parts procurement.
           </p>
-          <div className="pt-2 flex justify-center gap-4">
-            <Link href="/register">
-              <Button variant="primary" size="lg" className="font-bold text-xs">
+          <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <Link href="/register" className="w-full sm:w-auto">
+              <Button variant="primary" size="lg" className="w-full sm:w-auto font-bold text-xs">
                 Register Verified Trade Account
               </Button>
             </Link>
-            <Link href="/contact">
-              <Button variant="outline" size="lg" className="font-bold text-xs">
+            <Link href="/contact" className="w-full sm:w-auto">
+              <Button variant="outline" size="lg" className="w-full sm:w-auto font-bold text-xs">
                 Contact Our Procurement Team
               </Button>
             </Link>

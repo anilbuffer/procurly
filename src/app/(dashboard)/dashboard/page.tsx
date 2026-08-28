@@ -200,7 +200,7 @@ export default function CustomerPortalDashboard() {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#ed2025] hover:bg-[#d3181d] text-white font-black text-xs uppercase tracking-wider px-6 py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98]"
             >
               <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-              <span>+ New Parts Request</span>
+              <span>New Parts Request</span>
             </button>
           </Link>
         </div>
