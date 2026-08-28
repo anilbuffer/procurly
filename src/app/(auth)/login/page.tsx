@@ -473,20 +473,17 @@ export default function LoginPage() {
                   key={roleItem.role}
                   type="button"
                   onClick={() => handleSelectRole(roleItem)}
-                  className={`relative p-2.5 sm:p-3 rounded-xl text-left transition-all flex items-start gap-2.5 border backdrop-blur-md ${
-                    isLastOnMobileTwoCol ? 'col-span-2 sm:col-span-1' : 'col-span-1'
-                  } ${
-                    isSelected
+                  className={`relative p-2.5 sm:p-3 rounded-xl text-left transition-all flex items-start gap-2.5 border backdrop-blur-md ${isLastOnMobileTwoCol ? 'col-span-2 sm:col-span-1' : 'col-span-1'
+                    } ${isSelected
                       ? 'bg-white/15 border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.25)] ring-1 ring-cyan-400'
                       : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
-                  }`}
+                    }`}
                 >
                   <div
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                      isSelected
-                        ? 'bg-cyan-500 text-slate-950 font-bold shadow-md'
-                        : 'bg-white/10 text-slate-300'
-                    }`}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors ${isSelected
+                      ? 'bg-cyan-500 text-slate-950 font-bold shadow-md'
+                      : 'bg-white/10 text-slate-300'
+                      }`}
                   >
                     <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
@@ -579,7 +576,7 @@ export default function LoginPage() {
       {/* RIGHT SECTION (~40% Desktop): Clean Authentication Card                   */}
       {/* ========================================================================= */}
       <div className="lg:w-[40%] bg-white flex flex-col justify-between p-6 sm:p-10 lg:p-12 shadow-2xl relative z-20 min-h-screen">
-        <div className="space-y-6">
+        <div className="space-y-3 flex-col justify-between h-full">
           {/* Brand Logo & Version Tag */}
           <div className="flex items-center justify-between">
             <Link href="/" className="inline-flex items-center gap-2.5 group">
@@ -606,232 +603,184 @@ export default function LoginPage() {
               </span>
             </div>
           </div>
-
-          {/* Heading */}
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-              Sign In <span className="inline-block animate-bounce">👋</span>
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Select a workspace role above or enter credentials. Two-Factor Authentication (MFA) will verify next.
-            </p>
-          </div>
-
-          {/* Active Workspace Role Pill */}
-          <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
-                {React.createElement(currentRoleConfig.icon, { className: 'w-4 h-4 text-cyan-400' })}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">
-                  Role: <span className="text-[#ed2025]">{currentRoleConfig.role}</span>
-                </p>
-                <p className="text-[10px] text-slate-500 truncate font-mono">
-                  {currentRoleConfig.deskName} · {currentRoleConfig.name}
-                </p>
-              </div>
+          <div className='space-y-6 flex flex-col h-full align-center justify-center'>
+            {/* Heading */}
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                Sign In <span className="inline-block animate-bounce">👋</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Select a workspace role above or enter credentials. Two-Factor Authentication (MFA) will verify next.
+              </p>
             </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 shrink-0">
-              {currentRoleConfig.badge}
-            </span>
-          </div>
 
-          {/* Form Error Banner */}
-          {errorMessage && (
-            <div
-              className={`p-3 rounded-xl text-xs flex items-start gap-2.5 ${
-                isLockedOut
+            {/* Active Workspace Role Pill */}
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shrink-0">
+                  {React.createElement(currentRoleConfig.icon, { className: 'w-4 h-4 text-cyan-400' })}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 truncate">
+                    Role: <span className="text-[#ed2025]">{currentRoleConfig.role}</span>
+                  </p>
+                  <p className="text-[10px] text-slate-500 truncate font-mono">
+                    {currentRoleConfig.deskName} · {currentRoleConfig.name}
+                  </p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 shrink-0">
+                {currentRoleConfig.badge}
+              </span>
+            </div>
+
+            {/* Form Error Banner */}
+            {errorMessage && (
+              <div
+                className={`p-3 rounded-xl text-xs flex items-start gap-2.5 ${isLockedOut
                   ? 'bg-red-50 border border-red-200 text-red-700'
                   : 'bg-amber-50 border border-amber-200 text-amber-800'
-              }`}
-            >
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
-              <div className="flex-1">
-                <p className="font-bold">{isLockedOut ? 'Security Lockout Active' : 'Authentication Notice'}</p>
-                <p className="text-[11px] mt-0.5">{errorMessage}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Credentials Form */}
-          <form onSubmit={handleCredentialsSubmit} className="space-y-4">
-            {/* Email Address */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700">
-                Work Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Mail className="w-4 h-4" />
+                  }`}
+              >
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
+                <div className="flex-1">
+                  <p className="font-bold">{isLockedOut ? 'Security Lockout Active' : 'Authentication Notice'}</p>
+                  <p className="text-[11px] mt-0.5">{errorMessage}</p>
                 </div>
-                <input
-                  type="email"
-                  required
-                  disabled={isLockedOut || isSigningIn}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@dealership.co.nz"
-                  className="w-full pl-10 pr-3 py-2.5 bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all disabled:opacity-50"
-                />
               </div>
-            </div>
+            )}
 
-            {/* Password */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
+            {/* Credentials Form */}
+            <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+              {/* Email Address */}
+              <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-slate-700">
-                  Password
+                  Work Email Address
                 </label>
-                <span className="text-[10px] font-semibold text-slate-500">
-                  Complexity:{' '}
-                  <span className={`font-bold ${getComplexityLabel().color}`}>
-                    {getComplexityLabel().label}
-                  </span>
-                </span>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Lock className="w-4 h-4" />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    disabled={isLockedOut || isSigningIn}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@dealership.co.nz"
+                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all disabled:opacity-50"
+                  />
                 </div>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  disabled={isLockedOut || isSigningIn}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all disabled:opacity-50 font-mono"
-                />
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Password
+                  </label>
+                  <span className="text-[10px] font-semibold text-slate-500">
+                    Complexity:{' '}
+                    <span className={`font-bold ${getComplexityLabel().color}`}>
+                      {getComplexityLabel().label}
+                    </span>
+                  </span>
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    disabled={isLockedOut || isSigningIn}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••••••"
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50/80 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all disabled:opacity-50 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+
+                <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden mt-1.5">
+                  <div className={`h-full transition-all duration-300 ${getComplexityLabel().bar}`} />
+                </div>
+
+
+              </div>
+
+
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between text-xs pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-3.5 h-3.5 text-[#ed2025] rounded border-slate-300 focus:ring-[#ed2025]"
+                  />
+                  <span className="text-slate-600 font-medium">Remember me</span>
+                </label>
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => alert('Password reset instructions have been dispatched to your verified email address.')}
+                  className="font-bold text-brand-blue hover:text-blue-800 hover:underline transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  Forgot your password?
                 </button>
               </div>
 
-              <div className="w-full bg-slate-100 h-1 rounded-full overflow-hidden mt-1.5">
-                <div className={`h-full transition-all duration-300 ${getComplexityLabel().bar}`} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-1 pt-1 text-[10px] text-slate-500 font-medium">
-                <span className={`flex items-center gap-1 ${hasMinLength ? 'text-emerald-600 font-bold' : ''}`}>
-                  <CheckCircle2 className={`w-3 h-3 ${hasMinLength ? 'text-emerald-500' : 'text-slate-300'}`} />
-                  8+ characters
-                </span>
-                <span className={`flex items-center gap-1 ${hasUppercase ? 'text-emerald-600 font-bold' : ''}`}>
-                  <CheckCircle2 className={`w-3 h-3 ${hasUppercase ? 'text-emerald-500' : 'text-slate-300'}`} />
-                  Uppercase letter
-                </span>
-                <span className={`flex items-center gap-1 ${hasNumber ? 'text-emerald-600 font-bold' : ''}`}>
-                  <CheckCircle2 className={`w-3 h-3 ${hasNumber ? 'text-emerald-500' : 'text-slate-300'}`} />
-                  Contains number
-                </span>
-                <span className={`flex items-center gap-1 ${hasSpecial ? 'text-emerald-600 font-bold' : ''}`}>
-                  <CheckCircle2 className={`w-3 h-3 ${hasSpecial ? 'text-emerald-500' : 'text-slate-300'}`} />
-                  Special symbol
-                </span>
-              </div>
-            </div>
-
-            {/* MFA Notice Pill */}
-            <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4 text-brand-blue" />
-                <div>
-                  <p className="text-xs font-bold text-blue-950">Two-Factor Auth (MFA Ready)</p>
-                  <p className="text-[10px] text-blue-700">Full screen security challenge follows sign in</p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-brand-blue bg-white px-2 py-0.5 rounded border border-blue-200 shadow-xs">
-                Enabled
-              </span>
-            </div>
-
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between text-xs pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-3.5 h-3.5 text-[#ed2025] rounded border-slate-300 focus:ring-[#ed2025]"
-                />
-                <span className="text-slate-600 font-medium">Remember me</span>
-              </label>
-
+              {/* Primary SIGN IN Button */}
               <button
-                type="button"
-                onClick={() => alert('Password reset instructions have been dispatched to your verified email address.')}
-                className="font-bold text-brand-blue hover:text-blue-800 hover:underline transition-colors"
+                type="submit"
+                disabled={isLockedOut || isSigningIn}
+                className="w-full py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white shadow-lg flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-[#ed2025] to-[#d3181d] hover:from-[#d3181d] hover:to-[#b31317] hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                Forgot your password?
+                {isSigningIn ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Verifying Credentials...</span>
+                  </>
+                ) : isLockedOut ? (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    <span>Locked ({lockoutTimer}s remaining)</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign in to workspace</span>
+                    <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  </>
+                )}
               </button>
+            </form>
+
+            {/* Register Prompt */}
+            <div className="space-y-3 pt-2">
+              <div className="relative flex items-center justify-center mb-6">
+                <div className="border-t border-slate-200 w-full" />
+                <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider absolute">
+                  New to PROCURly?
+                </span>
+              </div>
+
+              <Link
+                href="/register"
+                className="w-full py-2.5 px-4 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 text-emerald-800 font-bold text-xs flex items-center justify-center gap-2 transition-all hover:border-emerald-300"
+              >
+                <span>+ Create an account (Register Trade Portal)</span>
+              </Link>
             </div>
-
-            {/* Primary SIGN IN Button */}
-            <button
-              type="submit"
-              disabled={isLockedOut || isSigningIn}
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white shadow-lg flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-[#ed2025] to-[#d3181d] hover:from-[#d3181d] hover:to-[#b31317] hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-            >
-              {isSigningIn ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Verifying Credentials...</span>
-                </>
-              ) : isLockedOut ? (
-                <>
-                  <Lock className="w-4 h-4" />
-                  <span>Locked ({lockoutTimer}s remaining)</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign in to workspace</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Account Lockout Demo & Security Footer */}
-          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[11px] text-slate-500">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-              <span>
-                Attempts: <strong className="text-slate-800 font-mono">{failedAttempts}/5</strong> (Lockout Protected)
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleSimulateFailedAttempt}
-              className="text-[10px] font-bold text-slate-500 hover:text-red-600 underline"
-            >
-              Test Fail Policy
-            </button>
-          </div>
-
-          {/* Register Prompt */}
-          <div className="space-y-3 pt-2">
-            <div className="relative flex items-center justify-center">
-              <div className="border-t border-slate-200 w-full" />
-              <span className="bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider absolute">
-                New to PROCURly?
-              </span>
-            </div>
-
-            <Link
-              href="/register"
-              className="w-full py-2.5 px-4 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-50 text-emerald-800 font-bold text-xs flex items-center justify-center gap-2 transition-all hover:border-emerald-300"
-            >
-              <span>+ Create an account (Register Trade Portal)</span>
-            </Link>
           </div>
         </div>
-
         {/* Footer */}
         <div className="pt-6 border-t border-slate-100 text-center">
           <p className="text-[11px] text-slate-400">
@@ -980,11 +929,10 @@ export default function LoginPage() {
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     onPaste={handleOtpPaste}
-                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center font-mono text-2xl font-black rounded-2xl border transition-all focus:outline-none ${
-                      digit
-                        ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300 ring-2 ring-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
-                        : 'border-slate-700 bg-slate-950/90 text-white focus:bg-slate-900 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20'
-                    } ${mfaSuccess ? 'border-emerald-400 bg-emerald-950/60 text-emerald-300' : ''}`}
+                    className={`w-12 h-14 sm:w-14 sm:h-16 text-center font-mono text-2xl font-black rounded-2xl border transition-all focus:outline-none ${digit
+                      ? 'border-cyan-400 bg-cyan-950/40 text-cyan-300 ring-2 ring-cyan-400/30 shadow-[0_0_15px_rgba(34,211,238,0.2)]'
+                      : 'border-slate-700 bg-slate-950/90 text-white focus:bg-slate-900 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20'
+                      } ${mfaSuccess ? 'border-emerald-400 bg-emerald-950/60 text-emerald-300' : ''}`}
                   />
                 ))}
               </div>
