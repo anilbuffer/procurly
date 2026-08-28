@@ -52,7 +52,7 @@ export function Navbar() {
       </div>
 
       {/* Main Navbar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 lg:px-0">
         <div className="flex items-center justify-between h-16 sm:h-18 py-2.5 sm:py-3">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group">
@@ -64,12 +64,9 @@ export function Navbar() {
                 <span className="text-lg sm:text-xl font-heading font-extrabold tracking-tight text-slate-900">
                   Procurly
                 </span>
-                <span className="text-[10px] sm:text-xs font-bold text-brand-red uppercase tracking-wider bg-red-50 px-1.5 py-0.2 rounded border border-red-200">
-                  Trade
-                </span>
               </div>
               <span className="text-[9px] sm:text-[10px] font-bold text-brand-blue uppercase tracking-widest -mt-0.5">
-                by Autohub
+                by Autohub New Zealand Limited
               </span>
             </div>
           </Link>
@@ -82,11 +79,10 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-all ${
-                    active
-                      ? 'text-brand-blue bg-brand-blue-light/70'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
+                  className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-all ${active
+                    ? 'text-brand-blue bg-brand-blue-light/70'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    }`}
                 >
                   {link.label}
                 </Link>
@@ -149,11 +145,10 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    isActive(link.href)
-                      ? 'text-brand-blue bg-brand-blue-light font-bold'
-                      : 'text-slate-700 hover:bg-slate-50'
-                  }`}
+                  className={`block px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${isActive(link.href)
+                    ? 'text-brand-blue bg-brand-blue-light font-bold'
+                    : 'text-slate-700 hover:bg-slate-50'
+                    }`}
                 >
                   {link.label}
                 </Link>

@@ -54,11 +54,37 @@ export function QuickQuoteEstimator() {
       </div>
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
+        {/* Quick Vehicle Select Pills */}
+        <div className="space-y-2">
+          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+            Popular NZ Trade Vehicles (Click to test):
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {SAMPLE_VEHICLES.map((v) => {
+              const isSelected = v.vin === selectedVehicleVin;
+              return (
+                <button
+                  key={v.vin}
+                  type="button"
+                  onClick={() => setSelectedVehicleVin(v.vin)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                    isSelected
+                      ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                      : 'bg-slate-100/90 text-slate-700 border-slate-200 hover:bg-slate-200/80 hover:border-slate-300'
+                  }`}
+                >
+                  {v.make} {v.model} ({v.year})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Step 1: Vehicle & Category Selection */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Sample NZ Vehicle
+              Selected Vehicle
             </label>
             <select
               value={selectedVehicleVin}
@@ -67,12 +93,12 @@ export function QuickQuoteEstimator() {
             >
               {SAMPLE_VEHICLES.map((v) => (
                 <option key={v.vin} value={v.vin}>
-                  {v.year} {v.make} {v.model} ({v.originMarket})
+                  {v.year} {v.make} {v.model} - {v.subModel} ({v.originMarket})
                 </option>
               ))}
             </select>
             <p className="text-[11px] text-slate-500 font-mono">
-              VIN: {activeVehicle.vin.slice(0, 10)}•••
+              Chassis/VIN: {activeVehicle.vin.slice(0, 12)}•••
             </p>
           </div>
 

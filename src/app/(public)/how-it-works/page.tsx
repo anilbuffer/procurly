@@ -23,7 +23,7 @@ export default function HowItWorksPage() {
   return (
     <div className="space-y-16 lg:space-y-24 py-12 pb-20">
       {/* Header */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="max-w-7xl mx-auto px-4 lg:px-0 text-center">
         <div className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-red uppercase tracking-wider bg-red-50 px-3 py-1 rounded-full border border-red-200 mb-4">
           <Layers className="w-3.5 h-3.5" /> End-to-End Trade Architecture
         </div>
@@ -36,7 +36,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* 4 Detailed Stages */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="max-w-7xl mx-auto px-4 lg:px-0 space-y-12">
         {/* Stage 1 */}
         <div className="bg-white rounded-3xl p-8 lg:p-12 border border-slate-200/90 shadow-card grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-6 space-y-4 text-left">
@@ -188,7 +188,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="max-w-7xl mx-auto px-4 lg:px-0 text-center">
         <div className="p-10 bg-slate-100 rounded-3xl border border-slate-200 space-y-4">
           <h3 className="text-2xl font-bold text-slate-900">Ready to try Procurly for your workshop?</h3>
           <p className="text-sm text-slate-600 max-w-xl mx-auto">

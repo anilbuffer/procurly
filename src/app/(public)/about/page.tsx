@@ -9,7 +9,7 @@ export default function AboutPage() {
   return (
     <div className="space-y-16 lg:space-y-24 py-12 pb-20">
       {/* Hero Header */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="max-w-7xl mx-auto px-4 lg:px-0 text-center">
         <div className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-blue uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-200 mb-4">
           <Building2 className="w-3.5 h-3.5" /> 25+ Years Autohub Automotive Legacy
         </div>
@@ -22,7 +22,7 @@ export default function AboutPage() {
       </section>
 
       {/* Story & Vision */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-7xl mx-auto px-4 lg:px-0">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 space-y-6 text-left">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
@@ -60,7 +60,7 @@ export default function AboutPage() {
 
       {/* Regional Infrastructure */}
       <section className="bg-slate-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <div className="max-w-7xl mx-auto px-4 lg:px-0 space-y-10">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <h3 className="text-2xl sm:text-3xl font-bold">New Zealand & Global Infrastructure</h3>
             <p className="text-xs sm:text-sm text-slate-400">
@@ -86,7 +86,7 @@ export default function AboutPage() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="max-w-7xl mx-auto px-4 lg:px-0 text-center">
         <div className="p-10 bg-white rounded-3xl border border-slate-200 shadow-card space-y-4">
           <h3 className="text-2xl font-bold text-slate-900">Partner with Procurly</h3>
           <p className="text-sm text-slate-600 max-w-xl mx-auto">
