@@ -9,34 +9,16 @@ import {
   Box,
   ListTodo,
   CreditCard,
-  Clock,
-  ArrowLeftRight,
-  ShieldAlert,
-  RotateCcw,
-  AlertTriangle,
   FileSpreadsheet,
-  CheckCircle2,
-  Receipt,
-  Users,
   Building2,
-  History,
   BarChart3,
-  TrendingUp,
-  DollarSign,
-  FileText,
-  FolderOpen,
-  Bell,
   User,
-  CircleHelp,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  CheckCircle,
   PlusCircle,
-  ExternalLink,
-  Shield,
-  Wallet,
   LogOut,
+  History,
 } from 'lucide-react';
 import { financeService } from '@/services/finance/financeService';
 import { FinanceStaffUser } from '@/types/finance';
@@ -106,12 +88,16 @@ export function FinanceSidebar({
     setProfileDropdownOpen(false);
   };
 
-  // Exactly matching the requested Sidebar Taxonomy:
+  // Consolidated Sidebar Navigation (Single-Item Top-Level Structure)
   const navSections = [
     {
-      group: 'FINANCE',
+      group: 'NAVIGATION',
       items: [
-        { label: 'Dashboard', href: '/finance/dashboard', icon: LayoutDashboard },
+        {
+          label: 'Dashboard',
+          href: '/finance/dashboard',
+          icon: LayoutDashboard,
+        },
         {
           label: 'My Tasks',
           href: '/finance/tasks',
@@ -119,84 +105,63 @@ export function FinanceSidebar({
           badge: openTasksCount > 0 ? `${openTasksCount}` : undefined,
           badgeAttention: false,
         },
-        { label: 'Payments', href: '/finance/payments', icon: CreditCard },
         {
-          label: 'Awaiting Payment',
-          href: '/finance/awaiting-payment',
-          icon: Clock,
-          badge: awaitingCount > 0 ? `${awaitingCount}` : undefined,
-          badgeAttention: true,
-        },
-        { label: 'Payment Transactions', href: '/finance/transactions', icon: ArrowLeftRight },
-        { label: 'Credit Accounts', href: '/finance/credit-accounts', icon: Wallet },
-        {
-          label: 'Refunds',
-          href: '/finance/refunds',
-          icon: RotateCcw,
-          badge: refundsCount > 0 ? `${refundsCount}` : undefined,
-          badgeAttention: false,
+          label: 'Payments & Treasury',
+          href: '/finance/payments',
+          icon: CreditCard,
+          badge: awaitingCount + exceptionsCount > 0 ? `${awaitingCount + exceptionsCount}` : undefined,
+          badgeAttention: awaitingCount + exceptionsCount > 0,
         },
         {
-          label: 'Financial Exceptions',
-          href: '/finance/exceptions',
-          icon: AlertTriangle,
-          badge: exceptionsCount > 0 ? `${exceptionsCount}` : undefined,
-          badgeAttention: true,
+          label: 'Quotes & Orders',
+          href: '/finance/approved-orders',
+          icon: FileSpreadsheet,
         },
-      ],
-    },
-    {
-      group: 'QUOTATIONS & ORDERS',
-      items: [
-        { label: 'Customer Quotes', href: '/finance/customer-quotes', icon: FileSpreadsheet },
-        { label: 'Approved Orders', href: '/finance/approved-orders', icon: CheckCircle2 },
-        { label: 'Order Payments', href: '/finance/order-payments', icon: Receipt },
-      ],
-    },
-    {
-      group: 'CUSTOMERS',
-      items: [
-        { label: 'Customers', href: '/finance/customers', icon: Building2 },
-        { label: 'Credit Customers', href: '/finance/credit-accounts', icon: Users },
-        { label: 'Payment History', href: '/finance/customers/cus_autocare_akl/payments', icon: History },
-      ],
-    },
-    {
-      group: 'REPORTING',
-      items: [
-        { label: 'Financial Reports', href: '/finance/reports', icon: BarChart3 },
-        { label: 'Revenue', href: '/finance/reports/revenue', icon: TrendingUp },
-        { label: 'Outstanding Payments', href: '/finance/reports/outstanding', icon: DollarSign },
-        { label: 'Transaction Reports', href: '/finance/reports/transactions', icon: FileText },
-      ],
-    },
-    {
-      group: 'DOCUMENTS',
-      items: [
-        { label: 'Invoices', href: '/finance/documents/invoices', icon: FileText },
-        { label: 'Payment Receipts', href: '/finance/documents/receipts', icon: Receipt },
-        { label: 'Financial Documents', href: '/finance/documents', icon: FolderOpen },
-      ],
-    },
-    {
-      group: 'SYSTEM',
-      items: [
         {
-          label: 'Notifications',
-          href: '/finance/notifications',
-          icon: Bell,
-          badge: unreadNotifsCount > 0 ? `${unreadNotifsCount}` : undefined,
-          badgeAttention: unreadNotifsCount > 0,
+          label: 'Customers',
+          href: '/finance/customers',
+          icon: Building2,
         },
-        { label: 'Profile', href: '/finance/profile', icon: User },
-        { label: 'Help & Support', href: '/finance/help', icon: CircleHelp },
+        {
+          label: 'Reports & Documents',
+          href: '/finance/reports',
+          icon: BarChart3,
+        },
       ],
     },
   ];
 
   const isLinkActive = (href: string) => {
-    if (href === '/finance/dashboard') return pathname === '/finance/dashboard' || pathname === '/finance';
-    return pathname === href || (pathname.startsWith(href + '/') && href !== '/finance/customers');
+    if (href === '/finance/dashboard') {
+      return pathname === '/finance/dashboard' || pathname === '/finance';
+    }
+    if (href === '/finance/tasks') {
+      return pathname.startsWith('/finance/tasks');
+    }
+    if (href === '/finance/payments') {
+      return (
+        pathname.startsWith('/finance/payments') ||
+        pathname.startsWith('/finance/awaiting-payment') ||
+        pathname.startsWith('/finance/transactions') ||
+        pathname.startsWith('/finance/credit-accounts') ||
+        pathname.startsWith('/finance/refunds') ||
+        pathname.startsWith('/finance/exceptions')
+      );
+    }
+    if (href === '/finance/approved-orders') {
+      return (
+        pathname.startsWith('/finance/approved-orders') ||
+        pathname.startsWith('/finance/customer-quotes') ||
+        pathname.startsWith('/finance/order-payments')
+      );
+    }
+    if (href === '/finance/customers') {
+      return pathname.startsWith('/finance/customers');
+    }
+    if (href === '/finance/reports') {
+      return pathname.startsWith('/finance/reports') || pathname.startsWith('/finance/documents');
+    }
+    return pathname === href || pathname.startsWith(href + '/');
   };
 
   return (
@@ -379,44 +344,6 @@ export function FinanceSidebar({
               <p className="text-[11px] text-slate-400 truncate">{currentUser.email || 'finance@procurly.com'}</p>
             </div>
 
-            {/* Navigation Links */}
-            <div className="py-1.5">
-              <Link
-                href="/finance/tasks"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <ListTodo className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">My Finance Tasks</p>
-                  <p className="text-[10px] text-slate-500">Approvals & clearing queue</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/finance/transactions"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <History className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Payment & Audit Ledger</p>
-                  <p className="text-[10px] text-slate-500">Complete transaction history</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/finance/help"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <User className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Team & Financial Access</p>
-                  <p className="text-[10px] text-slate-500">Manage Treasury roles</p>
-                </div>
-              </Link>
-            </div>
 
             {/* Sign Out */}
             <div className="border-t border-slate-800 pt-1">
