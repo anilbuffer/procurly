@@ -422,3 +422,29 @@ export interface OperationalReportMetrics {
   procurementTimeDays: number;
   deliveryTimeDays: number;
 }
+
+export interface FreightCarrierControl {
+  id: string;
+  name: string;
+  code: string;
+  category: 'Domestic Courier (NZ Post)' | 'Air Freight' | 'Sea Cargo' | 'Road Logistics';
+  isEnabled: boolean;
+  transitTime: string;
+  trackingIntegration: 'NZ Post Live API' | 'Mainfreight EDI' | 'Freightways Courier' | 'Manual Track';
+  statusNote: string;
+  cutoffTime: string;
+}
+
+export interface NZPostPickupBooking {
+  id: string;
+  consignmentId: string;
+  trackingNumber: string;
+  customerName: string;
+  pickupBranch: string;
+  pickupAddress: string;
+  scheduledTime: string;
+  parcelCount: number;
+  status: 'Scheduled' | 'Dispatched' | 'Driver En Route' | 'Picked Up' | 'In Transit';
+  postcode: string;
+}
+

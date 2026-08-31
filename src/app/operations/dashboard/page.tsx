@@ -4,26 +4,35 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ClipboardList,
-  Search,
-  Receipt,
-  CreditCard,
-  ShoppingCart,
+  Truck,
+  PackageCheck,
   AlertTriangle,
   ArrowRight,
   Clock,
   CheckCircle2,
-  TrendingUp,
-  Truck,
+  Calendar,
   PlusCircle,
   ShieldAlert,
   ChevronRight,
-  User,
-  Zap,
-  Calendar,
+  Sliders,
+  MapPin,
+  RefreshCw,
+  ExternalLink,
+  Search,
+  CheckCircle,
+  XCircle,
+  Navigation,
+  Info,
 } from 'lucide-react';
 import { operationsService } from '@/services/operations/operationsService';
-import { OperationsStaffUser, OperationalReportMetrics } from '@/types/operations';
+import {
+  OperationsStaffUser,
+  OperationalReportMetrics,
+  FreightCarrierControl,
+  NZPostPickupBooking,
+  OperationalPartRequest,
+  OperationalException,
+} from '@/types/operations';
 import { QuickCreateModal } from '@/components/operations/layout/QuickCreateModal';
 import { cn } from '@/lib/utils';
 
@@ -31,11 +40,27 @@ export default function OperationsDashboardPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<OperationsStaffUser>(operationsService.getDefaultUser());
   const [metrics, setMetrics] = useState<OperationalReportMetrics>(operationsService.getReportMetrics());
+  const [freightCarriers, setFreightCarriers] = useState<FreightCarrierControl[]>([]);
+  const [nzpostPickups, setNzpostPickups] = useState<NZPostPickupBooking[]>([]);
+  const [requests, setRequests] = useState<OperationalPartRequest[]>([]);
+  const [exceptions, setExceptions] = useState<OperationalException[]>([]);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const [isSchedulePickupModalOpen, setIsSchedulePickupModalOpen] = useState(false);
+
+  // New NZ Post Pickup form state
+  const [pickupCustomer, setPickupCustomer] = useState('AutoCare Auckland');
+  const [pickupBranch, setPickupBranch] = useState('Penrose Workshop Hub');
+  const [pickupAddress, setPickupAddress] = useState('42 Station Road, Penrose, Auckland');
+  const [pickupParcels, setPickupParcels] = useState(2);
+  const [pickupPostcode, setPickupPostcode] = useState('1061');
 
   const loadData = () => {
     setCurrentUser(operationsService.getCurrentUser());
     setMetrics(operationsService.getReportMetrics());
+    setFreightCarriers(operationsService.getFreightCarriers());
+    setNzpostPickups(operationsService.getNZPostPickups());
+    setRequests(operationsService.getRequests());
+    setExceptions(operationsService.getExceptions());
   };
 
   useEffect(() => {
@@ -45,459 +70,570 @@ export default function OperationsDashboardPage() {
     return () => window.removeEventListener('procurly_ops_updated', handleUpdate);
   }, []);
 
-  const pipelineStages = [
-    { name: 'Submitted', count: 48, filter: 'Submitted', color: 'border-slate-300 hover:border-slate-400 bg-slate-50' },
-    { name: 'Sourcing', count: 21, filter: 'Sourcing', color: 'border-blue-200 hover:border-blue-400 bg-blue-50/50' },
-    { name: 'Quote Ready', count: 12, filter: 'Quote Ready', color: 'border-indigo-200 hover:border-indigo-400 bg-indigo-50/50' },
-    { name: 'Customer Approval', count: 9, filter: 'Awaiting Customer Approval', color: 'border-purple-200 hover:border-purple-400 bg-purple-50/50' },
-    { name: 'Paid', count: 7, filter: 'Payment Received', color: 'border-emerald-200 hover:border-emerald-400 bg-emerald-50/50' },
-    { name: 'Procurement', count: 24, filter: 'Ordered From Supplier', color: 'border-amber-200 hover:border-amber-400 bg-amber-50/50' },
-    { name: 'Shipping', count: 18, filter: 'In Transit', color: 'border-cyan-200 hover:border-cyan-400 bg-cyan-50/50' },
-    { name: 'Delivered', count: 31, filter: 'Delivered', color: 'border-teal-200 hover:border-teal-400 bg-teal-50/50' },
-  ];
+  const handleToggleCarrier = (id: string, currentStatus: boolean) => {
+    const updated = operationsService.toggleFreightCarrier(id, !currentStatus);
+    setFreightCarriers(updated);
+  };
+
+  const handleSchedulePickup = (e: React.FormEvent) => {
+    e.preventDefault();
+    operationsService.scheduleNZPostPickup({
+      customerName: pickupCustomer,
+      pickupBranch: pickupBranch,
+      pickupAddress: pickupAddress,
+      parcelCount: pickupParcels,
+      postcode: pickupPostcode,
+    });
+    setIsSchedulePickupModalOpen(false);
+    loadData();
+  };
+
+  const handleResolveException = (id: string) => {
+    operationsService.updateExceptionStatus(id, 'Resolved', 'Resolved via Operations Freight Dispatch re-route.');
+    loadData();
+  };
+
+  // Filter shipments currently in execution
+  const activeShipments = requests.filter(
+    (r) => r.shipment || r.status === 'In Transit' || r.status === 'Customs Clearance' || r.status === 'Out For Delivery'
+  );
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* 12. Dashboard Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
+    <div className="space-y-6 animate-fade-in pb-12">
+      {/* Role Responsibility Scope Header */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-[#2B4499] text-white rounded-2xl p-5 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-700">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Good morning, {currentUser.name.split(' ')[0]}.
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-md bg-[#ed2025] text-white text-[10px] uppercase font-black tracking-wider">
+              Operations Domain
+            </span>
+            <span className="text-xs text-slate-300 font-medium flex items-center gap-1">
+              <Info className="w-3.5 h-3.5 text-sky-400" />
+              Role Ownership: Freight & Logistics Execution
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            Operations & Logistics Command Centre
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Here&apos;s what&apos;s happening across Procurly procurement operations today.
+          <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+            Operations strictly manages freight enablement, carrier routing, NZ Post pickups & tracking, delivery status updates, and logistics exceptions. Procurement requests and sourcing belong exclusively to the Procurement role.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-600 shadow-xs">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            <span>Today, 28 Aug 2026</span>
-          </div>
-
+          <Link
+            href="/procurement/dashboard"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-bold text-xs transition-all"
+          >
+            <span>Procurement Portal</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
           <button
-            onClick={() => setIsQuickCreateOpen(true)}
+            onClick={() => setIsSchedulePickupModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] text-white font-bold text-xs shadow-glow transition-all active:scale-[0.98]"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>New Request</span>
+            <span>Book NZ Post Pickup</span>
           </button>
         </div>
       </div>
 
-      {/* 13. KPI Cards Grid (6 Cards) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        {/* Open Requests */}
-        <Link
-          href="/operations/requests"
-          className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-[#2B4499] hover:shadow-md transition-all group relative overflow-hidden"
-        >
+      {/* KPI Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        {/* Active Shipments */}
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500">Open Requests</span>
+            <span className="text-[11px] font-bold text-slate-500">Active Freight Shipments</span>
             <div className="p-1.5 rounded-lg bg-blue-50 text-[#2B4499]">
-              <ClipboardList className="w-3.5 h-3.5" />
+              <Truck className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-slate-900 group-hover:text-[#2B4499] transition-colors">
-            {metrics.openRequestsCount}
-          </p>
-          <p className="text-[11px] font-medium text-emerald-600 mt-1 flex items-center gap-1">
-            <span>+8 this week</span>
-          </p>
-        </Link>
+          <p className="text-2xl font-black text-slate-900">{activeShipments.length || 18}</p>
+          <span className="text-[11px] font-medium text-slate-500 mt-1 block">In transit & local dispatch</span>
+        </div>
 
-        {/* Awaiting Quotes */}
-        <Link
-          href="/operations/sourcing"
-          className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-[#2B4499] hover:shadow-md transition-all group relative overflow-hidden"
-        >
+        {/* NZ Post Scheduled Pickups */}
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500">Awaiting Quotes</span>
-            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-700">
-              <Search className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-bold text-slate-500">NZ Post Pickups Pending</span>
+            <div className="p-1.5 rounded-lg bg-red-50 text-[#ed2025]">
+              <PackageCheck className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-slate-900 group-hover:text-[#2B4499] transition-colors">
-            {metrics.awaitingQuotesCount}
-          </p>
-          <p className="text-[11px] font-medium text-amber-600 mt-1 flex items-center gap-1">
-            <span>4 overdue</span>
-          </p>
-        </Link>
+          <p className="text-2xl font-black text-slate-900">{nzpostPickups.filter((p) => p.status !== 'Picked Up').length}</p>
+          <span className="text-[11px] font-medium text-emerald-600 mt-1 block">Scheduled for today</span>
+        </div>
 
-        {/* Awaiting Customer Approval */}
-        <Link
-          href="/operations/customer-quotes"
-          className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-[#2B4499] hover:shadow-md transition-all group relative overflow-hidden"
-        >
+        {/* Active Freight Carriers */}
+        <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs relative overflow-hidden group">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500">Awaiting Approval</span>
-            <div className="p-1.5 rounded-lg bg-purple-50 text-purple-700">
-              <Receipt className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-slate-900 group-hover:text-[#2B4499] transition-colors">
-            0{metrics.awaitingApprovalCount}
-          </p>
-          <p className="text-[11px] font-medium text-slate-500 mt-1">Requires follow-up</p>
-        </Link>
-
-        {/* Awaiting Payment */}
-        <Link
-          href="/operations/payments"
-          className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-[#2B4499] hover:shadow-md transition-all group relative overflow-hidden"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500">Awaiting Payment</span>
-            <div className="p-1.5 rounded-lg bg-amber-50 text-amber-700">
-              <CreditCard className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <p className="text-2xl font-black text-slate-900 group-hover:text-[#2B4499] transition-colors">
-            0{metrics.awaitingPaymentCount}
-          </p>
-          <p className="text-[11px] font-medium text-amber-700 mt-1 truncate">NZ$4,850 outstanding</p>
-        </Link>
-
-        {/* Procurement In Progress */}
-        <Link
-          href="/operations/procurement-orders"
-          className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-[#2B4499] hover:shadow-md transition-all group relative overflow-hidden"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold text-slate-500">In Procurement</span>
+            <span className="text-[11px] font-bold text-slate-500">Enabled Freight Carriers</span>
             <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700">
-              <ShoppingCart className="w-3.5 h-3.5" />
+              <Sliders className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-slate-900 group-hover:text-[#2B4499] transition-colors">
-            {metrics.procurementInProgressCount}
+          <p className="text-2xl font-black text-slate-900">
+            {freightCarriers.filter((c) => c.isEnabled).length} / {freightCarriers.length}
           </p>
-          <p className="text-[11px] font-medium text-slate-500 mt-1">Active orders</p>
-        </Link>
+          <span className="text-[11px] font-medium text-slate-500 mt-1 block">Carrier routes online</span>
+        </div>
 
-        {/* Exceptions (STRONG RED VISUAL PRIORITY) */}
+        {/* Logistics Exceptions */}
         <Link
           href="/operations/exceptions"
-          className="p-4 rounded-2xl bg-gradient-to-br from-red-50 to-white border-2 border-[#ed2025] hover:shadow-lg hover:shadow-red-500/10 transition-all group relative overflow-hidden ring-2 ring-red-500/20"
+          className="p-4 rounded-2xl bg-gradient-to-br from-red-50 to-white border-2 border-[#ed2025] shadow-xs relative overflow-hidden group hover:shadow-md transition-all"
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-black text-red-700 uppercase tracking-wider">Exceptions</span>
-            <div className="p-1.5 rounded-lg bg-[#ed2025] text-white shadow-xs animate-pulse">
-              <AlertTriangle className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-black text-red-700 uppercase tracking-wider">Logistics Exceptions</span>
+            <div className="p-1.5 rounded-lg bg-[#ed2025] text-white animate-pulse">
+              <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl font-black text-[#ed2025]">0{metrics.exceptionsCount}</p>
-          <p className="text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1">
-            <span>Requires attention</span>
+          <p className="text-2xl font-black text-[#ed2025]">
+            0{exceptions.filter((e) => e.status !== 'Resolved' && e.status !== 'Closed').length}
           </p>
+          <span className="text-[11px] font-bold text-red-600 mt-1 flex items-center gap-1">
+            <span>Requires operational action</span>
+            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+          </span>
         </Link>
       </div>
 
-      {/* 14. Operational Priority Queue ("Needs Attention") */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-[#ed2025] animate-ping" />
-            <h2 className="text-base font-black text-slate-900 tracking-tight">Needs Attention</h2>
-            <span className="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-              3 Critical Items
-            </span>
-          </div>
-          <Link
-            href="/operations/tasks"
-            className="text-xs font-bold text-[#2B4499] hover:underline flex items-center gap-1"
-          >
-            <span>View all queue tasks</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
-          {/* Card 1: Payment Failed */}
-          <div className="p-4 rounded-xl border border-red-200 bg-red-50/40 flex flex-col justify-between hover:border-red-400 transition-colors group">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="inline-flex items-center gap-1.5 text-xs font-black text-[#ed2025]">
-                  <span className="w-2 h-2 rounded-full bg-[#ed2025]" />
-                  AH-P-000108
-                </span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-red-700 bg-red-100 px-2 py-0.5 rounded">
-                  Critical
-                </span>
-              </div>
-              <p className="text-sm font-black text-slate-900 mb-0.5">Payment Failed</p>
-              <p className="text-xs text-slate-600 mb-2">Hyundai Santa Fe · Brake Booster Unit</p>
-              <div className="text-[11px] text-slate-500 mb-3 space-y-0.5">
-                <p>Owner: <span className="font-semibold text-slate-700">Michael Chen</span></p>
-                <p>Customer: <span className="font-semibold text-slate-700">AutoCare Auckland</span></p>
-              </div>
-            </div>
-            <Link
-              href="/operations/requests/AH-P-000108"
-              className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-white border border-red-200 hover:bg-[#ed2025] hover:text-white text-xs font-bold text-[#ed2025] transition-all shadow-xs"
-            >
-              <span>Review Payment</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-
-          {/* Card 2: Supplier Quote Expiring */}
-          <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/40 flex flex-col justify-between hover:border-amber-400 transition-colors group">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="inline-flex items-center gap-1.5 text-xs font-black text-amber-700">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
-                  AH-P-000118
-                </span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-                  Expires Today
-                </span>
-              </div>
-              <p className="text-sm font-black text-slate-900 mb-0.5">Supplier Quote Expiring</p>
-              <p className="text-xs text-slate-600 mb-2">Toyota Hilux · VNT Turbocharger</p>
-              <div className="text-[11px] text-slate-500 mb-3 space-y-0.5">
-                <p>Wholesale Rate: <span className="font-semibold text-slate-700">NZ$1,605 total landed</span></p>
-                <p>Owner: <span className="font-semibold text-slate-700">Sarah Wilson</span></p>
-              </div>
-            </div>
-            <Link
-              href="/operations/requests/AH-P-000118"
-              className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-white border border-amber-200 hover:bg-amber-600 hover:text-white text-xs font-bold text-amber-700 transition-all shadow-xs"
-            >
-              <span>Review Quote</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-
-          {/* Card 3: Logistics Exception */}
-          <div className="p-4 rounded-xl border border-yellow-200 bg-yellow-50/40 flex flex-col justify-between hover:border-yellow-400 transition-colors group">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="inline-flex items-center gap-1.5 text-xs font-black text-yellow-800">
-                  <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                  AH-P-000104
-                </span>
-                <span className="text-[10px] font-black uppercase tracking-wider text-yellow-900 bg-yellow-100 px-2 py-0.5 rounded">
-                  LOG-00042
-                </span>
-              </div>
-              <p className="text-sm font-black text-slate-900 mb-0.5">Logistics Exception</p>
-              <p className="text-xs text-slate-600 mb-2">Mazda CX-5 · Tailgate Assembly</p>
-              <div className="text-[11px] text-slate-500 mb-3 space-y-0.5">
-                <p>Status: <span className="font-semibold text-slate-700">Oversize Crate Flight Rebooking</span></p>
-                <p>Owner: <span className="font-semibold text-slate-700">Sarah Wilson</span></p>
-              </div>
-            </div>
-            <Link
-              href="/operations/exceptions/LOG-00042"
-              className="inline-flex items-center justify-between px-3 py-2 rounded-xl bg-white border border-yellow-200 hover:bg-yellow-600 hover:text-white text-xs font-bold text-yellow-800 transition-all shadow-xs"
-            >
-              <span>Resolve Exception</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* 15. Procurement Pipeline */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
-        <div className="flex items-center justify-between mb-3">
+      {/* SECTION 1: FREIGHT & CARRIER ENABLEMENT CONTROLS */}
+      <div id="freight-controls" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
           <div>
-            <h2 className="text-base font-black text-slate-900 tracking-tight">Procurement Pipeline</h2>
-            <p className="text-xs text-slate-500">
-              Live lifecycle state across all active procurement orders. Click any stage to filter the workspace.
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">Freight & Carrier Control Panel</h2>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Enable or disable freight options dynamically across customer quotations & checkout calculations.
             </p>
           </div>
-          <Link
-            href="/operations/requests"
-            className="text-xs font-bold text-[#2B4499] hover:underline flex items-center gap-1"
-          >
-            <span>Open requests table</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
+          <span className="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-full shrink-0">
+            Real-time Carrier Routing Engine
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
-          {pipelineStages.map((st, idx) => (
-            <button
-              key={st.name}
-              onClick={() => router.push(`/operations/requests?status=${encodeURIComponent(st.filter)}`)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {freightCarriers.map((carrier) => (
+            <div
+              key={carrier.id}
               className={cn(
-                'p-3 rounded-xl border text-center transition-all hover:scale-[1.02] active:scale-[0.98] flex flex-col justify-between',
-                st.color
+                'p-4 rounded-xl border transition-all flex flex-col justify-between',
+                carrier.isEnabled
+                  ? 'bg-slate-50/60 border-slate-200 hover:border-slate-300'
+                  : 'bg-slate-100/70 border-slate-200 opacity-75'
               )}
             >
-              <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-500 mb-1">
-                <span>{idx + 1}.</span>
-                <span className="truncate">{st.name}</span>
+              <div>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      {carrier.category}
+                    </span>
+                    <h3 className="text-sm font-black text-slate-900 mt-0.5">{carrier.name}</h3>
+                  </div>
+
+                  {/* Toggle Switch Button */}
+                  <button
+                    onClick={() => handleToggleCarrier(carrier.id, carrier.isEnabled)}
+                    className={cn(
+                      'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
+                      carrier.isEnabled ? 'bg-emerald-600' : 'bg-slate-300'
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                        carrier.isEnabled ? 'translate-x-5' : 'translate-x-0'
+                      )}
+                    />
+                  </button>
+                </div>
+
+                <div className="space-y-1 text-xs text-slate-600 my-3 bg-white p-2.5 rounded-lg border border-slate-200/80">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-medium">Est. Transit:</span>
+                    <span className="font-bold text-slate-800">{carrier.transitTime}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-medium">Daily Cutoff:</span>
+                    <span className="font-semibold text-slate-700">{carrier.cutoffTime}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400 font-medium">Integration:</span>
+                    <span className="font-semibold text-slate-700">{carrier.trackingIntegration}</span>
+                  </div>
+                </div>
               </div>
-              <p className="text-xl font-black text-slate-900">{st.count}</p>
-              <span className="text-[10px] font-semibold text-[#2B4499] mt-1 opacity-0 hover:opacity-100 transition-opacity">
-                Filter →
-              </span>
-            </button>
+
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200/60 text-[11px]">
+                <span
+                  className={cn(
+                    'font-bold flex items-center gap-1',
+                    carrier.isEnabled ? 'text-emerald-700' : 'text-slate-500'
+                  )}
+                >
+                  {carrier.isEnabled ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                  {carrier.isEnabled ? 'Active Freight Method' : 'Disabled'}
+                </span>
+                <span className="text-slate-400 truncate max-w-[150px]">{carrier.statusNote}</span>
+              </div>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Lower Row: Recent Activity & Performance Snapshot */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 16. Request Activity (Timeline) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-black text-slate-900 tracking-tight">Recent Activity</h2>
+      {/* SECTION 2: NZ POST PICKUP & TRACKING HUB */}
+      <div id="nzpost-tracking" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-[#ed2025] text-white flex items-center justify-center font-bold text-xs">
+                NZ
+              </div>
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                NZ Post Pickup & Courier Tracking Hub
+              </h2>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Manage NZ Post pickup dispatches, manifest creation, and courier driver tracking.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsSchedulePickupModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-all self-start sm:self-auto"
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-red-400" />
+            <span>Schedule NZ Post Pickup</span>
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/70 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-4">Tracking & Consignment</th>
+                <th className="py-3 px-4">Customer & Destination</th>
+                <th className="py-3 px-4">Pickup Address</th>
+                <th className="py-3 px-4">Parcels</th>
+                <th className="py-3 px-4">Scheduled Window</th>
+                <th className="py-3 px-4">Courier Status</th>
+                <th className="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-xs">
+              {nzpostPickups.map((pickup) => (
+                <tr key={pickup.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#ed2025] font-black">{pickup.trackingNumber}</span>
+                      <span className="text-[10px] text-slate-400 font-normal">{pickup.consignmentId}</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <p className="font-bold text-slate-900">{pickup.customerName}</p>
+                    <span className="text-[11px] text-slate-500">{pickup.pickupBranch}</span>
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-600 max-w-[220px] truncate">
+                    <div className="flex items-center gap-1 text-slate-700">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="truncate">{pickup.pickupAddress}</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span className="px-2 py-0.5 rounded bg-slate-100 font-bold text-slate-700">
+                      {pickup.parcelCount} PKG
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-700 font-medium">
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{pickup.scheduledTime}</span>
+                    </div>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span
+                      className={cn(
+                        'px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1',
+                        pickup.status === 'Scheduled' && 'bg-amber-100 text-amber-800 border border-amber-200',
+                        pickup.status === 'Dispatched' && 'bg-blue-100 text-blue-800 border border-blue-200',
+                        pickup.status === 'Picked Up' && 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      )}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      {pickup.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-right">
+                    <a
+                      href={`https://www.nzpost.co.nz/tools/tracking/item/${pickup.trackingNumber}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition-colors"
+                    >
+                      <span>Live Track</span>
+                      <ExternalLink className="w-3 h-3 text-slate-400" />
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* SECTION 3: DELIVERY STATUS EXECUTION QUEUE */}
+      <div id="delivery-updates" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">Delivery Status Execution Queue</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Update real-time shipment delivery states for workshop customers.
+            </p>
+          </div>
+          <Link
+            href="/operations/shipments"
+            className="text-xs font-bold text-[#2B4499] hover:underline flex items-center gap-1"
+          >
+            <span>View Full Shipments Hub</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Item 1 */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between hover:border-blue-300 transition-colors">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono font-bold text-xs text-[#2B4499]">SHP-90812-NZ</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-cyan-100 text-cyan-800">In Transit</span>
+              </div>
+              <p className="text-sm font-black text-slate-900">Hyundai Santa Fe Brake Booster</p>
+              <p className="text-xs text-slate-500 mt-0.5">Customer: AutoCare Auckland (Penrose)</p>
+              <div className="my-3 text-xs text-slate-600 bg-white p-2 rounded border border-slate-200">
+                <p><span className="font-semibold text-slate-500">Carrier:</span> Mainfreight Air Express</p>
+                <p><span className="font-semibold text-slate-500">Tracking:</span> MF-AKL-882109</p>
+              </div>
+            </div>
             <Link
-              href="/operations/audit"
-              className="text-xs font-bold text-[#2B4499] hover:underline flex items-center gap-1"
+              href="/operations/shipments"
+              className="w-full inline-flex items-center justify-center gap-1 py-2 rounded-lg bg-[#2B4499] hover:bg-blue-900 text-white font-bold text-xs transition-colors shadow-xs"
             >
-              <span>Full audit log</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <span>Update Delivery Milestone</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          <div className="space-y-3.5 flex-1">
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-xs font-black text-[#2B4499] shrink-0 mt-0.5">10:42 AM</span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-900">Customer Quote Generated</span>
-                  <Link
-                    href="/operations/requests/AH-P-000123"
-                    className="text-xs font-black text-[#2B4499] hover:underline"
-                  >
-                    AH-P-000123
-                  </Link>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Michael Chen generated Quote QUO-000123-v3 (NZ$485.00) for Toyota Hiace Control Arm
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-xs font-black text-emerald-700 shrink-0 mt-0.5">10:18 AM</span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-900">Payment Received & Verified</span>
-                  <Link
-                    href="/operations/requests/AH-P-000120"
-                    className="text-xs font-black text-[#2B4499] hover:underline"
-                  >
-                    AH-P-000120
-                  </Link>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  James Taylor reconciled NZ$420.00 settlement for Nissan Navara Alternator
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-xs font-black text-indigo-700 shrink-0 mt-0.5">09:45 AM</span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-900">Supplier Quotation Added</span>
-                  <Link
-                    href="/operations/requests/AH-P-000118"
-                    className="text-xs font-black text-[#2B4499] hover:underline"
-                  >
-                    AH-P-000118
-                  </Link>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Sarah Wilson logged wholesale rate from Tokyo Auto Spares (TAS-JP) for Hilux Turbo
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-xs font-black text-slate-600 shrink-0 mt-0.5">09:20 AM</span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-900">Request Assigned</span>
-                  <Link
-                    href="/operations/requests/AH-P-000117"
-                    className="text-xs font-black text-[#2B4499] hover:underline"
-                  >
-                    AH-P-000117
-                  </Link>
-                </div>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Michael Chen assigned Subaru Outback Steering Rack sourcing to Sarah Wilson
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 17. PERFORMANCE SNAPSHOT */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-black text-slate-900 tracking-tight">Performance Snapshot</h2>
-              <div className="p-1 rounded-lg bg-blue-50 text-[#2B4499]">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <div>
-                  <p className="text-xs text-slate-500 font-medium">Average Processing Time</p>
-                  <p className="text-lg font-black text-slate-900">{metrics.avgProcessingDays} days</p>
-                </div>
-                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                  Within SLA
+          {/* Item 2 */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between hover:border-blue-300 transition-colors">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono font-bold text-xs text-[#2B4499]">SHP-90815-NZ</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">
+                  Customs Clearance
                 </span>
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="text-[11px] text-slate-500 font-medium">Quote Conversion</p>
-                  <p className="text-base font-black text-slate-900">{metrics.quoteConversionRate}%</p>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                  <p className="text-[11px] text-slate-500 font-medium">Payment Conversion</p>
-                  <p className="text-base font-black text-slate-900">{metrics.paymentConversionRate}%</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <div>
-                  <p className="text-xs text-slate-500 font-medium">Active Procurement Value</p>
-                  <p className="text-lg font-black text-[#2B4499]">
-                    NZ${metrics.activeProcurementValueNZD.toLocaleString()}
-                  </p>
-                </div>
-                <span className="text-[11px] font-bold text-slate-500">24 active POs</span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50/60 border border-amber-200">
-                <div>
-                  <p className="text-xs text-amber-900 font-medium">Outstanding Customer Payments</p>
-                  <p className="text-lg font-black text-amber-900">
-                    NZ${metrics.outstandingPaymentsNZD.toLocaleString()}
-                  </p>
-                </div>
-                <span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-                  7 Invoices
-                </span>
+              <p className="text-sm font-black text-slate-900">Subaru Outback Steering Rack</p>
+              <p className="text-xs text-slate-500 mt-0.5">Customer: Wellington Fleet Hub</p>
+              <div className="my-3 text-xs text-slate-600 bg-white p-2 rounded border border-slate-200">
+                <p><span className="font-semibold text-slate-500">Carrier:</span> NZ Post Express Courier</p>
+                <p><span className="font-semibold text-slate-500">Status:</span> MPI Biosecurity Hold Clearance</p>
               </div>
             </div>
-          </div>
-
-          <div className="pt-4 border-t border-slate-100 mt-4 text-center">
             <Link
-              href="/operations/reports"
-              className="text-xs font-bold text-[#2B4499] hover:underline inline-flex items-center gap-1"
+              href="/operations/shipments"
+              className="w-full inline-flex items-center justify-center gap-1 py-2 rounded-lg bg-[#2B4499] hover:bg-blue-900 text-white font-bold text-xs transition-colors shadow-xs"
             >
-              <span>View detailed operational & financial reports</span>
-              <ChevronRight className="w-3.5 h-3.5" />
+              <span>Update Delivery Milestone</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {/* Item 3 */}
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col justify-between hover:border-blue-300 transition-colors">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono font-bold text-xs text-[#2B4499]">SHP-90820-NZ</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                  Out For Delivery
+                </span>
+              </div>
+              <p className="text-sm font-black text-slate-900">Nissan Leaf High Voltage Relay</p>
+              <p className="text-xs text-slate-500 mt-0.5">Customer: Christchurch Electric Hub</p>
+              <div className="my-3 text-xs text-slate-600 bg-white p-2 rounded border border-slate-200">
+                <p><span className="font-semibold text-slate-500">Carrier:</span> NZ Post Courier Van #4</p>
+                <p><span className="font-semibold text-slate-500">Driver ETA:</span> Today, 02:45 PM</p>
+              </div>
+            </div>
+            <Link
+              href="/operations/shipments"
+              className="w-full inline-flex items-center justify-center gap-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-xs"
+            >
+              <span>Confirm Workshop Delivery</span>
+              <CheckCircle className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
       </div>
+
+      {/* SECTION 4: LOGISTICS EXCEPTIONS RESOLUTION */}
+      <div className="bg-white rounded-2xl border border-red-200 p-5 shadow-xs">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-red-100">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="w-5 h-5 text-[#ed2025]" />
+            <h2 className="text-lg font-black text-slate-900 tracking-tight">Active Logistics Exceptions</h2>
+          </div>
+          <Link
+            href="/operations/exceptions"
+            className="text-xs font-bold text-red-600 hover:underline flex items-center gap-1"
+          >
+            <span>Open Exception Centre</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="space-y-3">
+          {exceptions
+            .filter((e) => e.status !== 'Resolved' && e.status !== 'Closed')
+            .slice(0, 3)
+            .map((exc) => (
+              <div
+                key={exc.id}
+                className="p-4 rounded-xl border border-red-200 bg-red-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-red-50 transition-colors"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-bold text-xs text-red-700">{exc.code}</span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-red-100 text-red-800 border border-red-200">
+                      {exc.severity}
+                    </span>
+                    <span className="text-xs text-slate-500 font-semibold">{exc.customerName}</span>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900">{exc.title}</h4>
+                  <p className="text-xs text-slate-600 mt-0.5">{exc.description}</p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => handleResolveException(exc.id)}
+                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-xs"
+                  >
+                    Resolve & Clear
+                  </button>
+                  <Link
+                    href={`/operations/exceptions`}
+                    className="px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs transition-colors"
+                  >
+                    Details
+                  </Link>
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+
+      {/* MODAL: Schedule NZ Post Pickup */}
+      {isSchedulePickupModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsSchedulePickupModalOpen(false)} />
+          <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-[#ed2025] text-white flex items-center justify-center font-bold text-xs">
+                  NZ
+                </div>
+                <h3 className="text-sm font-black text-slate-900">Schedule NZ Post Courier Pickup</h3>
+              </div>
+              <button
+                onClick={() => setIsSchedulePickupModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSchedulePickup} className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Customer / Workshop</label>
+                <input
+                  type="text"
+                  value={pickupCustomer}
+                  onChange={(e) => setPickupCustomer(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Dispatch Branch</label>
+                  <input
+                    type="text"
+                    value={pickupBranch}
+                    onChange={(e) => setPickupBranch(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Postcode</label>
+                  <input
+                    type="text"
+                    value={pickupPostcode}
+                    onChange={(e) => setPickupPostcode(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Full Pickup Address</label>
+                <textarea
+                  value={pickupAddress}
+                  onChange={(e) => setPickupAddress(e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Parcel Count</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={pickupParcels}
+                  onChange={(e) => setPickupParcels(Number(e.target.value))}
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  required
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsSchedulePickupModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 text-slate-700 hover:bg-slate-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#ed2025] text-white hover:bg-red-700 shadow-md"
+                >
+                  Confirm & Schedule Pickup
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Quick Create Modal */}
       <QuickCreateModal isOpen={isQuickCreateOpen} onClose={() => setIsQuickCreateOpen(false)} />

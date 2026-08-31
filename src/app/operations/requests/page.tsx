@@ -182,6 +182,23 @@ function OperationsRequestsContent() {
 
   return (
     <div className="space-y-5 animate-fade-in">
+      {/* Role Notice Banner */}
+      <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="font-bold px-2 py-0.5 rounded bg-amber-200/80 text-amber-950 uppercase text-[10px]">
+            Procurement Role Scope
+          </span>
+          <span>Procurement requests & sourcing belong to the Procurement Portal. Operations staff view requests for logistics context.</span>
+        </div>
+        <Link
+          href="/procurement/requests"
+          className="inline-flex items-center gap-1 font-bold text-amber-900 underline hover:text-amber-950 shrink-0"
+        >
+          <span>Open Procurement Portal</span>
+          <ChevronRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+
       {/* 18. Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>

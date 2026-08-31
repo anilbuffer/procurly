@@ -18,6 +18,8 @@ import {
   OperationalDocument,
   ExceptionStatus,
   OperationsRole,
+  FreightCarrierControl,
+  NZPostPickupBooking,
 } from '@/types/operations';
 import {
   INITIAL_STAFF_USERS,
@@ -27,6 +29,8 @@ import {
   INITIAL_TASKS,
   INITIAL_AUDIT_LOG,
   INITIAL_REPORT_METRICS,
+  INITIAL_FREIGHT_CARRIERS,
+  INITIAL_NZPOST_PICKUPS,
 } from './mockData';
 
 const STORAGE_KEY_USER = 'procurly_ops_current_user_v1';
@@ -36,6 +40,9 @@ const STORAGE_KEY_EXCEPTIONS = 'procurly_ops_exceptions_v1';
 const STORAGE_KEY_TASKS = 'procurly_ops_tasks_v1';
 const STORAGE_KEY_AUDIT = 'procurly_ops_audit_v1';
 const STORAGE_KEY_DOCS = 'procurly_ops_docs_v1';
+const STORAGE_KEY_FREIGHT_CARRIERS = 'procurly_ops_freight_carriers_v1';
+const STORAGE_KEY_NZPOST_PICKUPS = 'procurly_ops_nzpost_pickups_v1';
+
 
 class OperationsService {
   private isBrowser(): boolean {
@@ -925,6 +932,83 @@ class OperationsService {
       exceptions: matchedExceptions,
     };
   }
+
+  // --- FREIGHT & LOGISTICS EXECUTION ---
+  public getFreightCarriers(): FreightCarrierControl[] {
+    if (!this.isBrowser()) return INITIAL_FREIGHT_CARRIERS;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_FREIGHT_CARRIERS);
+      if (stored) return JSON.parse(stored);
+      localStorage.setItem(STORAGE_KEY_FREIGHT_CARRIERS, JSON.stringify(INITIAL_FREIGHT_CARRIERS));
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_FREIGHT_CARRIERS;
+  }
+
+  public toggleFreightCarrier(carrierId: string, isEnabled: boolean): FreightCarrierControl[] {
+    const list = this.getFreightCarriers().map((fc) => (fc.id === carrierId ? { ...fc, isEnabled } : fc));
+    if (this.isBrowser()) {
+      localStorage.setItem(STORAGE_KEY_FREIGHT_CARRIERS, JSON.stringify(list));
+      const target = list.find((c) => c.id === carrierId);
+      this.addAuditLog({
+        action: isEnabled ? 'Freight Method Enabled' : 'Freight Method Disabled',
+        objectType: 'System',
+        objectId: carrierId,
+        details: `Operations staff ${isEnabled ? 'enabled' : 'disabled'} carrier route ${target?.name || carrierId}`,
+      });
+      this.dispatchUpdate();
+    }
+    return list;
+  }
+
+  public getNZPostPickups(): NZPostPickupBooking[] {
+    if (!this.isBrowser()) return INITIAL_NZPOST_PICKUPS;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_NZPOST_PICKUPS);
+      if (stored) return JSON.parse(stored);
+      localStorage.setItem(STORAGE_KEY_NZPOST_PICKUPS, JSON.stringify(INITIAL_NZPOST_PICKUPS));
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_NZPOST_PICKUPS;
+  }
+
+  public scheduleNZPostPickup(data: {
+    customerName: string;
+    pickupBranch: string;
+    pickupAddress: string;
+    parcelCount: number;
+    postcode: string;
+  }): NZPostPickupBooking {
+    const list = this.getNZPostPickups();
+    const newBooking: NZPostPickupBooking = {
+      id: `nzp-${Date.now()}`,
+      consignmentId: `CNS-NZP-${Math.floor(1000 + Math.random() * 9000)}`,
+      trackingNumber: `NZP-${Math.floor(100000000 + Math.random() * 900000000)}-NZ`,
+      customerName: data.customerName,
+      pickupBranch: data.pickupBranch,
+      pickupAddress: data.pickupAddress,
+      scheduledTime: 'Today, 03:30 PM',
+      parcelCount: data.parcelCount,
+      status: 'Scheduled',
+      postcode: data.postcode,
+    };
+
+    const updated = [newBooking, ...list];
+    if (this.isBrowser()) {
+      localStorage.setItem(STORAGE_KEY_NZPOST_PICKUPS, JSON.stringify(updated));
+      this.addAuditLog({
+        action: 'NZ Post Pickup Scheduled',
+        objectType: 'Shipment',
+        objectId: newBooking.trackingNumber,
+        details: `Scheduled NZ Post pickup for ${data.customerName} (${data.parcelCount} parcels) at ${data.pickupBranch}`,
+      });
+      this.dispatchUpdate();
+    }
+    return newBooking;
+  }
 }
 
 export const operationsService = new OperationsService();
+

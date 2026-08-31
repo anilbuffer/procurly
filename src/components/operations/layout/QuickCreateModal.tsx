@@ -94,66 +94,45 @@ export function QuickCreateModal({ isOpen, onClose }: QuickCreateModalProps) {
 
   const createOptions = [
     {
-      id: 'new_request',
-      label: 'New Parts Request',
-      description: 'Log and start sourcing for a customer vehicle part',
-      icon: ClipboardList,
-      color: 'bg-blue-50 text-[#2B4499] border-blue-200',
-      allowed: currentUser.permissions.canManageRequests,
-      action: () => setActiveForm('request'),
-    },
-    {
-      id: 'new_customer',
-      label: 'New Customer',
-      description: 'Register trade account or workshop profile',
-      icon: Building2,
-      color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      allowed: currentUser.permissions.canApproveCustomers || currentUser.permissions.canManageRequests,
+      id: 'nzpost_pickup',
+      label: 'Schedule NZ Post Pickup',
+      description: 'Book courier pickup consignment for NZ Post / CourierPost',
+      icon: Truck,
+      color: 'bg-red-50 text-[#ed2025] border-red-200',
+      allowed: true,
       action: () => {
         onClose();
-        router.push('/operations/customers/pending');
+        router.push('/operations/dashboard#nzpost-tracking');
       },
     },
     {
-      id: 'supplier_quote',
-      label: 'Supplier Quote',
-      description: 'Enter wholesale quotation received from supplier network',
-      icon: FileText,
-      color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-      allowed: currentUser.permissions.canAddSupplierQuotes,
-      action: () => {
-        onClose();
-        router.push('/operations/sourcing');
-      },
-    },
-    {
-      id: 'customer_quote',
-      label: 'Customer Quote',
-      description: 'Generate customer quotation and configure landed margin',
-      icon: Receipt,
-      color: 'bg-purple-50 text-purple-700 border-purple-200',
-      allowed: currentUser.permissions.canCreateCustomerQuotes,
-      action: () => {
-        onClose();
-        router.push('/operations/customer-quotes');
-      },
-    },
-    {
-      id: 'procurement_order',
-      label: 'Procurement Order',
-      description: 'Create supplier PO and dispatch purchase confirmation',
-      icon: ShoppingCart,
+      id: 'logistics_exception',
+      label: 'Log Logistics Exception',
+      description: 'Flag cargo delay, transit damage, or biosecurity hold',
+      icon: AlertCircle,
       color: 'bg-amber-50 text-amber-700 border-amber-200',
-      allowed: currentUser.permissions.canManageProcurementOrders,
+      allowed: true,
       action: () => {
         onClose();
-        router.push('/operations/procurement-orders');
+        router.push('/operations/exceptions');
+      },
+    },
+    {
+      id: 'dispatch_shipment',
+      label: 'Update Delivery Status',
+      description: 'Update tracking milestone and customer delivery state',
+      icon: ClipboardList,
+      color: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+      allowed: true,
+      action: () => {
+        onClose();
+        router.push('/operations/shipments');
       },
     },
     {
       id: 'internal_note',
-      label: 'Internal Note',
-      description: 'Record internal operational note to a request',
+      label: 'Internal Operational Note',
+      description: 'Record internal logistics note or dispatch instruction',
       icon: MessageSquare,
       color: 'bg-slate-100 text-slate-800 border-slate-200',
       allowed: true,

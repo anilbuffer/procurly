@@ -95,14 +95,14 @@ export function OperationsSidebar({
     setProfileDropdownOpen(false);
   };
 
-  // ─── Navigation structure (mirrors Customer Portal section pattern) ──────────
+  // ─── Navigation structure (Freight & Logistics Execution Focus) ──────────
   const navSections = [
     {
       group: 'Command Centre',
       items: [
         { label: 'Dashboard', href: '/operations/dashboard', icon: LayoutDashboard },
         {
-          label: 'My Tasks',
+          label: 'Logistics Tasks',
           href: '/operations/tasks',
           icon: ListTodo,
           badge: openTasksCount > 0 ? `${openTasksCount}` : undefined,
@@ -111,22 +111,13 @@ export function OperationsSidebar({
       ],
     },
     {
-      group: 'Procurement',
+      group: 'Logistics & Freight',
       items: [
-        { label: 'Requests', href: '/operations/requests', icon: ClipboardList },
-        { label: 'Sourcing', href: '/operations/sourcing', icon: Search },
-        { label: 'Supplier Quotes', href: '/operations/supplier-quotes', icon: FileText },
-        { label: 'Customer Quotes', href: '/operations/customer-quotes', icon: Receipt },
-        { label: 'Procurement Orders', href: '/operations/procurement-orders', icon: ShoppingCart },
-      ],
-    },
-    {
-      group: 'Logistics',
-      items: [
-        { label: 'Shipments', href: '/operations/shipments', icon: Truck },
-        { label: 'In Transit', href: '/operations/shipments', icon: PackageCheck },
+        { label: 'Shipments & Dispatch', href: '/operations/shipments', icon: Truck },
+        { label: 'NZ Post Pickups & Tracking', href: '/operations/dashboard#nzpost-tracking', icon: PackageCheck },
+        { label: 'Freight Controls', href: '/operations/dashboard#freight-controls', icon: Settings },
         {
-          label: 'Exceptions',
+          label: 'Logistics Exceptions',
           href: '/operations/exceptions',
           icon: AlertTriangle,
           badge: exceptionsCount > 0 ? `${exceptionsCount}` : undefined,
@@ -135,24 +126,10 @@ export function OperationsSidebar({
       ],
     },
     {
-      group: 'Finance',
+      group: 'Delivery Operations',
       items: [
-        { label: 'Payments', href: '/operations/payments', icon: CreditCard },
-        { label: 'Outstanding', href: '/operations/payments', icon: Clock },
-        { label: 'Refunds', href: '/operations/refunds', icon: RotateCcw },
-      ],
-    },
-    {
-      group: 'Customers',
-      items: [
-        { label: 'Customers', href: '/operations/customers', icon: Building2 },
-        {
-          label: 'Pending Approvals',
-          href: '/operations/customers/pending',
-          icon: UserCheck,
-          badge: pendingCustCount > 0 ? `${pendingCustCount}` : undefined,
-          badgeAttention: false,
-        },
+        { label: 'Delivery Status Updates', href: '/operations/dashboard#delivery-updates', icon: Clock },
+        { label: 'Customers & Deliveries', href: '/operations/customers', icon: Building2 },
       ],
     },
     {
@@ -163,15 +140,9 @@ export function OperationsSidebar({
       ],
     },
     {
-      group: 'Reporting',
-      items: [{ label: 'Reports', href: '/operations/reports', icon: BarChart3 }],
-    },
-    {
       group: 'Administration',
       items: [
-        { label: 'Users', href: '/operations/users', icon: Users },
-        { label: 'Roles & Permissions', href: '/operations/roles', icon: ShieldCheck },
-        { label: 'Configuration', href: '/operations/configuration', icon: Settings },
+        { label: 'System Configuration', href: '/operations/configuration', icon: Settings },
         { label: 'Audit Log', href: '/operations/audit', icon: History },
       ],
     },
