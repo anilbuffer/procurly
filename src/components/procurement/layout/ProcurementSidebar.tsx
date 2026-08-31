@@ -276,8 +276,8 @@ export function ProcurementSidebar({
 
                 return (
                   <Link
-                    key={item.label + item.href}
-                    href={item.href}
+                    key={item.label + (item.href || '')}
+                    href={item.href || '#'}
                     onClick={onCloseMobile}
                     title={isCollapsed ? item.label : undefined}
                     className={cn(

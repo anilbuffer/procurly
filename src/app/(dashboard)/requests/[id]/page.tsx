@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { QuoteComparisonModal } from '@/components/forms/QuoteComparisonModal';
 import { DocumentPreviewModal } from '@/components/ui/DocumentPreviewModal';
 import { PaymentModal } from '@/components/ui/PaymentModal';
+import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
 import { requestsService } from '@/services/requestsService';
 import { PartRequest, PortalDocument, PaymentTransaction } from '@/types';
 import { formatNZD, formatDate, getStatusDescription } from '@/lib/utils';
@@ -180,6 +181,13 @@ export default function RequestDetailsPage() {
 
   return (
     <div className="space-y-6">
+      {/* 0. INTERACTIVE END-TO-END FLOW NAVIGATOR & ROLE SWITCHER */}
+      <EndToEndFlowNavigator
+        requestId={request.referenceNumber}
+        currentStatus={request.status}
+        onStatusChanged={loadData}
+      />
+
       {/* 1. TOP HEADER & THE 5 CRITICAL QUESTIONS BOX */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">

@@ -42,7 +42,17 @@ export function OperationsHeader({ onOpenMobileMenu }: OperationsHeaderProps) {
     setCurrentUser(operationsService.getCurrentUser());
     const handleUpdate = () => setCurrentUser(operationsService.getCurrentUser());
     window.addEventListener('procurly_ops_updated', handleUpdate);
-    return () => window.removeEventListener('procurly_ops_updated', handleUpdate);
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
+    window.addEventListener('procurly_procurement_updated', handleUpdate);
+    window.addEventListener('procurly_finance_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_procurement_updated', handleUpdate);
+      window.removeEventListener('procurly_finance_updated', handleUpdate);
+    };
   }, []);
 
   // Close dropdowns on outside click
@@ -160,12 +170,12 @@ export function OperationsHeader({ onOpenMobileMenu }: OperationsHeaderProps) {
           {/* Breadcrumbs — mirrors Customer Portal exactly */}
           <nav className="flex items-center gap-1.5 text-xs text-slate-500 overflow-hidden font-medium" aria-label="Breadcrumb">
             {breadcrumbs.map((crumb, idx) => (
-              <React.Fragment key={crumb.href + idx}>
+              <React.Fragment key={(crumb.href || '') + idx}>
                 {idx > 0 && <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />}
                 {idx === breadcrumbs.length - 1 ? (
                   <span className="font-bold text-slate-900 truncate">{crumb.label}</span>
                 ) : (
-                  <Link href={crumb.href} className="hover:text-[#2B4499] hover:underline transition-colors truncate">
+                  <Link href={crumb.href || '#'} className="hover:text-[#2B4499] hover:underline transition-colors truncate">
                     {crumb.label}
                   </Link>
                 )}

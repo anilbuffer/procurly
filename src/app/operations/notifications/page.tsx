@@ -101,7 +101,7 @@ export default function NotificationsPage() {
             </div>
 
             <Link
-              href={n.link}
+              href={n.link || (n as any).targetUrl || (n as any).linkUrl || '#'}
               className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-[#ed2025] hover:text-white font-bold text-slate-700 transition-colors shrink-0 flex items-center gap-1"
             >
               <span>View</span>

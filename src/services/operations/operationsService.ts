@@ -32,6 +32,7 @@ import {
   INITIAL_FREIGHT_CARRIERS,
   INITIAL_NZPOST_PICKUPS,
 } from './mockData';
+import { syncRequestStatusAcrossRoles } from '@/lib/syncCrossRoleStore';
 
 const STORAGE_KEY_USER = 'procurly_ops_current_user_v1';
 const STORAGE_KEY_REQUESTS = 'procurly_ops_requests_v1';
@@ -236,6 +237,11 @@ class OperationsService {
       details: note || `Status transitioned to ${newStatus}`,
       oldValue: oldStatus,
       newValue: newStatus,
+    });
+
+    syncRequestStatusAcrossRoles(reqs[idx].referenceNumber, newStatus, {
+      actorName: user.name,
+      note,
     });
 
     return reqs[idx];
@@ -485,6 +491,12 @@ class OperationsService {
       newValue: `NZ$${reqs[idx].customerQuote?.totalAmountNZD.toFixed(2)}`,
     });
 
+    syncRequestStatusAcrossRoles(reqs[idx].referenceNumber, 'Quote Ready', {
+      actorName: user.name,
+      note: `Published landed quotation ${reqs[idx].customerQuote?.quoteNumber}`,
+      totalAmountNZD: reqs[idx].customerQuote?.totalAmountNZD,
+    });
+
     return reqs[idx];
   }
 
@@ -518,6 +530,13 @@ class OperationsService {
     });
 
     this.saveRequests(reqs);
+
+    syncRequestStatusAcrossRoles(reqs[idx].referenceNumber, 'Awaiting Payment', {
+      actorName: `${reqs[idx].customerName} (Online)`,
+      note: 'Verified digital quote acceptance. Awaiting payment authorization.',
+    });
+
+    return reqs[idx];
 
     this.addAuditLog({
       action: 'Customer Approved Quote',

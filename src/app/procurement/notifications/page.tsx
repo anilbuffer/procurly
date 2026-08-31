@@ -177,7 +177,7 @@ export default function ProcurementNotificationsPage() {
                   </button>
                 )}
                 <Link
-                  href={n.targetUrl}
+                  href={n.targetUrl || (n as any).linkUrl || (n as any).link || '#'}
                   onClick={() => handleMarkRead(n.id)}
                   className="btn-red-polished text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1 shadow-xs"
                 >

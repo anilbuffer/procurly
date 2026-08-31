@@ -129,7 +129,7 @@ export default function MyTasksQueuePage() {
                   </button>
 
                   <Link
-                    href={task.targetUrl}
+                    href={task.targetUrl || '#'}
                     className="px-4 py-2 rounded-xl bg-[#ed2025] hover:bg-[#d3181d] text-white text-xs font-bold shadow-glow transition-all flex items-center gap-1.5"
                   >
                     <span>Open Action →</span>

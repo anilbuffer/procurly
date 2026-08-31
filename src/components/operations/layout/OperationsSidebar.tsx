@@ -164,8 +164,8 @@ export function OperationsSidebar({
 
     return (
       <Link
-        key={item.href + item.label}
-        href={item.href}
+        key={(item.href || '') + item.label}
+        href={item.href || '#'}
         onClick={onCloseMobile}
         title={isCollapsed ? item.label : undefined}
         className={cn(

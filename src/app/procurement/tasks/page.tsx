@@ -277,7 +277,7 @@ export default function ProcurementTasksPage() {
               {/* Action Button */}
               <div className="flex items-center gap-2 shrink-0 self-center">
                 <Link
-                  href={t.targetUrl}
+                  href={t.targetUrl || '#'}
                   className="btn-red-polished text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1 shadow-xs"
                 >
                   Execute Task <ArrowRight className="w-3.5 h-3.5" />

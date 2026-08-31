@@ -98,7 +98,7 @@ export interface PartRequirement {
   partNumber?: string;
   quantity: number;
   qualityPreference: 'Genuine OEM' | 'Genuine' | 'Aftermarket' | 'No Preference';
-  condition: 'New' | 'Grade A Used' | 'Reconditioned' | 'No Preference';
+  condition: 'New' | 'New OEM' | 'Used' | 'Grade A Used' | 'Reconditioned' | 'No Preference';
   notes?: string;
   images: string[];
 }

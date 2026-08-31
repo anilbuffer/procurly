@@ -34,6 +34,7 @@ import {
   INITIAL_FINANCE_NOTIFICATIONS,
   INITIAL_FINANCE_DOCUMENTS,
 } from './mockData';
+import { syncRequestStatusAcrossRoles } from '@/lib/syncCrossRoleStore';
 
 const KEY_USER = 'procurly_fin_user_v1';
 const KEY_PAYMENTS = 'procurly_fin_payments_v1';
@@ -167,6 +168,13 @@ class FinanceService {
       status: 'Completed',
       channel: 'Virtual Terminal',
       description: `Payment recorded for ${newPayment.requestNumber}`,
+    });
+
+    syncRequestStatusAcrossRoles(newPayment.requestNumber, 'Ordered From Supplier', {
+      actorName: currentUser.name,
+      paymentMethod: newPayment.method,
+      totalAmountNZD: newPayment.amount,
+      note: `Payment of NZ$${newPayment.amount.toFixed(2)} recorded by Finance (${currentUser.name})`,
     });
 
     return newPayment;

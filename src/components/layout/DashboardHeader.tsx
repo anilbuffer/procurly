@@ -39,7 +39,17 @@ export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
     loadNotifications();
     const handleUpdate = () => loadNotifications();
     window.addEventListener('procurly_data_updated', handleUpdate);
-    return () => window.removeEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
+    window.addEventListener('procurly_ops_updated', handleUpdate);
+    window.addEventListener('procurly_procurement_updated', handleUpdate);
+    window.addEventListener('procurly_finance_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('procurly_procurement_updated', handleUpdate);
+      window.removeEventListener('procurly_finance_updated', handleUpdate);
+    };
   }, []);
 
   // Keyboard shortcut for Cmd/Ctrl + K
@@ -102,12 +112,12 @@ export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-1.5 text-xs text-slate-500 overflow-hidden font-medium" aria-label="Breadcrumb">
             {breadcrumbs.map((crumb, idx) => (
-              <React.Fragment key={crumb.href + idx}>
+              <React.Fragment key={(crumb.href || '') + idx}>
                 {idx > 0 && <span className="text-slate-300">/</span>}
                 {idx === breadcrumbs.length - 1 ? (
                   <span className="font-bold text-slate-900 truncate">{crumb.label}</span>
                 ) : (
-                  <Link href={crumb.href} className="hover:text-brand-blue hover:underline transition-colors truncate">
+                  <Link href={crumb.href || '#'} className="hover:text-brand-blue hover:underline transition-colors truncate">
                     {crumb.label}
                   </Link>
                 )}
@@ -196,7 +206,7 @@ export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
                     notifications.map((n) => (
                       <Link
                         key={n.id}
-                        href={n.linkUrl}
+                        href={n.linkUrl || (n as any).targetUrl || (n as any).link || '#'}
                         onClick={async () => {
                           await requestsService.markNotificationRead(n.id);
                           setNotificationsOpen(false);

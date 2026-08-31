@@ -108,7 +108,7 @@ export default function NotificationsPage() {
                     return (
                       <Link
                         key={item.id}
-                        href={item.linkUrl}
+                        href={item.linkUrl || (item as any).targetUrl || (item as any).link || '#'}
                         onClick={() => requestsService.markNotificationRead(item.id)}
                         className={`p-4 rounded-xl border transition-all flex items-start justify-between gap-4 block group ${
                           !item.isRead

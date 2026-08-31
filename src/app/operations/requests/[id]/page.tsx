@@ -45,6 +45,7 @@ import {
   OperationalDocument,
 } from '@/types/operations';
 import { StatusChangeModal } from '@/components/operations/layout/StatusChangeModal';
+import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
 import { cn } from '@/lib/utils';
 
 export default function RequestDetailWorkspacePage() {
@@ -211,6 +212,13 @@ export default function RequestDetailWorkspacePage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-16">
+      {/* 0. INTERACTIVE END-TO-END FLOW NAVIGATOR & ROLE SWITCHER */}
+      <EndToEndFlowNavigator
+        requestId={request.referenceNumber}
+        currentStatus={request.status}
+        onStatusChanged={loadData}
+      />
+
       {/* 21. Header Workspace Bar */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

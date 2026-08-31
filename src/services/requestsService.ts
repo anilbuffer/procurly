@@ -24,6 +24,7 @@ import {
   INITIAL_TEAM_MEMBERS,
   INITIAL_NOTIFICATIONS,
 } from './mockData';
+import { syncRequestStatusAcrossRoles } from '@/lib/syncCrossRoleStore';
 
 const REQUESTS_KEY = 'procurly_requests_v3';
 const COMPANY_KEY = 'procurly_company_v3';
@@ -359,6 +360,13 @@ class MockRequestsService {
       requestNumber: item.referenceNumber,
     });
 
+    // Cross-role real-time sync across Operations, Procurement, and Finance
+    syncRequestStatusAcrossRoles(item.referenceNumber, 'Awaiting Payment', {
+      actorName: acceptanceInfo.acceptedBy || 'James Wilson (AutoCare Auckland)',
+      freightMethod: item.selectedFreight,
+      note: `Quote accepted by ${acceptanceInfo.acceptedBy || 'James Wilson'}. Proceeding to trade payment.`,
+    });
+
     return { request: item, order: newOrder };
   }
 
@@ -532,6 +540,13 @@ class MockRequestsService {
       linkUrl: `/orders`,
       requestId: item.requestId,
       requestNumber: item.requestNumber,
+    });
+
+    // Cross-role real-time sync across Operations, Procurement, and Finance
+    syncRequestStatusAcrossRoles(item.requestNumber, 'Ordered From Supplier', {
+      actorName: 'Accounts / Customer',
+      paymentMethod: method,
+      note: `Payment authorized via ${method}. Order officially placed with supplier network.`,
     });
 
     return item;

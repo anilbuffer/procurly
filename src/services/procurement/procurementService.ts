@@ -32,6 +32,7 @@ import {
   INITIAL_SHIPMENTS,
   INITIAL_NOTIFICATIONS,
 } from './mockData';
+import { syncRequestStatusAcrossRoles } from '@/lib/syncCrossRoleStore';
 
 const KEY_USER = 'procurly_proc_user_v2';
 const KEY_REQUESTS = 'procurly_proc_requests_v2';
@@ -135,6 +136,11 @@ class ProcurementService {
     if (this.isBrowser()) {
       localStorage.setItem(KEY_REQUESTS, JSON.stringify(reqs));
       this.dispatch();
+
+      syncRequestStatusAcrossRoles(reqs[idx].requestNumber, status, {
+        actorName: user.name,
+        note,
+      });
     }
     return reqs[idx];
   }
