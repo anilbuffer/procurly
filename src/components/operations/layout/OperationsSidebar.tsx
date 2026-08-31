@@ -364,45 +364,6 @@ export function OperationsSidebar({
               </div>
             </div>
 
-            {/* ── RBAC Role Switcher (Operations-specific, replaces customer nav links) */}
-            <div className="py-1.5 border-b border-slate-800/60">
-              <div className="px-4 py-1.5">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block">
-                  Simulate Role (RBAC)
-                </span>
-                <p className="text-[11px] text-slate-500 mt-0.5">Switch user to test permission adaptations:</p>
-              </div>
-              {staffUsers.map((user) => {
-                const isSelected = user.id === currentUser.id;
-                return (
-                  <button
-                    key={user.id}
-                    onClick={() => handleSwitchUser(user)}
-                    className={cn(
-                      'w-full flex items-center gap-2.5 px-4 py-2 text-left transition-colors',
-                      isSelected
-                        ? 'bg-slate-800/70 text-white font-bold'
-                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        'w-6 h-6 rounded-lg text-[10px] font-black flex items-center justify-center shrink-0',
-                        isSelected ? 'bg-[#2B4499] text-white' : 'bg-slate-700 text-slate-300'
-                      )}
-                    >
-                      {user.avatar}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold truncate">{user.name}</p>
-                      <p className="text-[10px] text-slate-500 truncate">{user.roleTitle}</p>
-                    </div>
-                    {isSelected && <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-
             {/* Navigation Links — mirrors Customer Portal */}
             <div className="py-1.5">
               <Link
