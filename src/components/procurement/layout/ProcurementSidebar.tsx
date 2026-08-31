@@ -109,13 +109,6 @@ export function ProcurementSidebar({
           badge: openTasksCount > 0 ? `${openTasksCount}` : undefined,
           badgeAttention: false,
         },
-        {
-          label: 'Notifications',
-          href: '/procurement/notifications',
-          icon: Bell,
-          badge: unreadNotifsCount > 0 ? `${unreadNotifsCount}` : undefined,
-          badgeAttention: unreadNotifsCount > 0,
-        },
       ],
     },
     {
@@ -139,20 +132,15 @@ export function ProcurementSidebar({
       group: 'SUPPLIERS',
       items: [
         { label: 'Suppliers', href: '/procurement/suppliers', icon: Building2 },
-        { label: 'Supplier Performance', href: '/procurement/suppliers/performance', icon: TrendingUp },
-        { label: 'Supplier Communications', href: '/procurement/supplier-communications', icon: MessageSquare },
       ],
     },
     {
       group: 'LOGISTICS',
       items: [
-        { label: 'Ready for Dispatch', href: '/procurement/ready-for-dispatch', icon: PackageCheck },
-        { label: 'Shipping', href: '/procurement/shipping', icon: Truck },
-        { label: 'In Transit', href: '/procurement/in-transit', icon: Navigation },
         {
-          label: 'Logistics Exceptions',
-          href: '/procurement/exceptions',
-          icon: AlertTriangle,
+          label: 'Logistics & Dispatch',
+          href: '/procurement/logistics',
+          icon: Truck,
           badge: exceptionsCount > 0 ? `${exceptionsCount}` : undefined,
           badgeAttention: true,
         },
@@ -172,7 +160,10 @@ export function ProcurementSidebar({
       return pathname === '/procurement' || pathname === '/procurement/dashboard';
     }
     if (href === '/procurement/suppliers') {
-      return pathname === '/procurement/suppliers';
+      return pathname.startsWith('/procurement/suppliers');
+    }
+    if (href === '/procurement/logistics') {
+      return pathname.startsWith('/procurement/logistics');
     }
     return pathname.startsWith(href);
   };
@@ -350,33 +341,6 @@ export function ProcurementSidebar({
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 truncate">{currentUser.email || 'procurement@procurly.com'}</p>
-            </div>
-
-            {/* Navigation Links */}
-            <div className="py-1.5">
-              <Link
-                href="/procurement/tasks"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <ListTodo className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">My Procurement Tasks</p>
-                  <p className="text-[10px] text-slate-500">Sourcing & PO task queue</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/procurement/help"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <User className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Team & Specialist Access</p>
-                  <p className="text-[10px] text-slate-500">Manage buyer permissions</p>
-                </div>
-              </Link>
             </div>
 
             {/* Sign Out */}

@@ -100,8 +100,9 @@ export function ProcurementHeader({
     if (pathname.includes('/procurement/tracking')) return 'Procurement Tracking & Pipeline';
     if (pathname.includes('/procurement/suppliers/performance')) return 'Supplier Performance Intelligence';
     if (pathname.includes('/procurement/suppliers/')) return 'Supplier Profile & Sourcing History';
-    if (pathname.includes('/procurement/suppliers')) return 'Supplier Directory & Management';
+    if (pathname.includes('/procurement/suppliers')) return 'Supplier Directory & Management Hub';
     if (pathname.includes('/procurement/supplier-communications')) return 'Supplier Communications Hub';
+    if (pathname.includes('/procurement/logistics')) return 'Logistics & Dispatch Workspace';
     if (pathname.includes('/procurement/ready-for-dispatch')) return 'Ready for Dispatch Verification';
     if (pathname.includes('/procurement/shipping')) return 'Shipping & Logistics Handover';
     if (pathname.includes('/procurement/in-transit')) return 'In-Transit Freight Monitor';
