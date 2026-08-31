@@ -90,9 +90,9 @@ export const INITIAL_FINANCE_PAYMENTS: FinancePayment[] = [
     allocatedBy: 'Claire Vance',
     receiptNumber: 'REC-2026-0123',
     invoiceNumber: 'INV-2026-0123',
-    quoteNumber: 'QUO-2026-0123',
-    partsSummary: 'Toyota Hiace TRH200 Front Lower Control Arm (LH+RH)',
-    vehicleSummary: '2018 Toyota Hiace TRH200 (1TR-FE 2.0L Petrol)',
+    quoteNumber: 'QUO-000123-v3',
+    partsSummary: 'Toyota Hiace Left Front Lower Control Arm',
+    vehicleSummary: '2019 Toyota Hiace (3.0L Diesel KDH201)',
     internalNotes: ['Card payment processed automatically via Stripe. Funds settled to BNZ master merchant.'],
     auditTrail: [
       {
@@ -1041,12 +1041,12 @@ export const INITIAL_FINANCIAL_EXCEPTIONS: FinancialException[] = [
 export const INITIAL_CUSTOMER_QUOTES_FINANCE: FinanceCustomerQuote[] = [
   {
     id: 'QUO-2026-0123',
-    quoteNumber: 'QUO-2026-0123',
+    quoteNumber: 'QUO-000123-v3',
     requestNumber: 'AH-P-000123',
     customerId: 'cus_autocare_akl',
     customerName: 'AutoCare Auckland',
-    vehicleSummary: '2018 Toyota Hiace TRH200 (1TR-FE 2.0L Petrol)',
-    partsSummary: 'Toyota Hiace TRH200 Front Lower Control Arm (LH+RH)',
+    vehicleSummary: '2019 Toyota Hiace (3.0L Diesel KDH201)',
+    partsSummary: 'Toyota Hiace Left Front Lower Control Arm',
     partsSubtotal: 395.0,
     freightCost: 26.96,
     customsDuty: 0.0,
