@@ -21,9 +21,6 @@ import {
   Truck,
   Navigation,
   AlertTriangle,
-  FolderOpen,
-  FileSpreadsheet,
-  BarChart3,
   User,
   HelpCircle,
   ChevronLeft,
@@ -162,19 +159,6 @@ export function ProcurementSidebar({
       ],
     },
     {
-      group: 'DOCUMENTS',
-      items: [
-        { label: 'Supplier Documents', href: '/procurement/documents/suppliers', icon: FolderOpen },
-        { label: 'Procurement Documents', href: '/procurement/documents', icon: FileSpreadsheet },
-      ],
-    },
-    {
-      group: 'REPORTS',
-      items: [
-        { label: 'Procurement Reports', href: '/procurement/reports', icon: BarChart3 },
-      ],
-    },
-    {
       group: 'SYSTEM',
       items: [
         { label: 'Profile', href: '/procurement/profile', icon: User },
@@ -186,9 +170,6 @@ export function ProcurementSidebar({
   const isLinkActive = (href: string) => {
     if (href === '/procurement/dashboard') {
       return pathname === '/procurement' || pathname === '/procurement/dashboard';
-    }
-    if (href === '/procurement/documents') {
-      return pathname === '/procurement/documents';
     }
     if (href === '/procurement/suppliers') {
       return pathname === '/procurement/suppliers';

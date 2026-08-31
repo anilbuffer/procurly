@@ -27,11 +27,9 @@ import {
   Users,
   ShieldCheck,
   Settings,
-  History,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  ExternalLink,
   PlusCircle,
   LogOut,
 } from 'lucide-react';
@@ -140,13 +138,7 @@ export function OperationsSidebar({
         { label: 'Notifications', href: '/operations/notifications', icon: Bell },
       ],
     },
-    {
-      group: 'Administration',
-      items: [
-        { label: 'System Configuration', href: '/operations/configuration', icon: Settings },
-        { label: 'Audit Log', href: '/operations/audit', icon: History },
-      ],
-    },
+
   ];
 
   // ─── Render a single nav link — mirrors Customer Portal renderNavLink exactly ─
@@ -277,25 +269,7 @@ export function OperationsSidebar({
           </div>
         ))}
 
-        {/* ── Support-style "Back to Customer Portal" footer link ──────────── */}
-        <div className="space-y-1 pt-2 border-t border-slate-800/60">
-          {!isCollapsed && (
-            <div className="px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-500">
-              Portal
-            </div>
-          )}
-          <Link
-            href="/dashboard"
-            onClick={onCloseMobile}
-            title={isCollapsed ? 'Customer Portal' : undefined}
-            className="flex items-center rounded-xl text-xs font-semibold transition-all relative group text-slate-400 hover:text-white hover:bg-slate-800/50 px-3.5 py-2.5"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <ExternalLink className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-slate-200 transition-colors" />
-              {!isCollapsed && <span className="truncate">Customer Portal</span>}
-            </div>
-          </Link>
-        </div>
+
       </nav>
 
       {/* ── Bottom Profile / RBAC Switcher — mirrors Customer Portal footer ──── */}
