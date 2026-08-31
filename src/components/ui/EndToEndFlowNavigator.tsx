@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -48,6 +48,11 @@ export function EndToEndFlowNavigator({
   const pathname = usePathname();
   const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Identify current desk based on URL
   const currentRole = pathname.startsWith('/operations')
@@ -176,8 +181,8 @@ export function EndToEndFlowNavigator({
       <div className="pt-4 overflow-x-auto custom-scrollbar">
         <div className="flex items-center justify-between min-w-[820px] px-1">
           {FLOW_STAGES.map((stage, idx) => {
-            const isCompleted = idx < currentIndex;
-            const isCurrent = idx === currentIndex;
+            const isCompleted = isMounted ? idx < currentIndex : idx < 2;
+            const isCurrent = isMounted ? idx === currentIndex : idx === 2;
 
             return (
               <React.Fragment key={stage.id}>
@@ -189,7 +194,8 @@ export function EndToEndFlowNavigator({
                     isUpdating ? 'opacity-50' : 'hover:scale-105'
                   }`}
                 >
-                  <div
+                  <span
+                    suppressHydrationWarning
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition-all ${
                       isCurrent
                         ? 'bg-[#ed2025] text-white ring-4 ring-red-500/30 scale-110 shadow-lg'
@@ -199,8 +205,9 @@ export function EndToEndFlowNavigator({
                     }`}
                   >
                     {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : stage.number}
-                  </div>
+                  </span>
                   <span
+                    suppressHydrationWarning
                     className={`text-[11px] mt-1.5 font-bold whitespace-nowrap leading-none ${
                       isCurrent ? 'text-red-400 font-black' : isCompleted ? 'text-emerald-400' : 'text-slate-400'
                     }`}
@@ -212,8 +219,9 @@ export function EndToEndFlowNavigator({
 
                 {idx < FLOW_STAGES.length - 1 && (
                   <div
+                    suppressHydrationWarning
                     className={`flex-1 h-0.5 mx-1.5 transition-all ${
-                      idx < currentIndex ? 'bg-emerald-500' : 'bg-slate-800'
+                      isCompleted ? 'bg-emerald-500' : 'bg-slate-800'
                     }`}
                   />
                 )}
@@ -243,7 +251,7 @@ export function EndToEndFlowNavigator({
 
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-slate-400">Current Status:</span>
-          <span className="font-bold text-white bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-700">
+          <span suppressHydrationWarning className="font-bold text-white bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-700">
             {currentStatus}
           </span>
         </div>
