@@ -49,6 +49,7 @@ export default function FinanceTransactionsPage() {
     const matchesSearch =
       t.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.requestNumber && t.requestNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
       t.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.description.toLowerCase().includes(searchQuery.toLowerCase());
 

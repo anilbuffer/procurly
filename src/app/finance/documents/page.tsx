@@ -39,6 +39,7 @@ export default function FinancialDocumentsPage() {
     const matchesSearch =
       d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.documentNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (d.requestNumber && d.requestNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
       d.customerName.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });

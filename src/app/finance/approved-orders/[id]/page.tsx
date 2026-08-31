@@ -30,8 +30,18 @@ export default function ApprovedOrderDetailPage() {
   const resolveOrder = (id: string): ApprovedOrderFinance => {
     const orders = financeService.getApprovedOrders();
     return (
-      orders.find((item) => item.id.toLowerCase() === id.toLowerCase() || item.orderNumber.toLowerCase() === id.toLowerCase()) ||
-      INITIAL_APPROVED_ORDERS_FINANCE.find((item) => item.id.toLowerCase() === id.toLowerCase() || item.orderNumber.toLowerCase() === id.toLowerCase()) ||
+      orders.find(
+        (item) =>
+          item.id.toLowerCase() === id.toLowerCase() ||
+          item.orderNumber.toLowerCase() === id.toLowerCase() ||
+          item.requestNumber.toLowerCase() === id.toLowerCase()
+      ) ||
+      INITIAL_APPROVED_ORDERS_FINANCE.find(
+        (item) =>
+          item.id.toLowerCase() === id.toLowerCase() ||
+          item.orderNumber.toLowerCase() === id.toLowerCase() ||
+          item.requestNumber.toLowerCase() === id.toLowerCase()
+      ) ||
       INITIAL_APPROVED_ORDERS_FINANCE[0]
     );
   };

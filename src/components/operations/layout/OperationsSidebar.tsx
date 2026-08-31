@@ -101,6 +101,7 @@ export function OperationsSidebar({
       group: 'Command Centre',
       items: [
         { label: 'Dashboard', href: '/operations/dashboard', icon: LayoutDashboard },
+        { label: 'Procurement Requests', href: '/operations/requests', icon: ClipboardList },
         {
           label: 'Logistics Tasks',
           href: '/operations/tasks',

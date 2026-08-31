@@ -13,6 +13,8 @@ import {
   ArrowRight,
   X,
   Wallet,
+  CheckCircle2,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { financeService } from '@/services/finance/financeService';
 import { cn } from '@/lib/utils';
@@ -56,6 +58,8 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
   const refunds = financeService.getRefunds();
   const exceptions = financeService.getExceptions();
   const docs = financeService.getDocuments();
+  const quotes = financeService.getCustomerQuotes();
+  const orders = financeService.getApprovedOrders();
 
   const filteredPayments = payments.filter(
     (p) =>
@@ -65,15 +69,31 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
       p.partsSummary.toLowerCase().includes(query.toLowerCase())
   ).slice(0, 3);
 
+  const filteredOrders = orders.filter(
+    (o) =>
+      o.orderNumber.toLowerCase().includes(query.toLowerCase()) ||
+      o.requestNumber.toLowerCase().includes(query.toLowerCase()) ||
+      o.customerName.toLowerCase().includes(query.toLowerCase())
+  ).slice(0, 2);
+
+  const filteredQuotes = quotes.filter(
+    (q) =>
+      q.quoteNumber.toLowerCase().includes(query.toLowerCase()) ||
+      q.requestNumber.toLowerCase().includes(query.toLowerCase()) ||
+      q.customerName.toLowerCase().includes(query.toLowerCase()) ||
+      q.partsSummary.toLowerCase().includes(query.toLowerCase())
+  ).slice(0, 2);
+
   const filteredAccounts = accounts.filter(
     (a) =>
       a.customerName.toLowerCase().includes(query.toLowerCase()) ||
       a.nzbn.includes(query)
-  ).slice(0, 3);
+  ).slice(0, 2);
 
   const filteredRefunds = refunds.filter(
     (r) =>
       r.id.toLowerCase().includes(query.toLowerCase()) ||
+      (r.requestNumber && r.requestNumber.toLowerCase().includes(query.toLowerCase())) ||
       r.customerName.toLowerCase().includes(query.toLowerCase()) ||
       r.reason.toLowerCase().includes(query.toLowerCase())
   ).slice(0, 2);
@@ -81,6 +101,7 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
   const filteredExceptions = exceptions.filter(
     (e) =>
       e.id.toLowerCase().includes(query.toLowerCase()) ||
+      (e.requestNumber && e.requestNumber.toLowerCase().includes(query.toLowerCase())) ||
       e.customerName.toLowerCase().includes(query.toLowerCase()) ||
       e.summary.toLowerCase().includes(query.toLowerCase())
   ).slice(0, 2);
@@ -88,6 +109,7 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
   const filteredDocs = docs.filter(
     (d) =>
       d.documentNumber.toLowerCase().includes(query.toLowerCase()) ||
+      (d.requestNumber && d.requestNumber.toLowerCase().includes(query.toLowerCase())) ||
       d.title.toLowerCase().includes(query.toLowerCase()) ||
       d.customerName.toLowerCase().includes(query.toLowerCase())
   ).slice(0, 2);
@@ -99,6 +121,8 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
 
   const totalResults =
     filteredPayments.length +
+    filteredOrders.length +
+    filteredQuotes.length +
     filteredAccounts.length +
     filteredRefunds.length +
     filteredExceptions.length +
@@ -117,7 +141,7 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search payments (PAY-00123), accounts, refunds, exceptions, invoices..."
+            placeholder="Search payments (PAY-00123), Request ID (AH-P-000123), accounts, quotes, invoices..."
             className="w-full bg-transparent text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none"
           />
           {query && (
@@ -136,7 +160,7 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
             <div className="py-12 text-center text-xs text-slate-400 space-y-1">
               <Search className="w-8 h-8 mx-auto text-slate-300 stroke-[1.5]" />
               <p className="font-semibold text-slate-600">No finance records found</p>
-              <p>Try searching by customer name, payment ID, or NZBN number.</p>
+              <p>Try searching by Request ID (AH-P-000123), customer name, payment ID, or NZBN.</p>
             </div>
           ) : (
             <div className="space-y-3 p-2">
@@ -160,6 +184,9 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-mono font-bold text-xs text-slate-900">{p.id}</span>
+                              <span className="font-mono text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                                {p.requestNumber}
+                              </span>
                               <span className="text-xs text-slate-500 truncate">{p.customerName}</span>
                             </div>
                             <p className="text-[11px] text-slate-400 truncate">{p.partsSummary}</p>
@@ -168,6 +195,82 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
                         <div className="text-right shrink-0">
                           <p className="text-xs font-black text-slate-900">NZ${p.amount.toFixed(2)}</p>
                           <span className="text-[10px] font-semibold text-emerald-600">{p.status}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Approved Orders */}
+              {filteredOrders.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 mb-1.5">
+                    Approved Orders & Clearance
+                  </p>
+                  <div className="space-y-1">
+                    {filteredOrders.map((o) => (
+                      <div
+                        key={o.id}
+                        onClick={() => handleSelect(`/finance/approved-orders/${o.id}`)}
+                        className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100/80 cursor-pointer transition-colors group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-xs text-slate-900">{o.orderNumber}</span>
+                              <span className="font-mono text-[11px] font-semibold text-sky-700 bg-sky-50 px-1.5 py-0.2 rounded border border-sky-200">
+                                {o.requestNumber}
+                              </span>
+                              <span className="text-xs text-slate-500 truncate">{o.customerName}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 truncate">Clearance: {o.clearanceStatus}</p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xs font-black text-slate-900">NZ${o.totalAmount.toFixed(2)}</p>
+                          <span className="text-[10px] font-semibold text-sky-600">{o.paymentStatus}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Customer Quotes */}
+              {filteredQuotes.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 mb-1.5">
+                    Customer Quotes
+                  </p>
+                  <div className="space-y-1">
+                    {filteredQuotes.map((q) => (
+                      <div
+                        key={q.id}
+                        onClick={() => handleSelect(`/finance/customer-quotes/${q.id}`)}
+                        className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100/80 cursor-pointer transition-colors group"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center shrink-0">
+                            <FileSpreadsheet className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-bold text-xs text-slate-900">{q.quoteNumber}</span>
+                              <span className="font-mono text-[11px] font-semibold text-teal-700 bg-teal-50 px-1.5 py-0.2 rounded border border-teal-200">
+                                {q.requestNumber}
+                              </span>
+                              <span className="text-xs text-slate-500 truncate">{q.customerName}</span>
+                            </div>
+                            <p className="text-[11px] text-slate-400 truncate">{q.partsSummary}</p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xs font-black text-slate-900">NZ${q.totalAmount.toFixed(2)}</p>
+                          <span className="text-[10px] font-semibold text-teal-600">{q.status}</span>
                         </div>
                       </div>
                     ))}
@@ -227,6 +330,11 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-mono font-bold text-xs text-slate-900">{r.id}</span>
+                              {r.requestNumber && (
+                                <span className="font-mono text-[11px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">
+                                  {r.requestNumber}
+                                </span>
+                              )}
                               <span className="text-xs text-slate-500">{r.customerName}</span>
                             </div>
                             <p className="text-[11px] text-slate-400 truncate">{r.reason}</p>
@@ -260,7 +368,14 @@ export function FinanceGlobalSearchModal({ isOpen, onClose }: FinanceGlobalSearc
                             <FileText className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <p className="font-bold text-xs text-slate-900 truncate">{d.title}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-bold text-xs text-slate-900 truncate">{d.title}</p>
+                              {d.requestNumber && (
+                                <span className="font-mono text-[10px] font-semibold text-sky-700 bg-sky-50 px-1.5 py-0.2 rounded border border-sky-200 shrink-0">
+                                  {d.requestNumber}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-[11px] text-slate-400">{d.documentNumber} • {d.issueDate}</p>
                           </div>
                         </div>

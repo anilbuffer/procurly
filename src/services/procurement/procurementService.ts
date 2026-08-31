@@ -87,7 +87,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_REQUESTS;
     try {
       const val = localStorage.getItem(KEY_REQUESTS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: ProcurementRequest[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_REQUESTS.forEach((initReq) => {
+          if (!stored.some((r) => r.id === initReq.id || r.requestNumber === initReq.requestNumber)) {
+            stored.unshift(initReq);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_REQUESTS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_REQUESTS, JSON.stringify(INITIAL_REQUESTS));
     } catch (e) {
       console.error(e);
@@ -195,7 +208,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_SUPPLIERS;
     try {
       const val = localStorage.getItem(KEY_SUPPLIERS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: SupplierSummary[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_SUPPLIERS.forEach((initSup) => {
+          if (!stored.some((s) => s.id === initSup.id || s.code === initSup.code)) {
+            stored.unshift(initSup);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_SUPPLIERS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_SUPPLIERS, JSON.stringify(INITIAL_SUPPLIERS));
     } catch (e) {
       console.error(e);
@@ -229,7 +255,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_SUPPLIER_QUOTES;
     try {
       const val = localStorage.getItem(KEY_QUOTES);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: SupplierQuoteItem[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_SUPPLIER_QUOTES.forEach((initQ) => {
+          if (!stored.some((q) => q.id === initQ.id || q.quoteNumber === initQ.quoteNumber)) {
+            stored.unshift(initQ);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_QUOTES, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_QUOTES, JSON.stringify(INITIAL_SUPPLIER_QUOTES));
     } catch (e) {
       console.error(e);
@@ -342,7 +381,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_PURCHASE_ORDERS;
     try {
       const val = localStorage.getItem(KEY_POS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: PurchaseOrderItem[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_PURCHASE_ORDERS.forEach((initPo) => {
+          if (!stored.some((p) => p.id === initPo.id || p.poNumber === initPo.poNumber)) {
+            stored.unshift(initPo);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_POS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_POS, JSON.stringify(INITIAL_PURCHASE_ORDERS));
     } catch (e) {
       console.error(e);
@@ -431,7 +483,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_TASKS;
     try {
       const val = localStorage.getItem(KEY_TASKS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: ProcurementTaskItem[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_TASKS.forEach((initTask) => {
+          if (!stored.some((t) => t.id === initTask.id)) {
+            stored.unshift(initTask);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_TASKS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_TASKS, JSON.stringify(INITIAL_TASKS));
     } catch (e) {
       console.error(e);
@@ -458,7 +523,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_EXCEPTIONS;
     try {
       const val = localStorage.getItem(KEY_EXCEPTIONS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: ProcurementExceptionItem[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_EXCEPTIONS.forEach((initExc) => {
+          if (!stored.some((e) => e.id === initExc.id || e.code === initExc.code)) {
+            stored.unshift(initExc);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_EXCEPTIONS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_EXCEPTIONS, JSON.stringify(INITIAL_EXCEPTIONS));
     } catch (e) {
       console.error(e);
@@ -542,7 +620,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_CONVERSATIONS;
     try {
       const val = localStorage.getItem(KEY_CONVERSATIONS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: SupplierConversation[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_CONVERSATIONS.forEach((initConv) => {
+          if (!stored.some((c) => c.id === initConv.id)) {
+            stored.unshift(initConv);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_CONVERSATIONS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_CONVERSATIONS, JSON.stringify(INITIAL_CONVERSATIONS));
     } catch (e) {
       console.error(e);
@@ -595,7 +686,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_DOCUMENTS;
     try {
       const val = localStorage.getItem(KEY_DOCS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: ProcurementDocumentItem[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_DOCUMENTS.forEach((initDoc) => {
+          if (!stored.some((d) => d.id === initDoc.id)) {
+            stored.unshift(initDoc);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_DOCS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_DOCS, JSON.stringify(INITIAL_DOCUMENTS));
     } catch (e) {
       console.error(e);
@@ -624,7 +728,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_SHIPMENTS;
     try {
       const val = localStorage.getItem(KEY_SHIPMENTS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: ShipmentDispatchItem[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_SHIPMENTS.forEach((initShp) => {
+          if (!stored.some((s) => s.id === initShp.id || s.shipmentNumber === initShp.shipmentNumber)) {
+            stored.unshift(initShp);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_SHIPMENTS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_SHIPMENTS, JSON.stringify(INITIAL_SHIPMENTS));
     } catch (e) {
       console.error(e);
@@ -671,7 +788,20 @@ class ProcurementService {
     if (!this.isBrowser()) return INITIAL_NOTIFICATIONS;
     try {
       const val = localStorage.getItem(KEY_NOTIFS);
-      if (val) return JSON.parse(val);
+      if (val) {
+        const stored: ProcurementNotificationItem[] = JSON.parse(val);
+        let updated = false;
+        INITIAL_NOTIFICATIONS.forEach((initNotif) => {
+          if (!stored.some((n) => n.id === initNotif.id)) {
+            stored.unshift(initNotif);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(KEY_NOTIFS, JSON.stringify(stored));
+        }
+        return stored;
+      }
       localStorage.setItem(KEY_NOTIFS, JSON.stringify(INITIAL_NOTIFICATIONS));
     } catch (e) {
       console.error(e);

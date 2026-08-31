@@ -102,7 +102,18 @@ class OperationsService {
     try {
       const stored = localStorage.getItem(STORAGE_KEY_REQUESTS);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed: OperationalPartRequest[] = JSON.parse(stored);
+        let updated = false;
+        INITIAL_REQUESTS.forEach((initReq) => {
+          if (!parsed.some((r) => r.referenceNumber === initReq.referenceNumber || r.id === initReq.id)) {
+            parsed.unshift(initReq);
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(parsed));
+        }
+        return parsed;
       }
       localStorage.setItem(STORAGE_KEY_REQUESTS, JSON.stringify(INITIAL_REQUESTS));
     } catch (e) {

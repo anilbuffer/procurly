@@ -220,9 +220,6 @@ export function ProcurementSidebar({
                   <span className="font-extrabold text-white tracking-tight text-base leading-none">
                     PROCUR<span className="text-brand-red">ly</span>
                   </span>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-brand-blue/30 text-sky-400 border border-sky-400/20">
-                    Procurement
-                  </span>
                 </div>
                 <span className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
                   Automotive Sourcing Portal
@@ -242,19 +239,6 @@ export function ProcurementSidebar({
             </button>
           )}
         </div>
-
-        {/* Live Operational Indicator */}
-        {!isCollapsed && (
-          <div className="px-4 py-2.5 bg-slate-950/20 border-b border-slate-800/50 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="font-medium text-slate-300">Procurement Command</span>
-            </div>
-            <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
-              Active Session
-            </span>
-          </div>
-        )}
 
         {/* Navigation Item Tree */}
         <div
@@ -308,8 +292,8 @@ export function ProcurementSidebar({
                               ? 'bg-white text-brand-red'
                               : 'bg-brand-red text-white animate-pulse'
                             : active
-                            ? 'bg-white/20 text-white'
-                            : 'bg-slate-800 text-slate-300 border border-slate-700'
+                              ? 'bg-white/20 text-white'
+                              : 'bg-slate-800 text-slate-300 border border-slate-700'
                         )}
                       >
                         {item.badge}

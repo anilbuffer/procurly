@@ -23,6 +23,7 @@ import {
   XCircle,
   Navigation,
   Info,
+  ClipboardList,
 } from 'lucide-react';
 import { operationsService } from '@/services/operations/operationsService';
 import {
@@ -197,6 +198,86 @@ export default function OperationsDashboardPage() {
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
           </span>
         </Link>
+      </div>
+
+      {/* SECTION 0: ACTIVE PROCUREMENT REQUESTS MONITOR */}
+      <div id="procurement-requests" className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+          <div>
+            <div className="flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-[#2B4499]" />
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">Active Procurement Requests</h2>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Monitor active workshop part requests, landed quotes, and status progression.
+            </p>
+          </div>
+          <Link
+            href="/operations/requests"
+            className="text-xs font-bold text-[#2B4499] hover:underline flex items-center gap-1 shrink-0"
+          >
+            <span>View All Procurement Requests ({requests.length})</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50/70 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="py-3 px-4">Request ID</th>
+                <th className="py-3 px-4">Customer</th>
+                <th className="py-3 px-4">Vehicle</th>
+                <th className="py-3 px-4">Part Description</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Owner</th>
+                <th className="py-3 px-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-xs">
+              {requests.slice(0, 5).map((req) => (
+                <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-3.5 px-4 font-mono font-black text-[#2B4499]">
+                    <Link href={`/operations/requests/${req.referenceNumber}`} className="hover:underline">
+                      {req.referenceNumber}
+                    </Link>
+                  </td>
+                  <td className="py-3.5 px-4 font-bold text-slate-900">{req.customerName}</td>
+                  <td className="py-3.5 px-4 text-slate-700 font-medium">
+                    {req.vehicle.year} {req.vehicle.make} {req.vehicle.model}
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-800 font-medium max-w-[200px] truncate" title={req.part.name}>
+                    {req.part.name}
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <span
+                      className={cn(
+                        'px-2.5 py-1 rounded-full text-[11px] font-bold inline-flex items-center gap-1 border',
+                        req.status === 'Awaiting Customer Approval' && 'bg-purple-50 text-purple-700 border-purple-200',
+                        req.status === 'Quote Ready' && 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                        req.status === 'In Transit' && 'bg-cyan-50 text-cyan-700 border-cyan-200',
+                        req.status.includes('Exception') && 'bg-red-50 text-red-700 border-red-200'
+                      )}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                      {req.status}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 text-slate-600 font-medium">{req.ownerName}</td>
+                  <td className="py-3.5 px-4 text-right">
+                    <Link
+                      href={`/operations/requests/${req.referenceNumber}`}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-[#2B4499] hover:text-white text-slate-700 font-bold text-[11px] transition-colors"
+                    >
+                      <span>Open Workspace</span>
+                      <ChevronRight className="w-3 h-3" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* SECTION 1: FREIGHT & CARRIER ENABLEMENT CONTROLS */}

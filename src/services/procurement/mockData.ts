@@ -657,6 +657,64 @@ export const INITIAL_REQUESTS: ProcurementRequest[] = [
 export const INITIAL_PROCUREMENT_REQUESTS: ProcurementRequest[] = INITIAL_REQUESTS;
 
 export const INITIAL_SUPPLIER_QUOTES: SupplierQuoteItem[] = [
+  // Quotes for AH-P-000123 (Toyota Hiace Left Lower Control Arm)
+  {
+    id: 'sq_123_01',
+    quoteNumber: 'SQ-9035',
+    requestId: 'req_123',
+    requestRef: 'AH-P-000123',
+    supplierId: 'sup_tokyo_oem',
+    supplierName: 'Tokyo Auto Spares Co., Ltd.',
+    supplierCode: 'TAS-JP',
+    partName: 'Left Front Lower Control Arm (Toyota OEM)',
+    partNumber: '48069-26150',
+    quantity: 1,
+    condition: 'New OEM Factory Boxed',
+    warrantyMonths: 12,
+    unitCostNZD: 395.0,
+    freightCostNZD: 70.0,
+    handlingCostNZD: 20.0,
+    totalCostNZD: 485.0,
+    availability: 'In Stock',
+    leadTimeDays: 5,
+    leadTimeDisplay: '5–8 Days (Air Express)',
+    validUntil: '2026-09-10',
+    status: 'Received',
+    createdAt: '2026-08-28T10:40:00Z',
+    notes: 'Genuine Toyota Japan packaging with factory rubber bushings and lower ball joint included.',
+    paymentTerms: 'Net 30 Days',
+    isPreferred: true,
+    attachments: [
+      { name: 'Quotation_AH-P-000123_TAS.pdf', size: '245 KB', url: '/docs/quote_123_tas.pdf' },
+    ],
+  },
+  {
+    id: 'sq_123_02',
+    quoteNumber: 'SQ-9036',
+    requestId: 'req_123',
+    requestRef: 'AH-P-000123',
+    supplierId: 'sup_kansai_reman',
+    supplierName: 'Kansai Precision Remanufacturing',
+    supplierCode: 'KPR-JP',
+    partName: 'Left Front Lower Control Arm (Japan Reman/Refurb)',
+    partNumber: '48069-26150-R',
+    quantity: 1,
+    condition: 'Remanufactured OEM Spec',
+    warrantyMonths: 12,
+    unitCostNZD: 310.0,
+    freightCostNZD: 80.0,
+    handlingCostNZD: 20.0,
+    totalCostNZD: 410.0,
+    availability: '3–5 Days',
+    leadTimeDays: 18,
+    leadTimeDisplay: '18–30 Days (Sea Freight)',
+    validUntil: '2026-09-12',
+    status: 'Received',
+    createdAt: '2026-08-28T10:42:00Z',
+    notes: 'Refurbished original Toyota casting with new heavy-duty polyurethane bushings.',
+    paymentTerms: 'Net 30 Days',
+    isPreferred: false,
+  },
   // Quotes for PR-10048 (Hilux Turbo)
   {
     id: 'sq_hilux_01',
@@ -996,6 +1054,21 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrderItem[] = [
 
 export const INITIAL_TASKS: ProcurementTaskItem[] = [
   {
+    id: 'task_123',
+    title: 'Review landed quotes for AH-P-000123 (AutoCare Auckland — Toyota Hiace Control Arm)',
+    type: 'Compare quotations',
+    requestId: 'req_123',
+    requestRef: 'AH-P-000123',
+    vehicleSummary: '2019 Toyota Hiace (KDH201)',
+    customerName: 'AutoCare Auckland',
+    priority: 'Urgent',
+    dueDate: '2026-08-28T10:00:00Z',
+    dueBucket: 'Today',
+    isCompleted: false,
+    assignedTo: 'Brendon Davies',
+    targetUrl: '/procurement/quote-comparison?requestId=req_123',
+  },
+  {
     id: 'task_01',
     title: 'Review quotes and compare suppliers for PR-10048 (Hilux Turbo)',
     type: 'Compare quotations',
@@ -1165,6 +1238,41 @@ export const INITIAL_EXCEPTIONS: ProcurementExceptionItem[] = [
 
 export const INITIAL_CONVERSATIONS: SupplierConversation[] = [
   {
+    id: 'conv_123',
+    supplierId: 'sup_tokyo_oem',
+    supplierName: 'Tokyo Auto Spares Co., Ltd.',
+    lastMessage: 'Konnichiwa Brendon-san, Toyota Hiace OEM control arm #48069-26150 confirmed in stock at Nagoya hub.',
+    lastMessageTime: '10 mins ago',
+    unreadCount: 1,
+    relatedRequestRef: 'AH-P-000123',
+    messages: [
+      {
+        id: 'msg_123_1',
+        supplierId: 'sup_tokyo_oem',
+        supplierName: 'Tokyo Auto Spares Co., Ltd.',
+        requestId: 'req_123',
+        requestRef: 'AH-P-000123',
+        sender: 'Brendon Davies',
+        senderRole: 'Procurement Specialist',
+        isInternalNote: false,
+        message: 'Konnichiwa Kenji-san. Urgently need OEM Left Front Lower Control Arm for 2019 Hiace (VIN JTEBR32P10029384, part 48069-26150).',
+        timestamp: '2026-08-28T09:15:00Z',
+      },
+      {
+        id: 'msg_123_2',
+        supplierId: 'sup_tokyo_oem',
+        supplierName: 'Tokyo Auto Spares Co., Ltd.',
+        requestId: 'req_123',
+        requestRef: 'AH-P-000123',
+        sender: 'Kenji Takahashi',
+        senderRole: 'Supplier Representative',
+        isInternalNote: false,
+        message: 'Konnichiwa Brendon-san, Toyota Hiace OEM control arm #48069-26150 confirmed in stock at Nagoya hub. Air freight option NZ$485 landed.',
+        timestamp: '2026-08-28T10:42:00Z',
+      },
+    ],
+  },
+  {
     id: 'conv_01',
     supplierId: 'sup_tokyo_oem',
     supplierName: 'Tokyo Auto Spares Co., Ltd.',
@@ -1255,6 +1363,21 @@ export const INITIAL_CONVERSATIONS: SupplierConversation[] = [
 ];
 
 export const INITIAL_DOCUMENTS: ProcurementDocumentItem[] = [
+  {
+    id: 'pdoc_123',
+    title: 'Quotation — AH-P-000123 (Toyota Hiace Control Arm)',
+    type: 'Supplier Quote',
+    requestId: 'req_123',
+    requestRef: 'AH-P-000123',
+    supplierName: 'Tokyo Auto Spares Co., Ltd.',
+    customerName: 'AutoCare Auckland',
+    date: '2026-08-28',
+    uploadedBy: 'Brendon Davies',
+    fileSize: '245 KB',
+    fileFormat: 'PDF',
+    downloadUrl: '/docs/quote_123_tas.pdf',
+    isInternalOnly: false,
+  },
   {
     id: 'pdoc_01',
     title: 'Supplier Quotation SQ-9021 (Hilux Turbo OEM)',
@@ -1424,6 +1547,17 @@ export const INITIAL_SHIPMENTS: ShipmentDispatchItem[] = [
 ];
 
 export const INITIAL_NOTIFICATIONS: ProcurementNotificationItem[] = [
+  {
+    id: 'notif_123',
+    title: 'Supplier Quotes Ready: AH-P-000123',
+    description: 'Tokyo Auto Spares submitted quote for Toyota Hiace Left Control Arm (AH-P-000123). Air & Sea options available.',
+    type: 'Supplier quote received',
+    timestamp: '10 mins ago',
+    isRead: false,
+    requestId: 'req_123',
+    targetUrl: '/procurement/quote-comparison?requestId=req_123',
+    priority: 'Urgent',
+  },
   {
     id: 'notif_01',
     title: 'Supplier Quote Received: SQ-9021',

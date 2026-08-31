@@ -28,8 +28,18 @@ export default function CustomerQuoteDetailPage() {
   const resolveQuote = (id: string): FinanceCustomerQuote => {
     const quotes = financeService.getCustomerQuotes();
     return (
-      quotes.find((item) => item.id.toLowerCase() === id.toLowerCase() || item.quoteNumber.toLowerCase() === id.toLowerCase()) ||
-      INITIAL_CUSTOMER_QUOTES_FINANCE.find((item) => item.id.toLowerCase() === id.toLowerCase() || item.quoteNumber.toLowerCase() === id.toLowerCase()) ||
+      quotes.find(
+        (item) =>
+          item.id.toLowerCase() === id.toLowerCase() ||
+          item.quoteNumber.toLowerCase() === id.toLowerCase() ||
+          item.requestNumber.toLowerCase() === id.toLowerCase()
+      ) ||
+      INITIAL_CUSTOMER_QUOTES_FINANCE.find(
+        (item) =>
+          item.id.toLowerCase() === id.toLowerCase() ||
+          item.quoteNumber.toLowerCase() === id.toLowerCase() ||
+          item.requestNumber.toLowerCase() === id.toLowerCase()
+      ) ||
       INITIAL_CUSTOMER_QUOTES_FINANCE[0]
     );
   };

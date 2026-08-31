@@ -325,27 +325,6 @@ export function ProcurementHeader({
           )}
         </div>
 
-        {/* Currency & Ecosystem Switcher */}
-        <div className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-200">
-          <span className="px-2 py-0.5 rounded bg-slate-100 text-[11px] font-bold text-slate-700 border border-slate-200">
-            NZD ($)
-          </span>
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-brand-blue hover:bg-slate-100 rounded-lg transition-colors"
-            title="Switch to Customer Trade Portal"
-          >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline">Customer Portal</span>
-          </Link>
-        </div>
-
-        {/* User Mini Badge */}
-        <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-blue to-indigo-600 text-white flex items-center justify-center text-xs font-bold ring-2 ring-slate-100">
-            {currentUser.avatar}
-          </div>
-        </div>
       </div>
     </header>
   );
