@@ -1,7 +1,7 @@
 import { INITIAL_REQUESTS as CUSTOMER_INITIAL_REQUESTS } from '@/services/mockData';
 import { INITIAL_REQUESTS as OPS_INITIAL_REQUESTS } from '@/services/operations/mockData';
 import { INITIAL_REQUESTS as PROC_INITIAL_REQUESTS } from '@/services/procurement/mockData';
-import { INITIAL_FINANCE_PAYMENTS } from '@/services/finance/mockData';
+import { INITIAL_FINANCE_PAYMENTS, INITIAL_AWAITING_PAYMENTS } from '@/services/finance/mockData';
 
 export interface SyncOptions {
   actorName?: string;
@@ -18,10 +18,14 @@ export function syncRequestStatusAcrossRoles(
 ) {
   if (typeof window === 'undefined') return;
 
-  const targetRef = requestIdOrRef.toUpperCase().includes('AH-P-')
-    ? requestIdOrRef.toUpperCase()
+  const rawInput = requestIdOrRef || 'AH-P-000123';
+  const targetRef = rawInput.toUpperCase().includes('AH-P-')
+    ? rawInput.toUpperCase()
     : 'AH-P-000123';
-  const targetId = 'req_123';
+  const targetId = rawInput === 'AH-P-000123' || rawInput === 'req_000123' || rawInput === 'req_123'
+    ? 'req_123'
+    : rawInput;
+
   const now = new Date().toISOString();
   const actor = options.actorName || 'System User';
 
@@ -32,8 +36,8 @@ export function syncRequestStatusAcrossRoles(
     const req = reqs.find(
       (r: any) =>
         r.id === targetId ||
-        (r.referenceNumber && r.referenceNumber.toUpperCase() === targetRef) ||
-        r.id === requestIdOrRef
+        r.id === rawInput ||
+        (r.referenceNumber && r.referenceNumber.toUpperCase() === targetRef)
     );
     if (req) {
       req.status = newStatus;
@@ -42,8 +46,15 @@ export function syncRequestStatusAcrossRoles(
 
       if (newStatus === 'Awaiting Payment' || newStatus === 'Customer Approved') {
         req.paymentStatus = 'Awaiting Payment';
-      } else if (newStatus === 'Payment Received' || newStatus === 'Ordered From Supplier') {
+      } else if (
+        newStatus === 'Payment Received' ||
+        newStatus === 'Ordered From Supplier' ||
+        newStatus === 'In Transit' ||
+        newStatus === 'Delivered'
+      ) {
         req.paymentStatus = 'Payment Received';
+      } else if (newStatus === 'Quote Ready' || newStatus === 'Sourcing' || newStatus === 'Request Submitted') {
+        req.paymentStatus = 'Pending Quote';
       }
 
       if (req.trackingMilestones) {
@@ -69,8 +80,9 @@ export function syncRequestStatusAcrossRoles(
     const opsReq = opsReqs.find(
       (r: any) =>
         r.id === 'req_000123' ||
-        (r.referenceNumber && r.referenceNumber.toUpperCase() === targetRef) ||
-        r.id === requestIdOrRef
+        r.id === targetId ||
+        r.id === rawInput ||
+        (r.referenceNumber && r.referenceNumber.toUpperCase() === targetRef)
     );
     if (opsReq) {
       opsReq.status = newStatus;
@@ -100,9 +112,9 @@ export function syncRequestStatusAcrossRoles(
     const procReqs = rawProc ? JSON.parse(rawProc) : PROC_INITIAL_REQUESTS;
     const procReq = procReqs.find(
       (r: any) =>
-        r.id === 'req_123' ||
-        (r.requestNumber && r.requestNumber.toUpperCase() === targetRef) ||
-        r.id === requestIdOrRef
+        r.id === targetId ||
+        r.id === rawInput ||
+        (r.requestNumber && r.requestNumber.toUpperCase() === targetRef)
     );
     if (procReq) {
       procReq.status = newStatus;
@@ -126,16 +138,45 @@ export function syncRequestStatusAcrossRoles(
     const rawFinPay = localStorage.getItem('procurly_fin_payments_v1');
     const finPays = rawFinPay ? JSON.parse(rawFinPay) : INITIAL_FINANCE_PAYMENTS;
     const finPay = finPays.find(
-      (p: any) => (p.requestNumber && p.requestNumber.toUpperCase() === targetRef) || p.id === 'PAY-000123' || p.id === 'PAY-00123'
+      (p: any) =>
+        (p.requestNumber && p.requestNumber.toUpperCase() === targetRef) ||
+        p.id === 'PAY-000123' ||
+        p.id === 'PAY-00123' ||
+        p.id === rawInput
     );
     if (finPay) {
-      if (newStatus === 'Payment Received' || newStatus === 'Ordered From Supplier') {
+      if (
+        newStatus === 'Payment Received' ||
+        newStatus === 'Ordered From Supplier' ||
+        newStatus === 'In Transit' ||
+        newStatus === 'Delivered'
+      ) {
         finPay.status = 'Received';
         finPay.paymentDate = 'Just now';
-      } else if (newStatus === 'Awaiting Payment' || newStatus === 'Customer Approved') {
+      } else if (newStatus === 'Awaiting Payment' || newStatus === 'Customer Approved' || newStatus === 'Quote Ready') {
         finPay.status = 'Awaiting';
       }
       localStorage.setItem('procurly_fin_payments_v1', JSON.stringify(finPays));
+    }
+
+    // Sync awaiting payments store
+    const rawFinAwaiting = localStorage.getItem('procurly_fin_awaiting_v1');
+    const finAwaiting = rawFinAwaiting ? JSON.parse(rawFinAwaiting) : INITIAL_AWAITING_PAYMENTS;
+    const awaitingItem = finAwaiting.find(
+      (a: any) => (a.requestNumber && a.requestNumber.toUpperCase() === targetRef) || a.id === 'AWT-000123'
+    );
+    if (awaitingItem) {
+      if (
+        newStatus === 'Payment Received' ||
+        newStatus === 'Ordered From Supplier' ||
+        newStatus === 'In Transit' ||
+        newStatus === 'Delivered'
+      ) {
+        awaitingItem.status = 'Paid & Released';
+      } else if (newStatus === 'Awaiting Payment' || newStatus === 'Customer Approved') {
+        awaitingItem.status = 'Due Soon';
+      }
+      localStorage.setItem('procurly_fin_awaiting_v1', JSON.stringify(finAwaiting));
     }
   } catch (e) {
     console.error('Error syncing Finance payments:', e);
@@ -172,7 +213,7 @@ export function syncRequestStatusAcrossRoles(
       timestamp: 'Just now',
       isRead: false,
       requestId: targetRef,
-      actionUrl: `/procurement/requests`,
+      actionUrl: `/procurement/requests/${targetId}`,
     });
     localStorage.setItem('procurly_proc_notifs_v2', JSON.stringify(procNotifs));
 
@@ -186,7 +227,7 @@ export function syncRequestStatusAcrossRoles(
       description: `Order ${targetRef} trade billing updated to "${newStatus}".`,
       timestamp: 'Just now',
       isRead: false,
-      actionUrl: `/finance/payments`,
+      actionUrl: `/finance/payments/PAY-000123`,
     });
     localStorage.setItem('procurly_fin_notifs_v1', JSON.stringify(finNotifs));
   } catch (e) {
@@ -201,3 +242,4 @@ export function syncRequestStatusAcrossRoles(
   window.dispatchEvent(new Event('procurly_finance_updated'));
   window.dispatchEvent(new Event('storage'));
 }
+

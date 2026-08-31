@@ -77,12 +77,28 @@ export default function PaymentDetailPage() {
   const isFailed = payment.status === 'Failed';
   const isRefunded = payment.status === 'Refunded';
 
+  const resolveCurrentStatus = () => {
+    if (typeof window !== 'undefined') {
+      try {
+        const rawProc = localStorage.getItem('procurly_proc_requests_v2');
+        if (rawProc) {
+          const procReqs = JSON.parse(rawProc);
+          const req = procReqs.find(
+            (r: any) => r.requestNumber === payment.requestNumber || r.id === 'req_123'
+          );
+          if (req?.status) return req.status;
+        }
+      } catch (e) {}
+    }
+    return payment.status === 'Received' ? 'Payment Received' : 'Awaiting Payment';
+  };
+
   return (
     <div className="space-y-6">
       {/* 0. INTERACTIVE END-TO-END FLOW NAVIGATOR & ROLE SWITCHER */}
       <EndToEndFlowNavigator
         requestId={payment.requestNumber || 'AH-P-000123'}
-        currentStatus={payment.status === 'Received' ? 'Payment Received' : 'Awaiting Payment'}
+        currentStatus={resolveCurrentStatus()}
         onStatusChanged={loadData}
       />
       {/* Back Link & Header */}
