@@ -1055,7 +1055,7 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrderItem[] = [
 export const INITIAL_TASKS: ProcurementTaskItem[] = [
   {
     id: 'task_123',
-    title: 'Review landed quotes for AH-P-000123 (AutoCare Auckland — Toyota Hiace Control Arm)',
+    title: 'Review landed quotes for AH-P-000123 (AutoCare Auckland — Left Front Lower Control Arm)',
     type: 'Compare quotations',
     requestId: 'req_123',
     requestRef: 'AH-P-000123',
@@ -1365,7 +1365,7 @@ export const INITIAL_CONVERSATIONS: SupplierConversation[] = [
 export const INITIAL_DOCUMENTS: ProcurementDocumentItem[] = [
   {
     id: 'pdoc_123',
-    title: 'Quotation — AH-P-000123 (Toyota Hiace Control Arm)',
+    title: 'Quotation — AH-P-000123 (Left Front Lower Control Arm)',
     type: 'Supplier Quote',
     requestId: 'req_123',
     requestRef: 'AH-P-000123',
@@ -1550,7 +1550,7 @@ export const INITIAL_NOTIFICATIONS: ProcurementNotificationItem[] = [
   {
     id: 'notif_123',
     title: 'Supplier Quotes Ready: AH-P-000123',
-    description: 'Tokyo Auto Spares submitted quote for Toyota Hiace Left Control Arm (AH-P-000123). Air & Sea options available.',
+    description: 'Tokyo Auto Spares submitted quote for Left Front Lower Control Arm (AH-P-000123). Air & Sea options available.',
     type: 'Supplier quote received',
     timestamp: '10 mins ago',
     isRead: false,

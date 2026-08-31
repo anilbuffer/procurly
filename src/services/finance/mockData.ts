@@ -70,9 +70,9 @@ export const INITIAL_FINANCE_STAFF: FinanceStaffUser[] = [
 
 export const INITIAL_FINANCE_PAYMENTS: FinancePayment[] = [
   {
-    id: 'PAY-00123',
+    id: 'PAY-000123',
     requestNumber: 'AH-P-000123',
-    orderNumber: 'ORD-2026-0089',
+    orderNumber: 'ORD-000123',
     customerId: 'cus_autocare_akl',
     customerName: 'AutoCare Auckland',
     customerEmail: 'accounts@autocareauckland.co.nz',
@@ -91,7 +91,7 @@ export const INITIAL_FINANCE_PAYMENTS: FinancePayment[] = [
     receiptNumber: 'REC-2026-0123',
     invoiceNumber: 'INV-2026-0123',
     quoteNumber: 'QUO-000123-v3',
-    partsSummary: 'Toyota Hiace Left Front Lower Control Arm',
+    partsSummary: 'Left Front Lower Control Arm',
     vehicleSummary: '2019 Toyota Hiace (3.0L Diesel KDH201)',
     internalNotes: ['Card payment processed automatically via Stripe. Funds settled to BNZ master merchant.'],
     auditTrail: [
@@ -432,9 +432,9 @@ export const INITIAL_AWAITING_PAYMENTS: AwaitingPaymentItem[] = [
 export const INITIAL_FINANCE_TRANSACTIONS: FinanceTransaction[] = [
   {
     id: 'TXN-998231',
-    reference: 'PAY-00123',
+    reference: 'PAY-000123',
     requestNumber: 'AH-P-000123',
-    orderNumber: 'ORD-2026-0089',
+    orderNumber: 'ORD-000123',
     customerId: 'cus_autocare_akl',
     customerName: 'AutoCare Auckland',
     type: 'Payment',
@@ -449,7 +449,7 @@ export const INITIAL_FINANCE_TRANSACTIONS: FinanceTransaction[] = [
     timestamp: '28 Aug 2026, 14:22:10',
     reconciledAt: '28 Aug 2026, 15:00:00',
     reconciledBy: 'Marcus Wong',
-    description: 'Customer payment for Toyota Hiace Control Arms',
+    description: 'Customer payment for Toyota Hiace Left Front Lower Control Arm',
   },
   {
     id: 'TXN-998230',
@@ -1046,7 +1046,7 @@ export const INITIAL_CUSTOMER_QUOTES_FINANCE: FinanceCustomerQuote[] = [
     customerId: 'cus_autocare_akl',
     customerName: 'AutoCare Auckland',
     vehicleSummary: '2019 Toyota Hiace (3.0L Diesel KDH201)',
-    partsSummary: 'Toyota Hiace Left Front Lower Control Arm',
+    partsSummary: 'Left Front Lower Control Arm',
     partsSubtotal: 395.0,
     freightCost: 26.96,
     customsDuty: 0.0,
@@ -1127,8 +1127,8 @@ export const INITIAL_CUSTOMER_QUOTES_FINANCE: FinanceCustomerQuote[] = [
 
 export const INITIAL_APPROVED_ORDERS_FINANCE: ApprovedOrderFinance[] = [
   {
-    id: 'ORD-2026-0089',
-    orderNumber: 'ORD-2026-0089',
+    id: 'ORD-000123',
+    orderNumber: 'ORD-000123',
     requestNumber: 'AH-P-000123',
     customerId: 'cus_autocare_akl',
     customerName: 'AutoCare Auckland',
@@ -1146,20 +1146,14 @@ export const INITIAL_APPROVED_ORDERS_FINANCE: ApprovedOrderFinance[] = [
     clearedAt: '28 Aug 2026, 14:22:15',
     clearedBy: 'System Automated Clearance',
     releasedToProcurementAt: '28 Aug 2026, 14:22:20',
-    procurementPoRef: 'PO-2026-0089',
+    procurementPoRef: 'PO-000123',
     notes: 'Paid in full via Visa. Instant clearance dispatched to Sarah Wilson (Procurement Lead).',
     parts: [
       {
-        name: 'Toyota Hiace TRH200 Front Lower Control Arm (LH)',
-        partNumber: '48069-26140',
+        name: 'Left Front Lower Control Arm',
+        partNumber: '48069-26150',
         qty: 1,
-        unitPrice: 197.5,
-      },
-      {
-        name: 'Toyota Hiace TRH200 Front Lower Control Arm (RH)',
-        partNumber: '48068-26140',
-        qty: 1,
-        unitPrice: 197.5,
+        unitPrice: 395.0,
       },
     ],
   },
@@ -1544,7 +1538,7 @@ export const INITIAL_FINANCE_DOCUMENTS: FinanceDocument[] = [
     category: 'Invoice',
     title: 'Tax Invoice — AutoCare Auckland (AH-P-000123)',
     requestNumber: 'AH-P-000123',
-    orderNumber: 'ORD-2026-0089',
+    orderNumber: 'ORD-000123',
     customerName: 'AutoCare Auckland',
     customerId: 'cus_autocare_akl',
     amount: 485.0,
@@ -1559,10 +1553,10 @@ export const INITIAL_FINANCE_DOCUMENTS: FinanceDocument[] = [
     id: 'DOC-REC-0123',
     documentNumber: 'REC-2026-0123',
     category: 'Payment Receipt',
-    title: 'Payment Confirmation Receipt — PAY-00123',
+    title: 'Payment Confirmation Receipt — PAY-000123',
     requestNumber: 'AH-P-000123',
-    paymentNumber: 'PAY-00123',
-    orderNumber: 'ORD-2026-0089',
+    paymentNumber: 'PAY-000123',
+    orderNumber: 'ORD-000123',
     customerName: 'AutoCare Auckland',
     customerId: 'cus_autocare_akl',
     amount: 485.0,

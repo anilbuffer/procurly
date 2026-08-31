@@ -890,7 +890,7 @@ export const INITIAL_SHIPMENTS: ShipmentTracking[] = [
       model: 'Hiace',
       regoNumber: 'KMR892',
     },
-    partName: 'Toyota Hiace · Control Arm',
+    partName: 'Left Front Lower Control Arm',
     status: 'In Transit',
     dispatchedAt: '2026-08-28T06:00:00Z',
     estimatedArrival: '18 September 2026',

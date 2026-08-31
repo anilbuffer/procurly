@@ -27,11 +27,12 @@ import { FinancePayment } from '@/types/finance';
 import { ProcessRefundModal } from '@/components/finance/modals/ProcessRefundModal';
 import { AuditHistoryModal } from '@/components/finance/modals/AuditHistoryModal';
 import { INITIAL_FINANCE_PAYMENTS } from '@/services/finance/mockData';
+import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
 
 export default function PaymentDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const rawId = (params?.paymentId as string) || 'PAY-00123';
+  const rawId = (params?.paymentId as string) || 'PAY-000123';
 
   const resolvePayment = (id: string): FinancePayment => {
     return (
@@ -78,6 +79,12 @@ export default function PaymentDetailPage() {
 
   return (
     <div className="space-y-6">
+      {/* 0. INTERACTIVE END-TO-END FLOW NAVIGATOR & ROLE SWITCHER */}
+      <EndToEndFlowNavigator
+        requestId={payment.requestNumber || 'AH-P-000123'}
+        currentStatus={payment.status === 'Received' ? 'Payment Received' : 'Awaiting Payment'}
+        onStatusChanged={loadData}
+      />
       {/* Back Link & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">

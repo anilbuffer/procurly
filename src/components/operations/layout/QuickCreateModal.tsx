@@ -330,7 +330,7 @@ export function QuickCreateModal({ isOpen, onClose }: QuickCreateModalProps) {
                   onChange={(e) => setNoteReqRef(e.target.value)}
                   className="w-full text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none focus:ring-2 focus:ring-[#ed2025]"
                 >
-                  <option value="AH-P-000123">AH-P-000123 — Toyota Hiace (Control Arm)</option>
+                  <option value="AH-P-000123">AH-P-000123 — 2019 Toyota Hiace (Left Front Lower Control Arm)</option>
                   <option value="AH-P-000122">AH-P-000122 — Mazda CX-5 (Headlamp)</option>
                   <option value="AH-P-000121">AH-P-000121 — Ford Ranger (Door Mirror)</option>
                   <option value="AH-P-000118">AH-P-000118 — Toyota Hilux (Turbocharger)</option>

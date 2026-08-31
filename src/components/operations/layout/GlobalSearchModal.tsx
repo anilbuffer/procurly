@@ -117,7 +117,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
                   onClick={() => handleNavigate('/operations/requests/AH-P-000123')}
                   className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 hover:text-[#2B4499] text-xs font-semibold text-slate-700 transition-colors"
                 >
-                  AH-P-000123 (Toyota Hiace)
+                  AH-P-000123 (Left Front Lower Control Arm)
                 </button>
                 <button
                   onClick={() => handleNavigate('/operations/exceptions')}

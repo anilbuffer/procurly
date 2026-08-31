@@ -147,7 +147,7 @@ export function EndToEndFlowNavigator({
           </Link>
 
           <Link
-            href="/procurement/requests"
+            href="/procurement/requests/req_123"
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               currentRole === 'Procurement'
                 ? 'bg-purple-600 text-white shadow-sm'
@@ -159,7 +159,7 @@ export function EndToEndFlowNavigator({
           </Link>
 
           <Link
-            href="/finance/payments"
+            href="/finance/payments/PAY-000123"
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               currentRole === 'Finance'
                 ? 'bg-emerald-600 text-white shadow-sm'

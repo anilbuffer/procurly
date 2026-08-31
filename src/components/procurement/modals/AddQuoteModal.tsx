@@ -177,7 +177,7 @@ export function AddQuoteModal({ isOpen, onClose, defaultRequestId }: AddQuoteMod
                 >
                   {requests.map((r) => (
                     <option key={r.id} value={r.id}>
-                      {r.requestNumber} — {r.customerName} ({r.vehicle.make} {r.vehicle.model})
+                      {r.requestNumber} — {r.customerName} ({r.part.name} • {r.vehicle.make} {r.vehicle.model})
                     </option>
                   ))}
                 </select>

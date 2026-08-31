@@ -39,6 +39,7 @@ import {
 import { AddQuoteModal } from '@/components/procurement/modals/AddQuoteModal';
 import { CreatePOModal } from '@/components/procurement/modals/CreatePOModal';
 import { ReportExceptionModal } from '@/components/procurement/modals/ReportExceptionModal';
+import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
 import {
   INITIAL_PROCUREMENT_REQUESTS,
   INITIAL_SUPPLIER_QUOTES,
@@ -124,6 +125,13 @@ export default function ProcurementRequestDetailPage() {
 
   return (
     <div className="space-y-6">
+      {/* 0. INTERACTIVE END-TO-END FLOW NAVIGATOR & ROLE SWITCHER */}
+      <EndToEndFlowNavigator
+        requestId={request.requestNumber}
+        currentStatus={request.status}
+        onStatusChanged={loadData}
+      />
+
       {/* 1. Top Back Button & Request Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
