@@ -309,31 +309,7 @@ export function OperationsHeader({ onOpenMobileMenu }: OperationsHeaderProps) {
                 <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
                   <p className="font-bold text-slate-900">{currentUser.name}</p>
                   <p className="text-[11px] text-slate-500">{currentUser.email}</p>
-                  <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-[#2B4499] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    <Shield className="w-3 h-3" />
-                    <span>{currentUser.roleTitle}</span>
-                  </div>
                 </div>
-
-                <div className="py-1">
-                  <Link
-                    href="/operations/configuration"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
-                  >
-                    <Settings className="w-4 h-4 text-slate-400" />
-                    <span>System Settings</span>
-                  </Link>
-                  <Link
-                    href="/operations/audit"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
-                  >
-                    <ShieldCheck className="w-4 h-4 text-slate-400" />
-                    <span>Audit & Compliance Log</span>
-                  </Link>
-                </div>
-
                 <div className="pt-1 mt-1 border-t border-slate-100">
                   <button
                     type="button"

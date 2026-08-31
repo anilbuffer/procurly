@@ -406,7 +406,7 @@ export function FinanceSidebar({
               </Link>
 
               <Link
-                href="/team"
+                href="/finance/help"
                 onClick={() => setProfileDropdownOpen(false)}
                 className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
               >

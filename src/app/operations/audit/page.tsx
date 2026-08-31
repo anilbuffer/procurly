@@ -102,7 +102,6 @@ export default function AuditLogPage() {
             <option value="Michael Chen">Michael Chen</option>
             <option value="Sarah Wilson">Sarah Wilson</option>
             <option value="James Taylor">James Taylor</option>
-            <option value="Admin User">Admin User</option>
           </select>
         </div>
       </div>

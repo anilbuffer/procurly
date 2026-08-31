@@ -21,7 +21,7 @@ export default function UsersDirectoryPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Staff & User Management</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Internal Autohub operations, procurement, finance, and system administrator accounts.
+            Internal Autohub operations, procurement, and finance accounts.
           </p>
         </div>
 

@@ -71,7 +71,6 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
       { type: 'Page', title: 'Orders', subtitle: 'Track approved procurement orders', href: '/orders', icon: ShoppingBag },
       { type: 'Page', title: 'Shipments', subtitle: 'Live logistics & transit tracking', href: '/shipments', icon: Truck },
       { type: 'Page', title: 'Payments', subtitle: 'Trade billing & invoice settlement', href: '/payments', icon: CreditCard },
-      { type: 'Page', title: 'Company Settings', subtitle: 'AutoCare Auckland profile & delivery addresses', href: '/company', icon: Building2 },
       { type: 'Page', title: 'Help & Support', subtitle: 'FAQ & Trade Desk contact info', href: '/help', icon: CircleHelp }
     );
   } else {

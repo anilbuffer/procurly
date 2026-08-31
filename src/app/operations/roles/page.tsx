@@ -28,7 +28,7 @@ export default function RolesPermissionsPage() {
             RBAC Roles & Permissions Matrix
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            Role-based access control matrix governing Operations, Procurement, Finance, and Administrator desks.
+            Role-based access control matrix governing Operations, Procurement, and Finance desks.
           </p>
         </div>
       </div>
@@ -42,7 +42,6 @@ export default function RolesPermissionsPage() {
                 <th className="py-3.5 px-3 text-center">Operations</th>
                 <th className="py-3.5 px-3 text-center">Procurement</th>
                 <th className="py-3.5 px-3 text-center">Finance</th>
-                <th className="py-3.5 px-3 text-center">Administrator</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -66,13 +65,6 @@ export default function RolesPermissionsPage() {
                   <td className="py-3 px-3 text-center">
                     {row.fin ? (
                       <Check className="w-4 h-4 text-emerald-600 mx-auto stroke-[2.5]" />
-                    ) : (
-                      <X className="w-4 h-4 text-slate-300 mx-auto" />
-                    )}
-                  </td>
-                  <td className="py-3 px-3 text-center">
-                    {row.admin ? (
-                      <Check className="w-4 h-4 text-[#2B4499] mx-auto stroke-[3]" />
                     ) : (
                       <X className="w-4 h-4 text-slate-300 mx-auto" />
                     )}

@@ -378,7 +378,7 @@ export interface NotificationItem {
 export type TradeAccount = CompanyProfile;
 
 // RBAC Roles & Security
-export type UserRole = 'Customer' | 'Operations' | 'Procurement' | 'Finance' | 'Administrator';
+export type UserRole = 'Customer' | 'Operations' | 'Procurement' | 'Finance';
 
 export interface WorkspaceUser {
   id: string;

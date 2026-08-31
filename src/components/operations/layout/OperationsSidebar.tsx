@@ -358,39 +358,7 @@ export function OperationsSidebar({
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 truncate">{currentUser.email}</p>
-              <div className="mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
-                <span className="text-slate-400">Desk / Role:</span>
-                <span className="font-bold text-emerald-400">{currentUser.roleTitle}</span>
-              </div>
             </div>
-
-            {/* Navigation Links — mirrors Customer Portal */}
-            <div className="py-1.5">
-              <Link
-                href="/operations/configuration"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <Settings className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">System Configuration</p>
-                  <p className="text-[10px] text-slate-500">Margins, SLAs & Carrier defaults</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/operations/audit"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <History className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Audit & Compliance Log</p>
-                  <p className="text-[10px] text-slate-500">Immutable event trail</p>
-                </div>
-              </Link>
-            </div>
-
             {/* Sign Out */}
             <div className="border-t border-slate-800 pt-1">
               <button

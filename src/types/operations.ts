@@ -1,6 +1,6 @@
 // PROCURly Operations Portal Types & Data Models
 
-export type OperationsRole = 'Operations' | 'Procurement' | 'Finance' | 'Administrator';
+export type OperationsRole = 'Operations' | 'Procurement' | 'Finance';
 
 export interface OperationsStaffUser {
   id: string;
@@ -151,7 +151,7 @@ export interface OperationalMessage {
   requestId: string;
   authorId: string;
   authorName: string;
-  authorRole: 'Customer' | 'Operations' | 'Procurement' | 'Finance' | 'Administrator' | 'System';
+  authorRole: 'Customer' | 'Operations' | 'Procurement' | 'Finance' | 'System';
   timestamp: string;
   content: string;
   isInternalOnly: boolean; // CRITICAL: true = internal note, false = customer visible

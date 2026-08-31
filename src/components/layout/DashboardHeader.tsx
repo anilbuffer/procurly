@@ -86,8 +86,6 @@ export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
     if (pathname === '/messages') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Messages', href: '/messages' }];
     if (pathname === '/payments') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Payments', href: '/payments' }];
     if (pathname === '/documents') return [{ label: 'Dashboard', href: '/dashboard' }, { label: 'Documents', href: '/documents' }];
-    if (pathname === '/company') return [{ label: 'Account', href: '/company' }, { label: 'Company Profile', href: '/company' }];
-    if (pathname === '/team') return [{ label: 'Account', href: '/team' }, { label: 'Team Members', href: '/team' }];
     if (pathname === '/notifications') return [{ label: 'Account', href: '/notifications' }, { label: 'Notifications', href: '/notifications' }];
     if (pathname === '/help' || pathname === '/support') return [{ label: 'Support', href: '/help' }, { label: 'Help & Support', href: '/help' }];
 

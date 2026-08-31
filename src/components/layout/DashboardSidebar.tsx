@@ -149,16 +149,6 @@ export function DashboardSidebar({
 
   const accountNavItems = [
     {
-      label: 'Company',
-      href: '/company',
-      icon: Building2,
-    },
-    {
-      label: 'Team',
-      href: '/team',
-      icon: Users,
-    },
-    {
       label: 'Notifications',
       href: '/notifications',
       icon: Bell,
@@ -379,51 +369,7 @@ export function DashboardSidebar({
                 </span>
               </div>
               <p className="text-[11px] text-slate-400 truncate">{currentUser.email}</p>
-              <div className="mt-2 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px]">
-                <span className="text-slate-400">Desk / Role:</span>
-                <span className="font-bold text-emerald-400">{currentUser.deskName}</span>
-              </div>
             </div>
-
-            {/* Navigation Links */}
-            <div className="py-1.5">
-              <Link
-                href="/company"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <Building2 className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Company Profile & Hubs</p>
-                  <p className="text-[10px] text-slate-500">Legal entity, NZBN, GST & addresses</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/team"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <Users className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Team Members</p>
-                  <p className="text-[10px] text-slate-500">Manage workshop manager access</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/payments"
-                onClick={() => setProfileDropdownOpen(false)}
-                className="flex items-center gap-2.5 px-4 py-2 hover:bg-slate-800 hover:text-white transition-colors"
-              >
-                <PaymentIcon className="w-4 h-4 text-slate-400" />
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-xs">Trade Billing & Receipts</p>
-                  <p className="text-[10px] text-slate-500">20th Mth Following credit limit</p>
-                </div>
-              </Link>
-            </div>
-
             {/* Sign Out */}
             <div className="border-t border-slate-800 pt-1">
               <button
