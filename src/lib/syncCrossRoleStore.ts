@@ -35,14 +35,24 @@ export function syncRequestStatusAcrossRoles(
   // 1. UPDATE CUSTOMER PORTAL STORAGE (procurly_requests_v3)
   try {
     const rawReqs = localStorage.getItem('procurly_requests_v3');
-    const reqs = rawReqs ? JSON.parse(rawReqs) : CUSTOMER_INITIAL_REQUESTS;
-    const req = reqs.find(
+    const reqs = rawReqs ? JSON.parse(rawReqs) : [...CUSTOMER_INITIAL_REQUESTS];
+    let req = reqs.find(
       (r: any) =>
         r.id === targetId ||
         r.id === rawInput ||
         (r.referenceNumber && r.referenceNumber.toUpperCase() === targetRef) ||
         (r.referenceNumber && r.referenceNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, ''))
     );
+    if (!req && reqs.length > 0) {
+      // Clone base request for dynamic ID (e.g. AH-P-000143)
+      const base = reqs.find((r: any) => r.id === 'req_123' || r.referenceNumber === 'AH-P-000123') || reqs[0];
+      req = {
+        ...JSON.parse(JSON.stringify(base)),
+        id: targetId,
+        referenceNumber: targetRef,
+      };
+      reqs.unshift(req);
+    }
     if (req) {
       req.status = newStatus;
       req.updatedAt = now;
@@ -55,6 +65,7 @@ export function syncRequestStatusAcrossRoles(
       } else if (
         newStatus === 'Payment Received' ||
         newStatus === 'Ordered From Supplier' ||
+        newStatus === 'PO Issued' ||
         newStatus === 'Received At Shipping Facility' ||
         newStatus === 'In Transit' ||
         newStatus === 'Arrived In New Zealand' ||
@@ -64,7 +75,7 @@ export function syncRequestStatusAcrossRoles(
         newStatus === 'Closed'
       ) {
         req.paymentStatus = 'Payment Received';
-      } else if (newStatus === 'Quote Ready' || newStatus === 'Sourcing' || newStatus === 'Request Submitted') {
+      } else if (newStatus === 'Quote Ready' || newStatus === 'Sourcing' || newStatus === 'Request Submitted' || newStatus === 'Submitted') {
         req.paymentStatus = 'Pending Quote';
       }
 
@@ -87,14 +98,23 @@ export function syncRequestStatusAcrossRoles(
   // 2. UPDATE OPERATIONS PORTAL STORAGE (procurly_ops_requests_v1)
   try {
     const rawOps = localStorage.getItem('procurly_ops_requests_v1');
-    const opsReqs = rawOps ? JSON.parse(rawOps) : OPS_INITIAL_REQUESTS;
-    const opsReq = opsReqs.find(
+    const opsReqs = rawOps ? JSON.parse(rawOps) : [...OPS_INITIAL_REQUESTS];
+    let opsReq = opsReqs.find(
       (r: any) =>
         r.id === targetId ||
         r.id === rawInput ||
         (r.referenceNumber && r.referenceNumber.toUpperCase() === targetRef) ||
         (r.referenceNumber && r.referenceNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, ''))
     );
+    if (!opsReq && opsReqs.length > 0) {
+      const baseOps = opsReqs.find((r: any) => r.id === 'req_000123' || r.referenceNumber === 'AH-P-000123') || opsReqs[0];
+      opsReq = {
+        ...JSON.parse(JSON.stringify(baseOps)),
+        id: targetId,
+        referenceNumber: targetRef,
+      };
+      opsReqs.unshift(opsReq);
+    }
     if (opsReq) {
       opsReq.status = newStatus;
       opsReq.updatedAt = now.replace('T', ' ').substring(0, 16);
@@ -131,24 +151,33 @@ export function syncRequestStatusAcrossRoles(
     console.error('Error syncing Operations requests:', e);
   }
 
-  // 3. UPDATE PROCUREMENT PORTAL STORAGE (procurly_proc_requests_v2)
+  // 3. UPDATE PROCUREMENT PORTAL STORAGE (procurly_proc_requests_v2 & procurly_proc_pos_v2)
   try {
     const rawProc = localStorage.getItem('procurly_proc_requests_v2');
-    const procReqs = rawProc ? JSON.parse(rawProc) : PROC_INITIAL_REQUESTS;
-    const procReq = procReqs.find(
+    const procReqs = rawProc ? JSON.parse(rawProc) : [...PROC_INITIAL_REQUESTS];
+    let procReq = procReqs.find(
       (r: any) =>
         r.id === targetId ||
         r.id === rawInput ||
         (r.requestNumber && r.requestNumber.toUpperCase() === targetRef) ||
         (r.requestNumber && r.requestNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, ''))
     );
+    if (!procReq && procReqs.length > 0) {
+      const baseProc = procReqs.find((r: any) => r.id === 'req_000123' || r.requestNumber === 'AH-P-000123') || procReqs[0];
+      procReq = {
+        ...JSON.parse(JSON.stringify(baseProc)),
+        id: targetId,
+        requestNumber: targetRef,
+      };
+      procReqs.unshift(procReq);
+    }
     if (procReq) {
       procReq.status = newStatus as any;
       procReq.updatedAt = now;
 
-      if (newStatus === 'Sourcing' || newStatus === 'Request Submitted') {
+      if (newStatus === 'Sourcing' || newStatus === 'Request Submitted' || newStatus === 'Submitted') {
         procReq.sourcingStatus = 'Sourcing';
-      } else if (newStatus === 'Quote Ready' || newStatus === 'Awaiting Customer Approval') {
+      } else if (newStatus === 'Quote Ready' || newStatus === 'Customer Approved' || newStatus === 'Awaiting Customer Approval') {
         procReq.sourcingStatus = 'Sourcing Complete';
       }
 
@@ -162,25 +191,54 @@ export function syncRequestStatusAcrossRoles(
 
       localStorage.setItem('procurly_proc_requests_v2', JSON.stringify(procReqs));
     }
+
+    // Sync PO in procurement
+    const rawPOs = localStorage.getItem('procurly_proc_pos_v2');
+    if (rawPOs) {
+      const pos = JSON.parse(rawPOs);
+      const po = pos.find(
+        (p: any) =>
+          (p.requestRef && p.requestRef.toUpperCase() === targetRef) ||
+          (p.requestRef && p.requestRef.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, ''))
+      );
+      if (po) {
+        if (newStatus === 'Ordered From Supplier' || newStatus === 'PO Issued') {
+          po.status = 'Ordered';
+        } else if (newStatus === 'Delivered' || newStatus === 'Closed') {
+          po.status = 'Fully Received';
+        }
+        localStorage.setItem('procurly_proc_pos_v2', JSON.stringify(pos));
+      }
+    }
   } catch (e) {
     console.error('Error syncing Procurement requests:', e);
   }
 
-  // 4. UPDATE FINANCE PORTAL STORAGE (procurly_fin_payments_v1 & procurly_fin_awaiting_v1)
+  // 4. UPDATE FINANCE PORTAL STORAGE (procurly_fin_payments_v1 & procurly_fin_awaiting_v1 & procurly_fin_orders_v1)
   try {
     const rawFinPay = localStorage.getItem('procurly_fin_payments_v1');
-    const finPays = rawFinPay ? JSON.parse(rawFinPay) : INITIAL_FINANCE_PAYMENTS;
-    const finPay = finPays.find(
+    const finPays = rawFinPay ? JSON.parse(rawFinPay) : [...INITIAL_FINANCE_PAYMENTS];
+    let finPay = finPays.find(
       (p: any) =>
         (p.requestNumber && p.requestNumber.toUpperCase() === targetRef) ||
         (p.requestNumber && p.requestNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, '')) ||
         p.id === `PAY-${targetRef.replace('AH-P-', '')}` ||
         p.id === rawInput
     );
+    if (!finPay && finPays.length > 0) {
+      const basePay = finPays[0];
+      finPay = {
+        ...JSON.parse(JSON.stringify(basePay)),
+        id: `PAY-${targetRef.replace('AH-P-', '')}`,
+        requestNumber: targetRef,
+      };
+      finPays.unshift(finPay);
+    }
     if (finPay) {
       if (
         newStatus === 'Payment Received' ||
         newStatus === 'Ordered From Supplier' ||
+        newStatus === 'PO Issued' ||
         newStatus === 'Received At Shipping Facility' ||
         newStatus === 'In Transit' ||
         newStatus === 'Arrived In New Zealand' ||
@@ -199,7 +257,7 @@ export function syncRequestStatusAcrossRoles(
 
     // Sync awaiting payments store
     const rawFinAwaiting = localStorage.getItem('procurly_fin_awaiting_v1');
-    const finAwaiting = rawFinAwaiting ? JSON.parse(rawFinAwaiting) : INITIAL_AWAITING_PAYMENTS;
+    const finAwaiting = rawFinAwaiting ? JSON.parse(rawFinAwaiting) : [...INITIAL_AWAITING_PAYMENTS];
     const awaitingItem = finAwaiting.find(
       (a: any) =>
         (a.requestNumber && a.requestNumber.toUpperCase() === targetRef) ||
@@ -210,6 +268,7 @@ export function syncRequestStatusAcrossRoles(
       if (
         newStatus === 'Payment Received' ||
         newStatus === 'Ordered From Supplier' ||
+        newStatus === 'PO Issued' ||
         newStatus === 'Received At Shipping Facility' ||
         newStatus === 'In Transit' ||
         newStatus === 'Delivered' ||
@@ -221,15 +280,43 @@ export function syncRequestStatusAcrossRoles(
       }
       localStorage.setItem('procurly_fin_awaiting_v1', JSON.stringify(finAwaiting));
     }
+
+    // Sync Finance Approved Orders
+    const rawFinOrders = localStorage.getItem('procurly_fin_orders_v1');
+    if (rawFinOrders) {
+      const finOrders = JSON.parse(rawFinOrders);
+      const finOrder = finOrders.find(
+        (o: any) =>
+          (o.requestNumber && o.requestNumber.toUpperCase() === targetRef) ||
+          (o.requestNumber && o.requestNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, ''))
+      );
+      if (finOrder) {
+        if (
+          newStatus === 'Payment Received' ||
+          newStatus === 'Ordered From Supplier' ||
+          newStatus === 'PO Issued' ||
+          newStatus === 'In Transit' ||
+          newStatus === 'Delivered' ||
+          newStatus === 'Closed'
+        ) {
+          finOrder.clearanceStatus = 'Financially Cleared';
+          finOrder.creditVerified = true;
+          finOrder.releasedToProcurementAt = now;
+        } else if (newStatus === 'Customer Approved' || newStatus === 'Awaiting Payment') {
+          finOrder.clearanceStatus = 'Awaiting Payment';
+        }
+        localStorage.setItem('procurly_fin_orders_v1', JSON.stringify(finOrders));
+      }
+    }
   } catch (e) {
-    console.error('Error syncing Finance payments:', e);
+    console.error('Error syncing Finance payments & orders:', e);
   }
 
   // 5. UPDATE ORDERS & SHIPMENTS STORAGE (procurly_orders_v3 & procurly_shipments_v3)
   try {
     const rawOrders = localStorage.getItem('procurly_orders_v3');
-    const orders = rawOrders ? JSON.parse(rawOrders) : CUSTOMER_INITIAL_ORDERS;
-    const order = orders.find(
+    const orders = rawOrders ? JSON.parse(rawOrders) : [...CUSTOMER_INITIAL_ORDERS];
+    let order = orders.find(
       (o: any) =>
         (o.requestNumber && o.requestNumber.toUpperCase() === targetRef) ||
         (o.requestNumber && o.requestNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, '')) ||
@@ -238,6 +325,17 @@ export function syncRequestStatusAcrossRoles(
         o.id === rawInput ||
         (o.orderNumber && o.orderNumber.toUpperCase() === rawInput.toUpperCase())
     );
+    if (!order && orders.length > 0) {
+      const baseOrd = orders[0];
+      order = {
+        ...JSON.parse(JSON.stringify(baseOrd)),
+        id: `ord_${targetRef.replace(/[^0-9]/g, '')}`,
+        orderNumber: `ORD-${targetRef.replace('AH-P-', '')}`,
+        requestNumber: targetRef,
+        requestId: targetId,
+      };
+      orders.unshift(order);
+    }
     if (order) {
       order.status = newStatus;
       order.timeline = getSynchronizedOrderTimeline(newStatus, order.timeline);
@@ -245,8 +343,8 @@ export function syncRequestStatusAcrossRoles(
     }
 
     const rawShipments = localStorage.getItem('procurly_shipments_v3');
-    const shipments = rawShipments ? JSON.parse(rawShipments) : CUSTOMER_INITIAL_SHIPMENTS;
-    const shipment = shipments.find(
+    const shipments = rawShipments ? JSON.parse(rawShipments) : [...CUSTOMER_INITIAL_SHIPMENTS];
+    let shipment = shipments.find(
       (s: any) =>
         (s.requestNumber && s.requestNumber.toUpperCase() === targetRef) ||
         (s.requestNumber && s.requestNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, '')) ||
@@ -254,20 +352,38 @@ export function syncRequestStatusAcrossRoles(
         s.requestId === rawInput ||
         s.id === rawInput
     );
+    if (!shipment && shipments.length > 0) {
+      const baseShp = shipments[0];
+      shipment = {
+        ...JSON.parse(JSON.stringify(baseShp)),
+        id: `shp_${targetRef.replace(/[^0-9]/g, '')}`,
+        trackingNumber: `NZP-AIR-${targetRef.replace(/[^0-9]/g, '')}-1192`,
+        requestNumber: targetRef,
+        requestId: targetId,
+      };
+      shipments.unshift(shipment);
+    }
     if (shipment) {
       if (newStatus === 'In Transit') {
         shipment.currentStatus = 'In Transit';
+        shipment.status = 'In Transit';
       } else if (newStatus === 'Arrived In New Zealand' || newStatus === 'Customs Clearance') {
         shipment.currentStatus = 'Customs Clearance';
+        shipment.status = 'Customs Clearance';
       } else if (newStatus === 'Out For Delivery') {
         shipment.currentStatus = 'Out For Delivery';
+        shipment.status = 'Out For Delivery';
       } else if (newStatus === 'Delivered' || newStatus === 'Closed') {
         shipment.currentStatus = 'Delivered';
+        shipment.status = 'Delivered';
         if (shipment.events) {
           shipment.events.forEach((ev: any) => {
             ev.status = 'completed';
           });
         }
+      } else if (newStatus === 'Ordered From Supplier' || newStatus === 'PO Issued') {
+        shipment.status = 'Order Placed with Supplier';
+        shipment.currentStatus = 'Order Placed with Supplier';
       }
       localStorage.setItem('procurly_shipments_v3', JSON.stringify(shipments));
     }

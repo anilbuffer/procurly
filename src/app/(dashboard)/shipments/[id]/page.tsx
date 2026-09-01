@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Package,
 } from 'lucide-react';
+import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
 
 export default function ShipmentDetailPage() {
   const params = useParams();
@@ -69,6 +70,19 @@ export default function ShipmentDetailPage() {
 
   return (
     <div className="space-y-6">
+      {/* End-to-End Order Flow Engine Bar */}
+      <EndToEndFlowNavigator
+        requestId={shipment.requestNumber || shipment.requestId}
+        currentStatus={shipment.status}
+        onStatusChanged={() => {
+          if (shipmentId) {
+            requestsService.getShipmentById(shipmentId).then((data) => {
+              if (data) setShipment(data);
+            });
+          }
+        }}
+      />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">

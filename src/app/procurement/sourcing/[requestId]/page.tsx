@@ -26,6 +26,7 @@ import {
 import { procurementService } from '@/services/procurement/procurementService';
 import { ProcurementRequest, SupplierSummary, SupplierQuoteItem } from '@/types/procurement';
 import { INITIAL_PROCUREMENT_REQUESTS, INITIAL_SUPPLIERS, INITIAL_SUPPLIER_QUOTES } from '@/services/procurement/mockData';
+import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
 
 export default function SourcingDetailPage() {
   const params = useParams();
@@ -151,6 +152,13 @@ export default function SourcingDetailPage() {
 
   return (
     <div className="space-y-6">
+      {/* End-to-End Order Flow Engine Bar */}
+      <EndToEndFlowNavigator
+        requestId={request.requestNumber || request.id || 'AH-P-000123'}
+        currentStatus={request.status || 'Sourcing'}
+        onStatusChanged={loadData}
+      />
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">

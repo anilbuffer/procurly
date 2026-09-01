@@ -61,76 +61,92 @@ export default function CustomerPortalDashboard() {
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_data_updated', handleUpdate);
     window.addEventListener('procurly_requests_updated', handleUpdate);
+    window.addEventListener('procurly_ops_updated', handleUpdate);
+    window.addEventListener('procurly_procurement_updated', handleUpdate);
+    window.addEventListener('procurly_finance_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
     return () => {
       window.removeEventListener('procurly_data_updated', handleUpdate);
       window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('procurly_procurement_updated', handleUpdate);
+      window.removeEventListener('procurly_finance_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
     };
   }, []);
 
-  // Compute KPI metrics according to the specification
-  // Active Requests: 08
-  // Awaiting Your Action: 02
-  // In Procurement: 04
-  // In Transit: 03
-  const activeRequestsCount = 8;
-  const awaitingActionCount = 2;
-  const inProcurementCount = 4;
-  const inTransitCount = 3;
+  // Dynamically compute KPI metrics mapped directly to the 8 Engine statuses
+  const activeRequestsCount = requests.filter((r) => r.status !== 'Delivered' && r.status !== 'Closed').length;
+  const awaitingActionCount = requests.filter(
+    (r) =>
+      r.status === 'Quote Ready' ||
+      r.status === 'Quoted' ||
+      r.status === 'Awaiting Customer Approval' ||
+      r.status === 'Payment Failed' ||
+      r.paymentStatus === 'Awaiting Payment' ||
+      r.paymentStatus === 'Payment Failed'
+  ).length;
+  const inProcurementCount = requests.filter(
+    (r) =>
+      r.status === 'Payment Received' ||
+      r.status === 'Ordered From Supplier' ||
+      r.status === 'PO Issued' ||
+      r.status === 'Received At Shipping Facility'
+  ).length;
+  const inTransitCount = requests.filter(
+    (r) =>
+      r.status === 'In Transit' ||
+      r.status === 'Arrived In New Zealand' ||
+      r.status === 'Customs Clearance' ||
+      r.status === 'Out For Delivery'
+  ).length;
 
-  // Action required items
-  const actionRequiredItems = [
-    {
-      id: 'req_123',
-      ref: 'AH-P-000123',
-      vehicle: 'Toyota Hiace · 2019',
-      part: 'Left Front Lower Control Arm',
-      status: 'Quote Ready',
-      amount: 485.0,
-      actionText: 'Review Quote →',
-      actionType: 'quote',
-    },
-    {
-      id: 'req_119',
-      ref: 'AH-P-000119',
-      vehicle: 'Mazda CX-5 · 2021',
-      part: 'Front Headlamp',
-      status: 'Payment Failed',
-      amount: 650.0,
-      actionText: 'Retry Payment →',
-      actionType: 'payment',
-    },
-  ];
+  // Dynamic action required items
+  const actionRequiredItems = requests
+    .filter(
+      (r) =>
+        r.status === 'Quote Ready' ||
+        r.status === 'Quoted' ||
+        r.status === 'Awaiting Customer Approval' ||
+        r.status === 'Payment Failed' ||
+        r.paymentStatus === 'Awaiting Payment' ||
+        r.paymentStatus === 'Payment Failed'
+    )
+    .map((r) => {
+      const topQuote = r.quoteOptions?.find((q) => q.isRecommended) || r.quoteOptions?.[0];
+      return {
+        id: r.id,
+        ref: r.referenceNumber,
+        vehicle: `${r.vehicle.make} ${r.vehicle.model} · ${r.vehicle.year}`,
+        part: r.parts[0]?.name || r.title,
+        status: r.status,
+        amount: topQuote?.totalLandedCostNZD || 485.0,
+        actionText:
+          r.status === 'Payment Failed' || r.paymentStatus === 'Payment Failed'
+            ? 'Retry Payment →'
+            : r.status === 'Awaiting Payment' || r.paymentStatus === 'Awaiting Payment' || r.status === 'Customer Approved'
+            ? 'Pay Now →'
+            : 'Review Quote →',
+        actionType:
+          r.status === 'Payment Failed' || r.paymentStatus === 'Payment Failed' || r.status === 'Awaiting Payment' || r.paymentStatus === 'Awaiting Payment' || r.status === 'Customer Approved'
+            ? 'payment'
+            : 'quote',
+      };
+    });
 
-  // Recent requests table items
-  const recentRequests = [
-    {
-      ref: 'AH-P-000123',
-      id: 'req_123',
-      vehicle: 'Toyota Hiace 2019',
-      part: 'Control Arm',
-      status: 'Awaiting Payment',
-      value: '$485',
-      date: '28 Aug',
-    },
-    {
-      ref: 'AH-P-000122',
-      id: 'req_122',
-      vehicle: 'Mazda CX-5 2021',
-      part: 'Headlamp',
-      status: 'Sourcing',
-      value: '—',
-      date: '27 Aug',
-    },
-    {
-      ref: 'AH-P-000121',
-      id: 'req_121',
-      vehicle: 'Ford Ranger 2020',
-      part: 'Door Mirror',
-      status: 'In Transit',
-      value: '$720',
-      date: '25 Aug',
-    },
-  ];
+  // Dynamic recent requests table items
+  const recentRequests = requests.slice(0, 6).map((r) => {
+    const topQuote = r.quoteOptions?.find((q) => q.isRecommended) || r.quoteOptions?.[0];
+    return {
+      ref: r.referenceNumber,
+      id: r.id,
+      vehicle: `${r.vehicle.make} ${r.vehicle.model} ${r.vehicle.year}`,
+      part: r.parts[0]?.name || r.title,
+      status: r.status,
+      value: topQuote?.totalLandedCostNZD ? formatNZD(topQuote.totalLandedCostNZD) : '$485',
+      date: formatDate(r.createdAt),
+    };
+  });
 
   // Procurement Activity Timeline
   const activityTimeline = [
@@ -206,17 +222,19 @@ export default function CustomerPortalDashboard() {
         </div>
       </div>
 
-      {/* 2. DASHBOARD KPI CARDS (4 Clean Cards) */}
+      {/* 2. DASHBOARD KPI CARDS (4 Clean Dynamic Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Active Requests (08) */}
+        {/* Card 1: Active Requests */}
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-start justify-between">
           <div className="space-y-1">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               Active Requests
             </p>
-            <p className="text-3xl font-black text-slate-900 tracking-tight">08</p>
+            <p className="text-3xl font-black text-slate-900 tracking-tight">
+              {String(activeRequestsCount).padStart(2, '0')}
+            </p>
             <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-              <span>+2 this month</span>
+              <span>Live Synced</span>
             </p>
           </div>
           <div className="p-3 rounded-xl bg-blue-50 text-[#2b4499]">
@@ -224,30 +242,36 @@ export default function CustomerPortalDashboard() {
           </div>
         </div>
 
-        {/* Card 2: Awaiting Your Action (02) — High Attention Styling */}
+        {/* Card 2: Awaiting Your Action — High Attention Styling */}
         <div className="bg-gradient-to-br from-amber-50 to-amber-100/80 rounded-2xl p-5 border-2 border-amber-400 shadow-sm flex items-start justify-between relative overflow-hidden">
           <div className="space-y-1 relative z-10">
             <div className="flex items-center gap-1.5">
               <p className="text-xs font-black text-amber-900 uppercase tracking-wider">
                 Awaiting Your Action
               </p>
-              <span className="w-2 h-2 rounded-full bg-[#ed2025] animate-ping" />
+              {awaitingActionCount > 0 && <span className="w-2 h-2 rounded-full bg-[#ed2025] animate-ping" />}
             </div>
-            <p className="text-3xl font-black text-amber-950 tracking-tight">02</p>
-            <p className="text-xs font-bold text-amber-800">Requires attention</p>
+            <p className="text-3xl font-black text-amber-950 tracking-tight">
+              {String(awaitingActionCount).padStart(2, '0')}
+            </p>
+            <p className="text-xs font-bold text-amber-800">
+              {awaitingActionCount > 0 ? 'Requires attention' : 'All up to date'}
+            </p>
           </div>
           <div className="p-3 rounded-xl bg-amber-200 text-amber-900 relative z-10 shadow-sm">
             <Clock className="w-5 h-5" />
           </div>
         </div>
 
-        {/* Card 3: In Procurement (04) */}
+        {/* Card 3: In Procurement */}
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-start justify-between">
           <div className="space-y-1">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               In Procurement
             </p>
-            <p className="text-3xl font-black text-slate-900 tracking-tight">04</p>
+            <p className="text-3xl font-black text-slate-900 tracking-tight">
+              {String(inProcurementCount).padStart(2, '0')}
+            </p>
             <p className="text-xs font-medium text-slate-500">Currently being processed</p>
           </div>
           <div className="p-3 rounded-xl bg-sky-50 text-sky-700">
@@ -255,13 +279,15 @@ export default function CustomerPortalDashboard() {
           </div>
         </div>
 
-        {/* Card 4: In Transit (03) */}
+        {/* Card 4: In Transit */}
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-start justify-between">
           <div className="space-y-1">
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
               In Transit
             </p>
-            <p className="text-3xl font-black text-slate-900 tracking-tight">03</p>
+            <p className="text-3xl font-black text-slate-900 tracking-tight">
+              {String(inTransitCount).padStart(2, '0')}
+            </p>
             <p className="text-xs font-medium text-slate-500">On the way</p>
           </div>
           <div className="p-3 rounded-xl bg-blue-50 text-[#2b4499]">

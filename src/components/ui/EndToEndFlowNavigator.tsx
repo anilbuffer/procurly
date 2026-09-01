@@ -31,7 +31,6 @@ export interface MasterStep {
   title: string;
   role: 'Customer' | 'Ops/Proc' | 'Ops' | 'Finance' | 'Procurement' | 'Logistics' | 'Completed';
   description: string;
-  deskUrl: string;
 }
 
 export const MASTER_8_STEPS: MasterStep[] = [
@@ -40,8 +39,7 @@ export const MASTER_8_STEPS: MasterStep[] = [
     id: 'Request Submitted',
     title: 'Submitted',
     role: 'Customer',
-    description: 'Customer registered and submitted part request for 2019 Toyota Hiace.',
-    deskUrl: '/requests/req_123',
+    description: 'Customer registered and submitted part request with vehicle & VIN details.',
   },
   {
     stepNumber: 2,
@@ -49,7 +47,6 @@ export const MASTER_8_STEPS: MasterStep[] = [
     title: 'Sourcing',
     role: 'Ops/Proc',
     description: 'Dedicated specialist assigned. Japanese supplier quotations recorded & compared.',
-    deskUrl: '/procurement/requests/req_000123',
   },
   {
     stepNumber: 3,
@@ -57,7 +54,6 @@ export const MASTER_8_STEPS: MasterStep[] = [
     title: 'Quote Ready',
     role: 'Ops',
     description: 'Landed cost calculated. Customer quote generated with Air & Sea freight options.',
-    deskUrl: '/operations/requests/AH-P-000123',
   },
   {
     stepNumber: 4,
@@ -65,7 +61,6 @@ export const MASTER_8_STEPS: MasterStep[] = [
     title: 'Customer Approved',
     role: 'Customer',
     description: 'Customer accepted verified quotation & terms. Air Express delivery chosen.',
-    deskUrl: '/requests/req_123',
   },
   {
     stepNumber: 5,
@@ -73,7 +68,6 @@ export const MASTER_8_STEPS: MasterStep[] = [
     title: 'Payment Received',
     role: 'Finance',
     description: 'Finance verified trade credit / direct wire payment. Procurement unlocked.',
-    deskUrl: '/finance/payments/PAY-000123',
   },
   {
     stepNumber: 6,
@@ -81,7 +75,6 @@ export const MASTER_8_STEPS: MasterStep[] = [
     title: 'PO Issued',
     role: 'Procurement',
     description: 'Purchase Order PO-NZ-4032 placed with Tokyo Auto Spares.',
-    deskUrl: '/procurement/requests/req_000123',
   },
   {
     stepNumber: 7,
@@ -89,7 +82,6 @@ export const MASTER_8_STEPS: MasterStep[] = [
     title: 'In Transit',
     role: 'Logistics',
     description: 'Dispatched from Tokyo Hub via Air NZ Flight NZ90. Live tracking via NZ Post.',
-    deskUrl: '/operations/requests/AH-P-000123',
   },
   {
     stepNumber: 8,
@@ -97,7 +89,6 @@ export const MASTER_8_STEPS: MasterStep[] = [
     title: 'Delivered',
     role: 'Completed',
     description: 'NZ Post courier delivery completed to AutoCare Auckland workshop.',
-    deskUrl: '/operations/requests/AH-P-000123',
   },
 ];
 
@@ -121,12 +112,33 @@ export function EndToEndFlowNavigator({
   const [docToPreview, setDocToPreview] = useState<PortalDocument | null>(null);
   const [currentRequest, setCurrentRequest] = useState<PartRequest | null>(null);
 
+  // Normalize IDs
+  const rawId = (requestId || 'AH-P-000123').trim();
+  const digits = rawId.replace(/[^0-9]/g, '') || '000123';
+  const paddedDigits = digits.padStart(6, '0');
+  const shortDigits = digits.replace(/^0+/, '') || '123';
+
+  const refNumber = rawId.toUpperCase().startsWith('AH-P-')
+    ? rawId.toUpperCase()
+    : `AH-P-${paddedDigits}`;
+  const reqId = `req_${shortDigits}`;
+  const ordId = `ord_${shortDigits}`;
+  const ordNumber = `ORD-${paddedDigits}`;
+  const payId = `PAY-${paddedDigits}`;
+  const shpId = `SHP-${paddedDigits}`;
+
   useEffect(() => {
     setMounted(true);
-    requestsService.getRequestById(requestId).then((res) => {
-      if (res) setCurrentRequest(res);
+    requestsService.getRequestById(refNumber).then((res) => {
+      if (res) {
+        setCurrentRequest(res);
+      } else {
+        requestsService.getRequestById(reqId).then((res2) => {
+          if (res2) setCurrentRequest(res2);
+        });
+      }
     });
-  }, [requestId, currentStatus]);
+  }, [refNumber, reqId, currentStatus]);
 
   // Identify active desk safely
   const currentPath = pathname || '';
@@ -180,7 +192,7 @@ export function EndToEndFlowNavigator({
     const target = MASTER_8_STEPS[stepIdx];
     setIsUpdating(true);
     try {
-      syncRequestStatusAcrossRoles(requestId, target.id, {
+      syncRequestStatusAcrossRoles(refNumber, target.id, {
         actorName: `8-Step Flow Engine (${currentRole} Desk)`,
         note: `Flow transition to Step ${target.stepNumber}: ${target.title}`,
       });
@@ -208,7 +220,7 @@ export function EndToEndFlowNavigator({
                   END-TO-END ORDER FLOW ENGINE
                 </span>
                 <span className="px-2.5 py-0.5 text-xs font-mono font-bold bg-[#172033] text-slate-300 rounded-full border border-slate-700/80">
-                  {requestId}
+                  {refNumber}
                 </span>
               </div>
               <p className="text-xs text-slate-300 font-medium mt-0.5">
@@ -224,7 +236,7 @@ export function EndToEndFlowNavigator({
             </span>
 
             <Link
-              href={`/requests/${requestId}`}
+              href={`/requests/${reqId}`}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 currentRole === 'Customer'
                   ? 'bg-[#2563EB] text-white shadow-sm ring-1 ring-blue-400'
@@ -236,7 +248,7 @@ export function EndToEndFlowNavigator({
             </Link>
 
             <Link
-              href={`/operations/requests/${requestId}`}
+              href={`/operations/requests/${refNumber}`}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 currentRole === 'Operations'
                   ? 'bg-[#2563EB] text-white shadow-sm ring-1 ring-blue-400'
@@ -248,7 +260,7 @@ export function EndToEndFlowNavigator({
             </Link>
 
             <Link
-              href={`/procurement/requests/${requestId}`}
+              href={`/procurement/requests/${reqId}`}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 currentRole === 'Procurement'
                   ? 'bg-[#2563EB] text-white shadow-sm ring-1 ring-blue-400'
@@ -260,7 +272,7 @@ export function EndToEndFlowNavigator({
             </Link>
 
             <Link
-              href={`/finance/payments/PAY-${requestId.replace(/[^0-9]/g, '') || '000143'}`}
+              href={`/finance/payments/${payId}`}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 currentRole === 'Finance'
                   ? 'bg-[#2563EB] text-white shadow-sm ring-1 ring-blue-400'
@@ -347,28 +359,28 @@ export function EndToEndFlowNavigator({
           <div className="flex items-center gap-2 flex-wrap text-xs">
             <span className="font-semibold text-slate-400">Connected Objects:</span>
             <Link
-              href={`/operations/requests/${requestId}`}
+              href={`/requests/${reqId}`}
               className="px-2.5 py-1 rounded-lg bg-[#0F172A] border border-slate-700/80 text-slate-300 font-mono text-xs hover:text-white hover:border-slate-500 transition-colors"
             >
-              Request: {requestId}
+              Request: {refNumber}
             </Link>
             <Link
-              href={`/procurement/requests/${requestId}`}
+              href={`/orders/${ordId}`}
               className="px-2.5 py-1 rounded-lg bg-[#0F172A] border border-slate-700/80 text-slate-300 font-mono text-xs hover:text-white hover:border-slate-500 transition-colors"
             >
-              Order: ORD-{requestId.replace(/[^0-9]/g, '') || '000143'}
+              Order: {ordNumber}
             </Link>
             <Link
-              href={`/finance/payments/PAY-${requestId.replace(/[^0-9]/g, '') || '000143'}`}
+              href={`/finance/payments/${payId}`}
               className="px-2.5 py-1 rounded-lg bg-[#0F172A] border border-slate-700/80 text-slate-300 font-mono text-xs hover:text-white hover:border-slate-500 transition-colors"
             >
-              Payment: PAY-{requestId.replace(/[^0-9]/g, '') || '000143'}
+              Payment: {payId}
             </Link>
             <Link
-              href="/operations/shipments"
+              href={`/shipments/${shpId}`}
               className="px-2.5 py-1 rounded-lg bg-[#0F172A] border border-slate-700/80 text-slate-300 font-mono text-xs hover:text-white hover:border-slate-500 transition-colors"
             >
-              Shipment: SHP-{requestId.replace(/[^0-9]/g, '') || '000143'}
+              Shipment: {shpId}
             </Link>
           </div>
 
@@ -410,3 +422,4 @@ export function EndToEndFlowNavigator({
     </>
   );
 }
+

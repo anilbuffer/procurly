@@ -335,7 +335,7 @@ class OperationsService {
     const idx = reqs.findIndex((r) => r.id === requestId || r.referenceNumber === requestId);
     if (idx === -1) return undefined;
 
-    const staff = INITIAL_STAFF_USERS.find((u) => u.id === staffId) || INITIAL_STAFF_USERS[0];
+    const staff = INITIAL_STAFF_USERS.find((u) => u.id === staffId || u.name === staffId) || INITIAL_STAFF_USERS[0];
     const oldOwner = reqs[idx].ownerName;
     reqs[idx].ownerName = staff.name;
     reqs[idx].ownerId = staff.id;

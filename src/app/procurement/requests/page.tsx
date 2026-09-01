@@ -38,26 +38,60 @@ function ProcurementRequestsContent() {
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
+    window.addEventListener('procurly_ops_updated', handleUpdate);
     window.addEventListener('procurly_procurement_updated', handleUpdate);
-    return () => window.removeEventListener('procurly_procurement_updated', handleUpdate);
+    window.addEventListener('procurly_finance_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('procurly_procurement_updated', handleUpdate);
+      window.removeEventListener('procurly_finance_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   const filterStatuses = [
     'All',
-    'New',
+    'Submitted',
     'Sourcing',
-    'Awaiting Supplier',
     'Quote Ready',
     'Customer Approved',
     'Payment Received',
-    'Ready for Procurement',
-    'On Hold',
+    'Ordered From Supplier',
+    'In Transit',
+    'Delivered',
     'Exception',
-    'Completed',
   ];
 
   const filteredRequests = requests.filter((r) => {
-    if (selectedStatus !== 'All' && r.status !== selectedStatus) return false;
+    if (selectedStatus !== 'All') {
+      const s = (r.status as string) || '';
+      if (selectedStatus === 'Submitted') {
+        if (s !== 'New' && s !== 'Request Submitted' && s !== 'Submitted') return false;
+      } else if (selectedStatus === 'Sourcing') {
+        if (s !== 'Sourcing' && s !== 'Awaiting Supplier') return false;
+      } else if (selectedStatus === 'Quote Ready') {
+        if (s !== 'Quote Ready' && s !== 'Quoted') return false;
+      } else if (selectedStatus === 'Customer Approved') {
+        if (s !== 'Customer Approved' && s !== 'Awaiting Customer Approval') return false;
+      } else if (selectedStatus === 'Payment Received') {
+        if (s !== 'Payment Received' && s !== 'Ready for Procurement') return false;
+      } else if (selectedStatus === 'Ordered From Supplier') {
+        if (s !== 'Ordered From Supplier' && s !== 'Ordered' && s !== 'PO Issued' && s !== 'Received At Shipping Facility') return false;
+      } else if (selectedStatus === 'In Transit') {
+        if (s !== 'In Transit' && s !== 'Dispatched' && s !== 'Shipped') return false;
+      } else if (selectedStatus === 'Delivered') {
+        if (s !== 'Delivered' && s !== 'Completed') return false;
+      } else if (selectedStatus === 'Exception') {
+        if (s !== 'Exception' && !s.includes('Exception') && s !== 'Payment Failed') return false;
+      } else if (s !== selectedStatus) {
+        return false;
+      }
+    }
     if (selectedPriority !== 'All' && r.priority !== selectedPriority) return false;
 
     if (searchQuery) {
@@ -76,20 +110,33 @@ function ProcurementRequestsContent() {
     return true;
   });
 
-  const getStatusBadge = (status: ProcurementRequestStatus) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'New':
+      case 'Submitted':
+      case 'Request Submitted':
         return 'bg-blue-50 text-brand-blue border-blue-200';
       case 'Sourcing':
       case 'Awaiting Supplier':
         return 'bg-amber-50 text-amber-800 border-amber-200';
       case 'Quote Ready':
+      case 'Quoted':
         return 'bg-emerald-50 text-emerald-800 border-emerald-200';
       case 'Customer Approved':
+      case 'Quote Approved':
+        return 'bg-indigo-50 text-indigo-800 border-indigo-200';
       case 'Payment Received':
       case 'Ready for Procurement':
-        return 'bg-indigo-50 text-indigo-800 border-indigo-200';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-300';
       case 'Ordered':
+      case 'Ordered From Supplier':
+      case 'PO Issued':
+      case 'Received At Shipping Facility':
+        return 'bg-sky-50 text-sky-800 border-sky-200';
+      case 'In Transit':
+      case 'Dispatched':
+        return 'bg-blue-50 text-brand-blue border-blue-200';
+      case 'Delivered':
       case 'Completed':
         return 'bg-emerald-100 text-emerald-900 border-emerald-300';
       case 'Exception':
@@ -133,7 +180,26 @@ function ProcurementRequestsContent() {
       {/* 2. Filter Pills Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1">
         {filterStatuses.map((st) => {
-          const count = st === 'All' ? requests.length : requests.filter((r) => r.status === st).length;
+          let count = requests.length;
+          if (st === 'Submitted') {
+            count = requests.filter((r) => (r.status as string) === 'New' || (r.status as string) === 'Request Submitted' || (r.status as string) === 'Submitted').length;
+          } else if (st === 'Sourcing') {
+            count = requests.filter((r) => r.status === 'Sourcing' || r.status === 'Awaiting Supplier').length;
+          } else if (st === 'Quote Ready') {
+            count = requests.filter((r) => r.status === 'Quote Ready').length;
+          } else if (st === 'Customer Approved') {
+            count = requests.filter((r) => r.status === 'Customer Approved').length;
+          } else if (st === 'Payment Received') {
+            count = requests.filter((r) => r.status === 'Payment Received' || r.status === 'Ready for Procurement').length;
+          } else if (st === 'Ordered From Supplier') {
+            count = requests.filter((r) => r.status === 'Ordered' || (r.status as string) === 'Ordered From Supplier').length;
+          } else if (st === 'In Transit') {
+            count = requests.filter((r) => (r.status as string) === 'In Transit').length;
+          } else if (st === 'Delivered') {
+            count = requests.filter((r) => r.status === 'Completed' || (r.status as string) === 'Delivered').length;
+          } else if (st === 'Exception') {
+            count = requests.filter((r) => r.status === 'Exception').length;
+          }
           return (
             <button
               key={st}

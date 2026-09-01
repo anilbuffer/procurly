@@ -66,8 +66,20 @@ function OperationsRequestsContent() {
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
     window.addEventListener('procurly_ops_updated', handleUpdate);
-    return () => window.removeEventListener('procurly_ops_updated', handleUpdate);
+    window.addEventListener('procurly_procurement_updated', handleUpdate);
+    window.addEventListener('procurly_finance_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('procurly_procurement_updated', handleUpdate);
+      window.removeEventListener('procurly_finance_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   // Sync with searchParams if provided
@@ -96,9 +108,28 @@ function OperationsRequestsContent() {
 
       // Status Filter
       if (selectedStatus !== 'All') {
-        if (selectedStatus === 'Submitted' && r.status !== 'Request Submitted') return false;
-        else if (selectedStatus === 'Exceptions' && !r.status.includes('Exception') && r.status !== 'Payment Failed') return false;
-        else if (selectedStatus !== 'Submitted' && selectedStatus !== 'Exceptions' && r.status !== selectedStatus) return false;
+        const s = (r.status as string) || '';
+        if (selectedStatus === 'Submitted') {
+          if (s !== 'Request Submitted' && s !== 'Submitted' && s !== 'New') return false;
+        } else if (selectedStatus === 'Sourcing') {
+          if (s !== 'Sourcing' && s !== 'Awaiting Supplier') return false;
+        } else if (selectedStatus === 'Quote Ready') {
+          if (s !== 'Quote Ready' && s !== 'Quoted') return false;
+        } else if (selectedStatus === 'Customer Approved') {
+          if (s !== 'Customer Approved' && s !== 'Awaiting Customer Approval' && s !== 'Quote Approved' && s !== 'Awaiting Payment' && s !== 'Payment Pending') return false;
+        } else if (selectedStatus === 'Payment Received') {
+          if (s !== 'Payment Received' && s !== 'Ready for Procurement' && s !== 'Financially Cleared') return false;
+        } else if (selectedStatus === 'Ordered From Supplier') {
+          if (s !== 'Ordered From Supplier' && s !== 'PO Issued' && s !== 'Ordered' && s !== 'Received At Shipping Facility') return false;
+        } else if (selectedStatus === 'In Transit') {
+          if (s !== 'In Transit' && s !== 'Shipped' && s !== 'Customs Clearance' && s !== 'Out For Delivery' && s !== 'Arrived In New Zealand' && s !== 'Dispatched') return false;
+        } else if (selectedStatus === 'Delivered') {
+          if (s !== 'Delivered' && s !== 'Completed' && s !== 'Closed') return false;
+        } else if (selectedStatus === 'Exceptions') {
+          if (!s.includes('Exception') && s !== 'Payment Failed' && s !== 'Cancelled' && s !== 'Refunded') return false;
+        } else if (s !== selectedStatus) {
+          return false;
+        }
       }
 
       // Owner Filter
@@ -134,14 +165,21 @@ function OperationsRequestsContent() {
     );
   };
 
-  // Bulk Actions
-  const handleBulkAssign = (staffName: string) => {
-    const staff = staffUsers.find((u) => u.name === staffName);
-    if (!staff) return;
+  const handleBulkStatusChange = (newStatus: OperationalRequestStatus) => {
     selectedIds.forEach((id) => {
-      operationsService.assignRequestOwner(id, staff.id);
+      operationsService.updateRequestStatus(id, newStatus, 'Bulk stage updated via Operations Workspace');
     });
     setSelectedIds([]);
+    setBulkStatusModalOpen(false);
+    loadData();
+  };
+
+  const handleBulkAssign = (staffId: string) => {
+    selectedIds.forEach((id) => {
+      operationsService.assignRequestOwner(id, staffId);
+    });
+    setSelectedIds([]);
+    loadData();
   };
 
   const handleBulkPriority = (priority: RequestPriority) => {
@@ -149,6 +187,7 @@ function OperationsRequestsContent() {
       operationsService.updateRequestPriority(id, priority);
     });
     setSelectedIds([]);
+    loadData();
   };
 
   const handleExportCSV = () => {
@@ -171,13 +210,15 @@ function OperationsRequestsContent() {
 
   const statusTabList = [
     { label: 'All Requests', value: 'All', count: requests.length },
-    { label: 'Submitted', value: 'Submitted', count: requests.filter((r) => r.status === 'Request Submitted').length },
-    { label: 'Sourcing', value: 'Sourcing', count: requests.filter((r) => r.status === 'Sourcing').length },
-    { label: 'Quote Ready', value: 'Quote Ready', count: requests.filter((r) => r.status === 'Quote Ready').length },
-    { label: 'Awaiting Approval', value: 'Awaiting Customer Approval', count: requests.filter((r) => r.status === 'Awaiting Customer Approval').length },
-    { label: 'Awaiting Payment', value: 'Awaiting Payment', count: requests.filter((r) => r.status === 'Awaiting Payment').length },
-    { label: 'In Transit', value: 'In Transit', count: requests.filter((r) => r.status === 'In Transit').length },
-    { label: 'Exceptions', value: 'Exceptions', count: requests.filter((r) => r.status.includes('Exception') || r.status === 'Payment Failed').length, isRed: true },
+    { label: 'Submitted', value: 'Submitted', count: requests.filter((r) => (r.status as string) === 'Request Submitted' || (r.status as string) === 'Submitted' || (r.status as string) === 'New').length },
+    { label: 'Sourcing', value: 'Sourcing', count: requests.filter((r) => r.status === 'Sourcing' || (r.status as string) === 'Awaiting Supplier').length },
+    { label: 'Quote Ready', value: 'Quote Ready', count: requests.filter((r) => (r.status as string) === 'Quote Ready' || (r.status as string) === 'Quoted').length },
+    { label: 'Customer Approved', value: 'Customer Approved', count: requests.filter((r) => (r.status as string) === 'Customer Approved' || (r.status as string) === 'Awaiting Customer Approval' || (r.status as string) === 'Quote Approved' || (r.status as string) === 'Awaiting Payment').length },
+    { label: 'Payment Received', value: 'Payment Received', count: requests.filter((r) => (r.status as string) === 'Payment Received' || (r.status as string) === 'Ready for Procurement' || (r.status as string) === 'Financially Cleared').length },
+    { label: 'PO Issued', value: 'Ordered From Supplier', count: requests.filter((r) => (r.status as string) === 'Ordered From Supplier' || (r.status as string) === 'PO Issued' || (r.status as string) === 'Ordered' || (r.status as string) === 'Received At Shipping Facility').length },
+    { label: 'In Transit', value: 'In Transit', count: requests.filter((r) => (r.status as string) === 'In Transit' || (r.status as string) === 'Shipped' || (r.status as string) === 'Customs Clearance' || (r.status as string) === 'Out For Delivery' || (r.status as string) === 'Arrived In New Zealand').length },
+    { label: 'Delivered', value: 'Delivered', count: requests.filter((r) => (r.status as string) === 'Delivered' || (r.status as string) === 'Completed' || (r.status as string) === 'Closed').length },
+    { label: 'Exceptions', value: 'Exceptions', count: requests.filter((r) => r.status.includes('Exception') || (r.status as string) === 'Payment Failed' || (r.status as string) === 'Cancelled').length, isRed: true },
   ];
 
   return (
@@ -379,7 +420,10 @@ function OperationsRequestsContent() {
               <span className="text-slate-500 font-medium">Bulk Actions:</span>
               <select
                 onChange={(e) => {
-                  if (e.target.value) handleBulkAssign(e.target.value);
+                  if (e.target.value) {
+                    handleBulkAssign(e.target.value);
+                    e.target.value = '';
+                  }
                 }}
                 defaultValue=""
                 className="py-1 px-2.5 bg-white border border-red-200 rounded-lg text-xs font-semibold text-slate-700"
@@ -388,7 +432,7 @@ function OperationsRequestsContent() {
                   Assign Staff...
                 </option>
                 {staffUsers.map((u) => (
-                  <option key={u.id} value={u.name}>
+                  <option key={u.id} value={u.id}>
                     {u.name}
                   </option>
                 ))}

@@ -37,8 +37,10 @@ export type OperationalRequestStatus =
   | 'Awaiting Customer Approval'
   | 'Customer Approved'
   | 'Awaiting Payment'
+  | 'Payment Pending'
   | 'Payment Received'
   | 'Ordered From Supplier'
+  | 'PO Issued'
   | 'Received At Shipping Facility'
   | 'In Transit'
   | 'Arrived In New Zealand'
@@ -52,7 +54,12 @@ export type OperationalRequestStatus =
   | 'Procurement Exception'
   | 'Logistics Exception'
   | 'Cancelled'
-  | 'Refunded';
+  | 'Refunded'
+  // Aliases
+  | 'Submitted'
+  | 'Quoted'
+  | 'Ordered'
+  | 'Shipped';
 
 export type RequestPriority = 'Normal' | 'High' | 'Urgent';
 
@@ -246,9 +253,12 @@ export interface OperationalPartRequest {
     status:
       | 'Procurement Completed'
       | 'Received at shipping facility'
+      | 'Received At Shipping Facility'
+      | 'Ready for Dispatch'
       | 'Dispatched'
       | 'In Transit'
       | 'Arrived in New Zealand'
+      | 'Arrived In New Zealand'
       | 'Customs Clearance'
       | 'Out For Delivery'
       | 'Delivered';

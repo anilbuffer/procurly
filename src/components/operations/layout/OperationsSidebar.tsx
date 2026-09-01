@@ -289,10 +289,6 @@ export function OperationsSidebar({
               </p>
               <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                 <span className="truncate text-cyan-300 font-semibold">{currentUser.role}</span>
-                <span>•</span>
-                <span className="text-emerald-400 font-semibold flex items-center gap-0.5 shrink-0 truncate">
-                  <ShieldCheck className="w-3 h-3" /> {currentUser.roleTitle}
-                </span>
               </div>
             </div>
           )}

@@ -29,6 +29,7 @@ import { PurchaseOrderItem, POStatus, ProcurementRequest } from '@/types/procure
 import { POPreviewModal } from '@/components/procurement/modals/POPreviewModal';
 import { ReportExceptionModal } from '@/components/procurement/modals/ReportExceptionModal';
 import { INITIAL_PURCHASE_ORDERS, INITIAL_PROCUREMENT_REQUESTS } from '@/services/procurement/mockData';
+import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
 
 export default function PurchaseOrderDetailPage() {
   const params = useParams();
@@ -76,6 +77,19 @@ export default function PurchaseOrderDetailPage() {
 
   return (
     <div className="space-y-6">
+      {/* End-to-End Order Flow Engine Bar */}
+      <EndToEndFlowNavigator
+        requestId={po.requestRef || 'AH-P-000123'}
+        currentStatus={
+          po.status === 'Fully Received'
+            ? 'Delivered'
+            : po.status === 'Supplier Confirmed' || po.status === 'Ordered' || po.status === 'Sent to Supplier'
+            ? 'Ordered From Supplier'
+            : 'Customer Approved'
+        }
+        onStatusChanged={loadData}
+      />
+
       {/* Top Banner & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">

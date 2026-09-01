@@ -23,8 +23,20 @@ export default function CustomerQuotesPage() {
   useEffect(() => {
     setRequests(operationsService.getRequests());
     const handleUpdate = () => setRequests(operationsService.getRequests());
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
     window.addEventListener('procurly_ops_updated', handleUpdate);
-    return () => window.removeEventListener('procurly_ops_updated', handleUpdate);
+    window.addEventListener('procurly_procurement_updated', handleUpdate);
+    window.addEventListener('procurly_finance_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('procurly_procurement_updated', handleUpdate);
+      window.removeEventListener('procurly_finance_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   const quotedRequests = requests.filter(

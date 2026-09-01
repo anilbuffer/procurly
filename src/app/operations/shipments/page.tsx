@@ -23,22 +23,78 @@ export default function ShipmentsCommandPage() {
   const [requests, setRequests] = useState<OperationalPartRequest[]>([]);
   const [activeFilter, setActiveFilter] = useState('All');
 
-  useEffect(() => {
+  const loadData = () => {
     setRequests(operationsService.getRequests());
-    const handleUpdate = () => setRequests(operationsService.getRequests());
+  };
+
+  useEffect(() => {
+    loadData();
+    const handleUpdate = () => loadData();
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
     window.addEventListener('procurly_ops_updated', handleUpdate);
-    return () => window.removeEventListener('procurly_ops_updated', handleUpdate);
+    window.addEventListener('procurly_procurement_updated', handleUpdate);
+    window.addEventListener('procurly_finance_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('procurly_procurement_updated', handleUpdate);
+      window.removeEventListener('procurly_finance_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
+  const readyToShipCount = requests.filter(
+    (r) =>
+      r.shipment?.status === 'Ready for Dispatch' ||
+      r.shipment?.status === 'Received at shipping facility' ||
+      r.shipment?.status === 'Received At Shipping Facility' ||
+      r.status === 'Ordered From Supplier' ||
+      r.status === 'Received At Shipping Facility' ||
+      r.status === 'PO Issued'
+  ).length;
+  const inTransitCount = requests.filter(
+    (r) => r.shipment?.status === 'In Transit' || r.shipment?.status === 'Dispatched' || r.status === 'In Transit' || r.status === 'Shipped'
+  ).length;
+  const arrivedNZCount = requests.filter(
+    (r) =>
+      r.shipment?.status === 'Arrived In New Zealand' ||
+      r.shipment?.status === 'Arrived in New Zealand' ||
+      r.status === 'Arrived In New Zealand'
+  ).length;
+  const customsCount = requests.filter(
+    (r) => r.shipment?.status === 'Customs Clearance' || r.status === 'Customs Clearance'
+  ).length;
+  const outForDeliveryCount = requests.filter(
+    (r) => r.shipment?.status === 'Out For Delivery' || r.status === 'Out For Delivery'
+  ).length;
+  const deliveredCount = requests.filter(
+    (r) => r.shipment?.status === 'Delivered' || r.status === 'Delivered' || r.status === 'Closed'
+  ).length;
+
   const shipmentRequests = requests.filter((r) => {
-    if (!r.shipment && r.status !== 'In Transit' && r.status !== 'Customs Clearance' && r.status !== 'Delivered') {
+    if (!r.shipment && r.status !== 'In Transit' && r.status !== 'Customs Clearance' && r.status !== 'Delivered' && r.status !== 'Ordered From Supplier' && r.status !== 'PO Issued') {
       return false;
     }
     if (activeFilter === 'in-transit') {
-      return r.shipment?.status === 'In Transit' || r.status === 'In Transit';
+      return r.shipment?.status === 'In Transit' || r.status === 'In Transit' || r.status === 'Shipped';
     }
     if (activeFilter === 'delivery') {
       return r.shipment?.status === 'Delivered' || r.status === 'Delivered' || r.status === 'Out For Delivery';
+    }
+    if (activeFilter === 'ready') {
+      return (
+        r.shipment?.status === 'Ready for Dispatch' ||
+        r.shipment?.status === 'Received at shipping facility' ||
+        r.shipment?.status === 'Received At Shipping Facility' ||
+        r.status === 'Ordered From Supplier' ||
+        r.status === 'Received At Shipping Facility'
+      );
+    }
+    if (activeFilter === 'customs') {
+      return r.shipment?.status === 'Customs Clearance' || r.status === 'Customs Clearance';
     }
     return true;
   });
@@ -58,23 +114,26 @@ export default function ShipmentsCommandPage() {
       {/* 36. Logistics KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <button
-          onClick={() => setActiveFilter('All')}
-          className="p-3.5 bg-white rounded-2xl border border-slate-200 hover:border-[#2B4499] text-left transition-all shadow-xs"
+          onClick={() => setActiveFilter(activeFilter === 'ready' ? 'All' : 'ready')}
+          className={cn(
+            'p-3.5 rounded-2xl border text-left transition-all shadow-xs',
+            activeFilter === 'ready' ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200' : 'bg-white border-slate-200 hover:border-[#2B4499]'
+          )}
         >
           <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Ready to Ship</span>
-          <p className="text-xl font-black text-slate-900">04</p>
+          <p className="text-xl font-black text-slate-900">{String(readyToShipCount).padStart(2, '0')}</p>
           <span className="text-[10px] text-slate-500">At origin hubs</span>
         </button>
 
         <button
-          onClick={() => setActiveFilter('in-transit')}
+          onClick={() => setActiveFilter(activeFilter === 'in-transit' ? 'All' : 'in-transit')}
           className={cn(
             'p-3.5 rounded-2xl border text-left transition-all shadow-xs',
             activeFilter === 'in-transit' ? 'bg-cyan-50 border-cyan-400 ring-2 ring-cyan-200' : 'bg-white border-slate-200 hover:border-cyan-500'
           )}
         >
           <span className="text-[10px] uppercase font-bold text-cyan-700 block mb-1">In Transit</span>
-          <p className="text-xl font-black text-cyan-900">08</p>
+          <p className="text-xl font-black text-cyan-900">{String(inTransitCount).padStart(2, '0')}</p>
           <span className="text-[10px] text-cyan-600">Air & Sea cargo</span>
         </button>
 
@@ -83,29 +142,32 @@ export default function ShipmentsCommandPage() {
           className="p-3.5 bg-white rounded-2xl border border-slate-200 hover:border-[#2B4499] text-left transition-all shadow-xs"
         >
           <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Arrived NZ</span>
-          <p className="text-xl font-black text-slate-900">03</p>
+          <p className="text-xl font-black text-slate-900">{String(arrivedNZCount).padStart(2, '0')}</p>
           <span className="text-[10px] text-slate-500">AKL / WLG Ports</span>
         </button>
 
         <button
-          onClick={() => setActiveFilter('All')}
-          className="p-3.5 bg-white rounded-2xl border border-slate-200 hover:border-[#2B4499] text-left transition-all shadow-xs"
+          onClick={() => setActiveFilter(activeFilter === 'customs' ? 'All' : 'customs')}
+          className={cn(
+            'p-3.5 rounded-2xl border text-left transition-all shadow-xs',
+            activeFilter === 'customs' ? 'bg-purple-50 border-purple-400 ring-2 ring-purple-200' : 'bg-white border-slate-200 hover:border-[#2B4499]'
+          )}
         >
           <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Customs Clearance</span>
-          <p className="text-xl font-black text-purple-900">02</p>
+          <p className="text-xl font-black text-purple-900">{String(customsCount).padStart(2, '0')}</p>
           <span className="text-[10px] text-purple-600">MPI & Biosecurity</span>
         </button>
 
         <button
-          onClick={() => setActiveFilter('delivery')}
+          onClick={() => setActiveFilter(activeFilter === 'delivery' ? 'All' : 'delivery')}
           className={cn(
             'p-3.5 rounded-2xl border text-left transition-all shadow-xs',
             activeFilter === 'delivery' ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200' : 'bg-white border-slate-200 hover:border-emerald-500'
           )}
         >
           <span className="text-[10px] uppercase font-bold text-emerald-700 block mb-1">Delivered</span>
-          <p className="text-xl font-black text-emerald-900">31</p>
-          <span className="text-[10px] text-emerald-600">Complete & signed</span>
+          <p className="text-xl font-black text-emerald-900">{String(deliveredCount).padStart(2, '0')}</p>
+          <span className="text-[10px] text-emerald-600">Workshop complete</span>
         </button>
 
         <Link

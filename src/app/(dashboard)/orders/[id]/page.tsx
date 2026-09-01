@@ -22,6 +22,7 @@ import {
   ExternalLink,
   ShieldCheck,
 } from 'lucide-react';
+import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -87,6 +88,19 @@ export default function OrderDetailPage() {
 
   return (
     <div className="space-y-6">
+      {/* End-to-End Order Flow Engine Bar */}
+      <EndToEndFlowNavigator
+        requestId={order.requestNumber || order.requestId}
+        currentStatus={order.status}
+        onStatusChanged={() => {
+          if (orderId) {
+            requestsService.getOrderById(orderId).then((data) => {
+              if (data) setOrder(data);
+            });
+          }
+        }}
+      />
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">

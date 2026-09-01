@@ -55,15 +55,27 @@ export default function ProcurementDashboardPage() {
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
+    window.addEventListener('procurly_ops_updated', handleUpdate);
     window.addEventListener('procurly_procurement_updated', handleUpdate);
-    return () => window.removeEventListener('procurly_procurement_updated', handleUpdate);
+    window.addEventListener('procurly_finance_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('procurly_procurement_updated', handleUpdate);
+      window.removeEventListener('procurly_finance_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
-  // Calculated KPI metrics
-  const newRequestsCount = requests.filter((r) => r.status === 'New').length;
-  const sourcingInProgressCount = requests.filter((r) => r.status === 'Sourcing' || r.status === 'Awaiting Supplier').length;
+  // Calculated KPI metrics directly mapped to 8 Engine statuses
+  const newRequestsCount = requests.filter((r) => (r.status as string) === 'New' || (r.status as string) === 'Submitted' || (r.status as string) === 'Request Submitted').length;
+  const sourcingInProgressCount = requests.filter((r) => (r.status as string) === 'Sourcing' || (r.status as string) === 'Awaiting Supplier').length;
   const quotesAwaitingReviewCount = quotes.filter((q) => q.status === 'Received' || q.status === 'Under Review').length;
-  const approvedForProcurementCount = requests.filter((r) => r.status === 'Payment Received' || r.status === 'Ready for Procurement').length;
+  const approvedForProcurementCount = requests.filter((r) => (r.status as string) === 'Payment Received' || (r.status as string) === 'Ready for Procurement' || (r.status as string) === 'Financially Cleared').length;
   const activePOsCount = pos.filter((p) => p.status !== 'Fully Received' && p.status !== 'Cancelled').length;
   const exceptionsCount = exceptions.filter((e) => e.stage !== 'Close').length;
 

@@ -8,6 +8,7 @@ export type RequestStatus =
   | 'Payment Pending'
   | 'Payment Received'
   | 'Ordered From Supplier'
+  | 'PO Issued'
   | 'Received At Shipping Facility'
   | 'In Transit'
   | 'In Transit - Air'
@@ -24,8 +25,10 @@ export type RequestStatus =
   | 'Cancelled'
   | 'Refunded'
   // Backward-compatible aliases
+  | 'Submitted'
   | 'Quoted'
   | 'Quote Approved'
+  | 'Ordered'
   | 'Shipped'
   | 'Rejected';
 
@@ -207,9 +210,12 @@ export interface ProcurementOrder {
 export type ShipmentStatus =
   | 'Processing'
   | 'Received at shipping facility'
+  | 'Received At Shipping Facility'
+  | 'Ready for Dispatch'
   | 'Dispatched'
   | 'In Transit'
   | 'Arrived in New Zealand'
+  | 'Arrived In New Zealand'
   | 'Customs Clearance'
   | 'Out For Delivery'
   | 'Delivered';
