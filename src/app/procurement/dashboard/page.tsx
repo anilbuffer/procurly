@@ -32,6 +32,7 @@ import {
   PurchaseOrderItem,
   ProcurementTaskItem,
   ProcurementExceptionItem,
+  ProcurementStaffUser,
 } from '@/types/procurement';
 
 export default function ProcurementDashboardPage() {
@@ -40,7 +41,7 @@ export default function ProcurementDashboardPage() {
   const [pos, setPos] = useState<PurchaseOrderItem[]>([]);
   const [tasks, setTasks] = useState<ProcurementTaskItem[]>([]);
   const [exceptions, setExceptions] = useState<ProcurementExceptionItem[]>([]);
-  const [currentUser, setCurrentUser] = useState(procurementService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(() => procurementService.getDefaultUser());
 
   const loadData = () => {
     setRequests(procurementService.getRequests());

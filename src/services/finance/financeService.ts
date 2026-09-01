@@ -62,6 +62,10 @@ class FinanceService {
   }
 
   // --- USER & STAFF ---
+  public getDefaultUser(): FinanceStaffUser {
+    return INITIAL_FINANCE_STAFF[0];
+  }
+
   public getCurrentUser(): FinanceStaffUser {
     if (!this.isBrowser()) return INITIAL_FINANCE_STAFF[0];
     try {

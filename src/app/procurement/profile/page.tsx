@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import {
   User,
@@ -19,11 +19,28 @@ import { procurementService } from '@/services/procurement/procurementService';
 import { ProcurementStaffUser } from '@/types/procurement';
 
 export default function ProcurementProfilePage() {
-  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(procurementService.getCurrentUser());
-  const [name, setName] = useState(currentUser.name);
-  const [email, setEmail] = useState(currentUser.email);
-  const [phone, setPhone] = useState(currentUser.phone);
+  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(() => procurementService.getDefaultUser());
+  const [name, setName] = useState(procurementService.getDefaultUser().name);
+  const [email, setEmail] = useState(procurementService.getDefaultUser().email);
+  const [phone, setPhone] = useState(procurementService.getDefaultUser().phone);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  useEffect(() => {
+    const user = procurementService.getCurrentUser();
+    setCurrentUser(user);
+    setName(user.name);
+    setEmail(user.email);
+    setPhone(user.phone);
+    const handleUpdate = () => {
+      const u = procurementService.getCurrentUser();
+      setCurrentUser(u);
+      setName(u.name);
+      setEmail(u.email);
+      setPhone(u.phone);
+    };
+    window.addEventListener('procurly_procurement_updated', handleUpdate);
+    return () => window.removeEventListener('procurly_procurement_updated', handleUpdate);
+  }, []);
 
   // Notification Preferences
   const [emailNotif, setEmailNotif] = useState(true);

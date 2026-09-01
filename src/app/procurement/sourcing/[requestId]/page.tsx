@@ -54,7 +54,7 @@ export default function SourcingDetailPage() {
 
   // Supplier Contact Message
   const [rfqMessage, setRfqMessage] = useState(
-    `Konnichiwa / Hello,\n\nPlease quote availability, landed freight cost, and lead time for:\nPart: ${initialRequest.part.name}\nOEM Part Number: ${initialRequest.part.partNumber || 'N/A'}\nVehicle: ${initialRequest.vehicle.year} ${initialRequest.vehicle.make} ${initialRequest.vehicle.model} (VIN: ${initialRequest.vehicle.vin})\nQuantity Required: ${initialRequest.part.quantity} unit(s).\nTarget Delivery: Auckland Airport Logistics Hub.\n\nThank you,\n${procurementService.getCurrentUser().name}\nAutohub Global Procurement`
+    `Konnichiwa / Hello,\n\nPlease quote availability, landed freight cost, and lead time for:\nPart: ${initialRequest.part.name}\nOEM Part Number: ${initialRequest.part.partNumber || 'N/A'}\nVehicle: ${initialRequest.vehicle.year} ${initialRequest.vehicle.make} ${initialRequest.vehicle.model} (VIN: ${initialRequest.vehicle.vin})\nQuantity Required: ${initialRequest.part.quantity} unit(s).\nTarget Delivery: Auckland Airport Logistics Hub.\n\nThank you,\n${procurementService.getDefaultUser().name}\nAutohub Global Procurement`
   );
   const [contactMethod, setContactMethod] = useState<'Email' | 'Phone' | 'Direct EDI'>('Direct EDI');
   const [rfqSent, setRfqSent] = useState(false);

@@ -16,7 +16,7 @@ import { financeService } from '@/services/finance/financeService';
 import { FinanceStaffUser } from '@/types/finance';
 
 export default function FinanceProfilePage() {
-  const [currentUser, setCurrentUser] = useState<FinanceStaffUser>(financeService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<FinanceStaffUser>(() => financeService.getDefaultUser());
   const [staffUsers, setStaffUsers] = useState<FinanceStaffUser[]>(financeService.getStaffUsers());
   const [toastMsg, setToastMsg] = useState<string | null>(null);
 

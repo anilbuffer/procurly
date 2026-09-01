@@ -53,7 +53,7 @@ function SupplierHubContent() {
   // Shared Data State
   const [suppliers, setSuppliers] = useState<SupplierSummary[]>([]);
   const [conversations, setConversations] = useState<SupplierConversation[]>([]);
-  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(procurementService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(() => procurementService.getDefaultUser());
 
   // 1. Directory Tab State
   const [searchQuery, setSearchQuery] = useState('');

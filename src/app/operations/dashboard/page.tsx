@@ -35,12 +35,13 @@ import {
   OperationalException,
 } from '@/types/operations';
 import { QuickCreateModal } from '@/components/operations/layout/QuickCreateModal';
+import { INITIAL_REPORT_METRICS } from '@/services/operations/mockData';
 import { cn } from '@/lib/utils';
 
 export default function OperationsDashboardPage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<OperationsStaffUser>(operationsService.getDefaultUser());
-  const [metrics, setMetrics] = useState<OperationalReportMetrics>(operationsService.getReportMetrics());
+  const [metrics, setMetrics] = useState<OperationalReportMetrics>(() => INITIAL_REPORT_METRICS);
   const [freightCarriers, setFreightCarriers] = useState<FreightCarrierControl[]>([]);
   const [nzpostPickups, setNzpostPickups] = useState<NZPostPickupBooking[]>([]);
   const [requests, setRequests] = useState<OperationalPartRequest[]>([]);

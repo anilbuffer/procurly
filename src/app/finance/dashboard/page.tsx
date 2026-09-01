@@ -32,6 +32,7 @@ import {
   CreditAccount,
   RefundItem,
   FinancialException,
+  FinanceStaffUser,
 } from '@/types/finance';
 
 export default function FinanceDashboardPage() {
@@ -41,7 +42,7 @@ export default function FinanceDashboardPage() {
   const [accounts, setAccounts] = useState<CreditAccount[]>([]);
   const [refunds, setRefunds] = useState<RefundItem[]>([]);
   const [exceptions, setExceptions] = useState<FinancialException[]>([]);
-  const [currentUser, setCurrentUser] = useState(financeService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<FinanceStaffUser>(() => financeService.getDefaultUser());
 
   const loadData = () => {
     setPayments(financeService.getPayments());

@@ -58,6 +58,10 @@ class ProcurementService {
   }
 
   // --- USER & STAFF ---
+  public getDefaultUser(): ProcurementStaffUser {
+    return INITIAL_STAFF_USERS[0];
+  }
+
   public getCurrentUser(): ProcurementStaffUser {
     if (!this.isBrowser()) return INITIAL_STAFF_USERS[0];
     try {

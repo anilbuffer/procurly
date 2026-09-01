@@ -60,16 +60,9 @@ export default function ProcurementRequestDetailPage() {
   };
 
   const [mounted, setMounted] = useState(false);
-  const [request, setRequest] = useState<ProcurementRequest>(() => resolveRequest(rawId));
-  const [quotes, setQuotes] = useState<SupplierQuoteItem[]>(() => {
-    const list = procurementService.getQuotesByRequestId(resolveRequest(rawId).id);
-    return list.length > 0 ? list : INITIAL_SUPPLIER_QUOTES.slice(0, 3);
-  });
-  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderItem[]>(() => {
-    const initReq = resolveRequest(rawId);
-    const pos = procurementService.getPurchaseOrders().filter((p) => p.requestId === initReq.id || p.requestRef === initReq.requestNumber);
-    return pos.length > 0 ? pos : INITIAL_PURCHASE_ORDERS.slice(0, 2);
-  });
+  const [request, setRequest] = useState<ProcurementRequest>(() => INITIAL_PROCUREMENT_REQUESTS[0]);
+  const [quotes, setQuotes] = useState<SupplierQuoteItem[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderItem[]>([]);
   const [activeTab, setActiveTab] = useState<
     'Overview' | 'Sourcing' | 'Supplier Quotes' | 'Purchase Order' | 'Documents' | 'Messages' | 'Activity'
   >('Overview');

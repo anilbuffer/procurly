@@ -14,10 +14,11 @@ import {
 } from 'lucide-react';
 import { operationsService } from '@/services/operations/operationsService';
 import { OperationalReportMetrics } from '@/types/operations';
+import { INITIAL_REPORT_METRICS } from '@/services/operations/mockData';
 import { cn } from '@/lib/utils';
 
 export default function ReportsDashboardPage() {
-  const [metrics, setMetrics] = useState<OperationalReportMetrics>(operationsService.getReportMetrics());
+  const [metrics, setMetrics] = useState<OperationalReportMetrics>(() => INITIAL_REPORT_METRICS);
   const [activeGroup, setActiveGroup] = useState<'operational' | 'financial' | 'customer' | 'management'>('operational');
 
   useEffect(() => {
