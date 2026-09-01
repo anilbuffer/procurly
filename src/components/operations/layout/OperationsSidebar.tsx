@@ -23,8 +23,6 @@ import {
   UserCheck,
   MessageSquare,
   Bell,
-  BarChart3,
-  Users,
   ShieldCheck,
   Settings,
   ChevronLeft,
@@ -106,7 +104,7 @@ export function OperationsSidebar({
       items: [
         { label: 'Shipments & Dispatch', href: '/operations/shipments', icon: Truck },
         { label: 'NZ Post Pickups & Tracking', href: '/operations/dashboard#nzpost-tracking', icon: PackageCheck },
-        { label: 'Freight Controls', href: '/operations/dashboard#freight-controls', icon: Settings },
+        { label: 'Freight Management', href: '/operations/configuration', icon: Settings },
         {
           label: 'Logistics Exceptions',
           href: '/operations/exceptions',
@@ -130,7 +128,6 @@ export function OperationsSidebar({
         { label: 'Notifications', href: '/operations/notifications', icon: Bell },
       ],
     },
-
   ];
 
   // ─── Render a single nav link — mirrors Customer Portal renderNavLink exactly ─
