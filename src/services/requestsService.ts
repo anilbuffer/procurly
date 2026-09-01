@@ -25,6 +25,7 @@ import {
   INITIAL_NOTIFICATIONS,
 } from './mockData';
 import { syncRequestStatusAcrossRoles } from '@/lib/syncCrossRoleStore';
+import { getSynchronizedOrderTimeline } from '@/lib/utils';
 
 const REQUESTS_KEY = 'procurly_requests_v3';
 const COMPANY_KEY = 'procurly_company_v3';
@@ -432,6 +433,19 @@ class MockRequestsService {
   // =================== ORDERS ===================
   async getOrders(searchQuery?: string): Promise<ProcurementOrder[]> {
     let list = this.getItem<ProcurementOrder[]>(ORDERS_KEY, INITIAL_ORDERS);
+    let modified = false;
+    list = list.map((ord) => {
+      const syncedTimeline = getSynchronizedOrderTimeline(ord.status, ord.timeline);
+      const isDifferent = JSON.stringify(ord.timeline) !== JSON.stringify(syncedTimeline);
+      if (isDifferent) {
+        modified = true;
+        return { ...ord, timeline: syncedTimeline };
+      }
+      return ord;
+    });
+    if (modified) {
+      this.setItem(ORDERS_KEY, list);
+    }
     if (searchQuery && searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       list = list.filter(
@@ -447,8 +461,46 @@ class MockRequestsService {
   }
 
   async getOrderById(id: string): Promise<ProcurementOrder | null> {
-    const list = this.getItem<ProcurementOrder[]>(ORDERS_KEY, INITIAL_ORDERS);
-    return list.find((o) => o.id === id || o.orderNumber.toLowerCase() === id.toLowerCase()) || null;
+    const list = await this.getOrders();
+    const query = id.toLowerCase().trim();
+    return (
+      list.find(
+        (o) =>
+          o.id.toLowerCase() === query ||
+          o.orderNumber.toLowerCase() === query ||
+          o.requestId.toLowerCase() === query ||
+          o.requestNumber.toLowerCase() === query ||
+          o.requestNumber.replace(/[^0-9]/g, '') === query.replace(/[^0-9]/g, '') ||
+          o.orderNumber.replace(/[^0-9]/g, '') === query.replace(/[^0-9]/g, '')
+      ) || null
+    );
+  }
+
+  async updateOrderStatus(
+    orderId: string,
+    status: ProcurementOrder['status'],
+    note?: string
+  ): Promise<ProcurementOrder | null> {
+    const orders = this.getItem<ProcurementOrder[]>(ORDERS_KEY, INITIAL_ORDERS);
+    const ord = orders.find(
+      (o) =>
+        o.id === orderId ||
+        o.orderNumber.toLowerCase() === orderId.toLowerCase() ||
+        o.requestId === orderId ||
+        o.requestNumber.toLowerCase() === orderId.toLowerCase()
+    );
+    if (!ord) return null;
+
+    ord.status = status;
+    ord.timeline = getSynchronizedOrderTimeline(status, ord.timeline);
+    this.setItem(ORDERS_KEY, orders);
+
+    syncRequestStatusAcrossRoles(ord.requestNumber, status, {
+      actorName: 'Trade Order Operations',
+      note: note || `Order ${ord.orderNumber} status updated to ${status}.`,
+    });
+
+    return ord;
   }
 
   // =================== SHIPMENTS ===================
@@ -538,16 +590,7 @@ class MockRequestsService {
     const ord = orders.find((o) => o.requestId === item.requestId || o.requestNumber === item.requestNumber);
     if (ord) {
       ord.status = 'Ordered From Supplier';
-      ord.timeline.forEach((t) => {
-        if (t.stage === 'Payment Received') {
-          t.status = 'completed';
-          t.timestamp = 'Just now';
-        }
-        if (t.stage === 'Ordered From Supplier') {
-          t.status = 'in-progress';
-          t.timestamp = 'Just now';
-        }
-      });
+      ord.timeline = getSynchronizedOrderTimeline('Ordered From Supplier', ord.timeline);
       this.setItem(ORDERS_KEY, orders);
     }
 

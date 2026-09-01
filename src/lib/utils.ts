@@ -219,3 +219,204 @@ export function getStatusDescription(status: string): string {
       return 'Currently being processed by Autohub.';
   }
 }
+
+export interface OrderTimelineMilestone {
+  stage: string;
+  timestamp: string;
+  status: 'completed' | 'in-progress' | 'pending';
+  description: string;
+}
+
+export function getSynchronizedOrderTimeline(
+  status: string,
+  existingTimeline?: OrderTimelineMilestone[]
+): OrderTimelineMilestone[] {
+  const s = (status || '').trim().toLowerCase();
+
+  const getExisting = (stageName: string) => {
+    return existingTimeline?.find(
+      (t) =>
+        t.stage.toLowerCase() === stageName.toLowerCase() ||
+        t.stage.toLowerCase().includes(stageName.toLowerCase()) ||
+        stageName.toLowerCase().includes(t.stage.toLowerCase())
+    );
+  };
+
+  const isDeliveredOrClosed =
+    s.includes('delivered') || s.includes('closed') || s.includes('completed');
+  const isOutForDelivery = s.includes('out for delivery');
+  const isInTransitOrCustoms =
+    s.includes('in transit') ||
+    s.includes('dispatched') ||
+    s.includes('shipped') ||
+    s.includes('customs') ||
+    s.includes('arrived in new zealand') ||
+    s.includes('arrived in nz') ||
+    s.includes('transit');
+  const isAtFacility =
+    s.includes('shipping facility') ||
+    s.includes('facility') ||
+    s.includes('export warehouse');
+  const isOrdered =
+    s.includes('ordered') ||
+    s.includes('po issued') ||
+    s.includes('ready for procurement');
+  const isPaymentReceived =
+    s.includes('payment received') ||
+    s.includes('paid') ||
+    s.includes('reconciled') ||
+    s.includes('credit approved');
+
+  // Stage 1: Customer Approved
+  const ex1 = getExisting('Customer Approved');
+  const stage1: OrderTimelineMilestone = {
+    stage: 'Customer Approved',
+    timestamp: ex1?.timestamp && ex1.timestamp !== 'Pending' ? ex1.timestamp : 'Just now',
+    status: 'completed',
+    description: ex1?.description || 'Quotation verified and approved by trade customer.',
+  };
+
+  // Stage 2: Payment Received
+  const ex2 = getExisting('Payment Received');
+  let status2: 'completed' | 'in-progress' | 'pending' = 'pending';
+  let time2 = 'Pending';
+  let desc2 = 'Awaiting payment confirmation.';
+
+  if (isDeliveredOrClosed || isOutForDelivery || isInTransitOrCustoms || isAtFacility || isOrdered || isPaymentReceived) {
+    status2 = 'completed';
+    time2 = ex2?.timestamp && ex2.timestamp !== 'Pending' ? ex2.timestamp : 'Completed';
+    desc2 =
+      ex2?.description && !ex2.description.toLowerCase().includes('awaiting')
+        ? ex2.description
+        : 'Payment verified and trade account billing authorized.';
+  } else {
+    status2 = 'in-progress';
+    time2 = 'Pending';
+    desc2 = 'Awaiting payment confirmation.';
+  }
+
+  const stage2: OrderTimelineMilestone = {
+    stage: 'Payment Received',
+    timestamp: time2,
+    status: status2,
+    description: desc2,
+  };
+
+  // Stage 3: Ordered From Supplier
+  const ex3 = getExisting('Ordered From Supplier');
+  let status3: 'completed' | 'in-progress' | 'pending' = 'pending';
+  let time3 = 'Pending';
+  let desc3 = 'PO issuance to overseas supplier.';
+
+  if (isDeliveredOrClosed || isOutForDelivery || isInTransitOrCustoms || isAtFacility) {
+    status3 = 'completed';
+    time3 = ex3?.timestamp && ex3.timestamp !== 'Pending' ? ex3.timestamp : 'Completed';
+    desc3 =
+      ex3?.description && !ex3.description.toLowerCase().includes('pending')
+        ? ex3.description
+        : 'PO transmitted and fulfilled by overseas supplier hub.';
+  } else if (isOrdered) {
+    status3 = 'in-progress';
+    time3 = ex3?.timestamp && ex3.timestamp !== 'Pending' ? ex3.timestamp : 'Just now';
+    desc3 = 'PO transmitted to supplier network. Sourcing in progress.';
+  } else if (isPaymentReceived) {
+    status3 = 'in-progress';
+    time3 = 'In Progress';
+    desc3 = 'PO issuance to overseas supplier.';
+  }
+
+  const stage3: OrderTimelineMilestone = {
+    stage: 'Ordered From Supplier',
+    timestamp: time3,
+    status: status3,
+    description: desc3,
+  };
+
+  // Stage 4: Received at Shipping Facility
+  const ex4 = getExisting('Received at Shipping Facility') || getExisting('Received At Shipping Facility');
+  let status4: 'completed' | 'in-progress' | 'pending' = 'pending';
+  let time4 = 'Pending';
+  let desc4 = 'Export warehouse QA & fitment inspection.';
+
+  if (isDeliveredOrClosed || isOutForDelivery || isInTransitOrCustoms) {
+    status4 = 'completed';
+    time4 = ex4?.timestamp && ex4.timestamp !== 'Pending' ? ex4.timestamp : 'Completed';
+    desc4 =
+      ex4?.description && !ex4.description.toLowerCase().includes('scheduled') && !ex4.description.toLowerCase().includes('pending')
+        ? ex4.description
+        : 'Export warehouse QA inspection passed. Crated for departure.';
+  } else if (isAtFacility) {
+    status4 = 'in-progress';
+    time4 = ex4?.timestamp && ex4.timestamp !== 'Pending' ? ex4.timestamp : 'Just now';
+    desc4 = 'Received at origin shipping facility. Export fitment QA in progress.';
+  }
+
+  const stage4: OrderTimelineMilestone = {
+    stage: 'Received at Shipping Facility',
+    timestamp: time4,
+    status: status4,
+    description: desc4,
+  };
+
+  // Stage 5: Shipment
+  const ex5 = getExisting('Shipment') || getExisting('In Transit');
+  let status5: 'completed' | 'in-progress' | 'pending' = 'pending';
+  let time5 = 'Pending';
+  let desc5 = 'International transit.';
+
+  if (isDeliveredOrClosed) {
+    status5 = 'completed';
+    time5 = ex5?.timestamp && ex5.timestamp !== 'Pending' ? ex5.timestamp : 'Completed';
+    desc5 =
+      ex5?.description && !ex5.description.toLowerCase().includes('expected') && !ex5.description.toLowerCase().includes('pending')
+        ? ex5.description
+        : 'International freight transit and customs clearance completed.';
+  } else if (isOutForDelivery) {
+    status5 = 'completed';
+    time5 = ex5?.timestamp && ex5.timestamp !== 'Pending' ? ex5.timestamp : 'Arrived';
+    desc5 = 'Arrived in New Zealand. Customs cleared and released for delivery.';
+  } else if (isInTransitOrCustoms) {
+    status5 = 'in-progress';
+    time5 = ex5?.timestamp && ex5.timestamp !== 'Pending' ? ex5.timestamp : 'In Transit';
+    desc5 =
+      ex5?.description && !ex5.description.toLowerCase().includes('pending')
+        ? ex5.description
+        : 'International freight transit / customs processing.';
+  }
+
+  const stage5: OrderTimelineMilestone = {
+    stage: 'Shipment',
+    timestamp: time5,
+    status: status5,
+    description: desc5,
+  };
+
+  // Stage 6: Delivered
+  const ex6 = getExisting('Delivered');
+  let status6: 'completed' | 'in-progress' | 'pending' = 'pending';
+  let time6 = 'Pending';
+  let desc6 = 'Workshop handover.';
+
+  if (isDeliveredOrClosed) {
+    status6 = 'completed';
+    time6 = ex6?.timestamp && ex6.timestamp !== 'Pending' ? ex6.timestamp : 'Delivered';
+    desc6 =
+      ex6?.description && !ex6.description.toLowerCase().includes('expected') && !ex6.description.toLowerCase().includes('pending')
+        ? ex6.description
+        : 'Workshop handover complete. Consignment signed and delivered.';
+  } else if (isOutForDelivery) {
+    status6 = 'in-progress';
+    time6 = 'Out for Delivery';
+    desc6 = 'Dispatched on local courier van for direct workshop delivery.';
+  }
+
+  const stage6: OrderTimelineMilestone = {
+    stage: 'Delivered',
+    timestamp: time6,
+    status: status6,
+    description: desc6,
+  };
+
+  return [stage1, stage2, stage3, stage4, stage5, stage6];
+}
+

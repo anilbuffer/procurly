@@ -9,7 +9,7 @@ import { StatCard } from '@/components/ui/StatCard';
 import { DocumentPreviewModal } from '@/components/ui/DocumentPreviewModal';
 import { requestsService } from '@/services/requestsService';
 import { ProcurementOrder, PortalDocument } from '@/types';
-import { formatNZD, formatDate, cn } from '@/lib/utils';
+import { formatNZD, formatDate, cn, getSynchronizedOrderTimeline } from '@/lib/utils';
 import {
   ShoppingBag,
   Search,
@@ -34,6 +34,9 @@ import {
   LayoutGrid,
   Table as TableIcon,
   CheckCircle2,
+  Printer,
+  ChevronRight,
+  AlertCircle,
   Clock,
   ExternalLink,
   MapPin,
@@ -82,7 +85,15 @@ export default function OrdersPage() {
     loadOrders();
     const handleUpdate = () => loadOrders();
     window.addEventListener('procurly_data_updated', handleUpdate);
-    return () => window.removeEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
+    window.addEventListener('procurly_ops_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   const handleCopy = (text: string, id: string) => {
@@ -902,7 +913,7 @@ export default function OrdersPage() {
 
                             <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-xs space-y-3">
                               <div className="relative pl-5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 space-y-4">
-                                {ord.timeline.map((event, idx) => {
+                                {getSynchronizedOrderTimeline(ord.status, ord.timeline).map((event, idx) => {
                                   const isDone = event.status === 'completed';
                                   const isInProg = event.status === 'in-progress';
                                   return (

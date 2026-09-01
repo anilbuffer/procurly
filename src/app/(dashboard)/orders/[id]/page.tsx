@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { requestsService } from '@/services/requestsService';
 import { ProcurementOrder } from '@/types';
-import { formatNZD, formatDate } from '@/lib/utils';
+import { formatNZD, formatDate, getSynchronizedOrderTimeline } from '@/lib/utils';
 import {
   ArrowLeft,
   ShoppingBag,
@@ -42,6 +42,22 @@ export default function OrderDetailPage() {
       }
     };
     loadOrder();
+
+    const handleUpdate = () => {
+      loadOrder();
+    };
+
+    window.addEventListener('procurly_data_updated', handleUpdate);
+    window.addEventListener('procurly_requests_updated', handleUpdate);
+    window.addEventListener('procurly_ops_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    return () => {
+      window.removeEventListener('procurly_data_updated', handleUpdate);
+      window.removeEventListener('procurly_requests_updated', handleUpdate);
+      window.removeEventListener('procurly_ops_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, [orderId]);
 
   if (isLoading) {
@@ -168,7 +184,7 @@ export default function OrderDetailPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="space-y-6 relative pl-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
-                {order.timeline.map((event, idx) => {
+                {getSynchronizedOrderTimeline(order.status, order.timeline).map((event, idx) => {
                   const isCompleted = event.status === 'completed';
                   const isInProgress = event.status === 'in-progress';
 

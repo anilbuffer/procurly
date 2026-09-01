@@ -2,6 +2,8 @@ import { INITIAL_REQUESTS as CUSTOMER_INITIAL_REQUESTS, INITIAL_DOCUMENTS as CUS
 import { INITIAL_REQUESTS as OPS_INITIAL_REQUESTS } from '@/services/operations/mockData';
 import { INITIAL_REQUESTS as PROC_INITIAL_REQUESTS } from '@/services/procurement/mockData';
 import { INITIAL_FINANCE_PAYMENTS, INITIAL_AWAITING_PAYMENTS } from '@/services/finance/mockData';
+import { getSynchronizedOrderTimeline } from '@/lib/utils';
+
 
 export interface SyncOptions {
   actorName?: string;
@@ -227,15 +229,31 @@ export function syncRequestStatusAcrossRoles(
   try {
     const rawOrders = localStorage.getItem('procurly_orders_v3');
     const orders = rawOrders ? JSON.parse(rawOrders) : CUSTOMER_INITIAL_ORDERS;
-    const order = orders.find((o: any) => (o.requestNumber && o.requestNumber.toUpperCase() === targetRef) || o.requestId === targetId);
+    const order = orders.find(
+      (o: any) =>
+        (o.requestNumber && o.requestNumber.toUpperCase() === targetRef) ||
+        (o.requestNumber && o.requestNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, '')) ||
+        o.requestId === targetId ||
+        o.requestId === rawInput ||
+        o.id === rawInput ||
+        (o.orderNumber && o.orderNumber.toUpperCase() === rawInput.toUpperCase())
+    );
     if (order) {
       order.status = newStatus;
+      order.timeline = getSynchronizedOrderTimeline(newStatus, order.timeline);
       localStorage.setItem('procurly_orders_v3', JSON.stringify(orders));
     }
 
     const rawShipments = localStorage.getItem('procurly_shipments_v3');
     const shipments = rawShipments ? JSON.parse(rawShipments) : CUSTOMER_INITIAL_SHIPMENTS;
-    const shipment = shipments.find((s: any) => (s.requestNumber && s.requestNumber.toUpperCase() === targetRef) || s.requestId === targetId);
+    const shipment = shipments.find(
+      (s: any) =>
+        (s.requestNumber && s.requestNumber.toUpperCase() === targetRef) ||
+        (s.requestNumber && s.requestNumber.replace(/[^0-9]/g, '') === targetRef.replace(/[^0-9]/g, '')) ||
+        s.requestId === targetId ||
+        s.requestId === rawInput ||
+        s.id === rawInput
+    );
     if (shipment) {
       if (newStatus === 'In Transit') {
         shipment.currentStatus = 'In Transit';
@@ -245,6 +263,11 @@ export function syncRequestStatusAcrossRoles(
         shipment.currentStatus = 'Out For Delivery';
       } else if (newStatus === 'Delivered' || newStatus === 'Closed') {
         shipment.currentStatus = 'Delivered';
+        if (shipment.events) {
+          shipment.events.forEach((ev: any) => {
+            ev.status = 'completed';
+          });
+        }
       }
       localStorage.setItem('procurly_shipments_v3', JSON.stringify(shipments));
     }
