@@ -49,7 +49,7 @@ export function ProcurementSidebar({
   onToggleCollapse,
 }: ProcurementSidebarProps) {
   const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(procurementService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(() => procurementService.getStaffUsers()[0]);
   const [staffUsers, setStaffUsers] = useState<ProcurementStaffUser[]>(procurementService.getStaffUsers());
   const [openTasksCount, setOpenTasksCount] = useState(0);
   const [unreadNotifsCount, setUnreadNotifsCount] = useState(0);

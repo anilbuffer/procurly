@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { financeService } from '@/services/finance/financeService';
 import { PaymentMethodType, PaymentStatusType } from '@/types/finance';
-import { CreditCard, CheckCircle2, ShieldCheck, DollarSign } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 interface RecordPaymentModalProps {
   isOpen: boolean;
@@ -27,7 +27,7 @@ export function RecordPaymentModal({
   const [requestNumber, setRequestNumber] = useState(defaultRequestNumber);
   const [customerId, setCustomerId] = useState(defaultCustomerId);
   const [amount, setAmount] = useState(defaultAmount.toString());
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Card');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('Bank Transfer');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatusType>('Received');
   const [reference, setReference] = useState('');
   const [notes, setNotes] = useState('');
@@ -58,43 +58,38 @@ export function RecordPaymentModal({
         amount: parseFloat(amount) || 0,
         method: paymentMethod,
         status: paymentStatus,
-        gatewayReference: reference || `MANUAL-${Date.now().toString().slice(-6)}`,
-        partsSummary: 'Automotive Replacement Parts Order',
+        bankReference: reference || `BNZ-WIRE-${Math.floor(100000 + Math.random() * 900000)}`,
+        internalNotes: notes ? [notes] : undefined,
       });
 
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
-        setIsSubmitting(false);
         onClose();
       }, 1000);
     } catch (err) {
       console.error(err);
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Record Customer Payment">
+    <Modal isOpen={isOpen} onClose={onClose} size="md" title="Record & Reconcile Payment">
       {success ? (
-        <div className="py-8 text-center space-y-3">
-          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-            <CheckCircle2 className="w-6 h-6" />
+        <div className="py-8 text-center space-y-2">
+          <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Check className="w-6 h-6 stroke-[3]" />
           </div>
-          <h4 className="text-base font-bold text-slate-900">Payment Recorded Successfully</h4>
+          <h3 className="text-base font-black text-slate-900">Payment Successfully Recorded</h3>
           <p className="text-xs text-slate-500">
-            Ledger updated, receipt generated, and financial clearance registered.
+            Payment allocated to {requestNumber || 'request'} and financial clearance status updated.
           </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center gap-2.5 text-xs text-emerald-800">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>All recorded payments automatically generate audit trails and tax invoices.</span>
-          </div>
-
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Customer Account</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Select Customer</label>
             <Select
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
@@ -105,23 +100,21 @@ export function RecordPaymentModal({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Request # (Optional)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Request Ref (AH-P-XXX)</label>
               <Input
                 value={requestNumber}
                 onChange={(e) => setRequestNumber(e.target.value)}
                 placeholder="e.g. AH-P-000123"
-                className="w-full text-xs"
+                className="w-full text-xs font-mono font-bold"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Amount (NZD incl. GST)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Amount (NZD incl GST)</label>
               <Input
                 type="number"
                 step="0.01"
-                required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="485.00"
                 className="w-full text-xs"
               />
             </div>
@@ -134,11 +127,11 @@ export function RecordPaymentModal({
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
                 options={[
-                  { value: 'Card', label: 'Credit / Debit Card (Stripe)' },
                   { value: 'Bank Transfer', label: 'Direct Bank Wire (BNZ / ANZ)' },
                   { value: 'Account2Account', label: 'Account2Account (Instant)' },
-                  { value: 'Trade Credit', label: 'Trade Credit Facility' },
+                  { value: 'Trade Credit', label: 'Trade Credit Facility (20th Mth Following)' },
                   { value: 'Direct Debit', label: 'Direct Debit' },
+                  { value: 'Card', label: 'Credit / Debit Card' },
                 ]}
                 className="w-full text-xs"
               />
@@ -160,11 +153,11 @@ export function RecordPaymentModal({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Gateway / Bank Reference</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Bank Remittance Reference</label>
             <Input
               value={reference}
               onChange={(e) => setReference(e.target.value)}
-              placeholder="e.g. ANZ-REF-99182 or Stripe ch_3N..."
+              placeholder="e.g. ANZ-REF-99182 or BNZ-WIRE-29182"
               className="w-full text-xs"
             />
           </div>

@@ -430,7 +430,7 @@ export interface FreightCarrierControl {
   category: 'Domestic Courier (NZ Post)' | 'Air Freight' | 'Sea Cargo' | 'Road Logistics';
   isEnabled: boolean;
   transitTime: string;
-  trackingIntegration: 'NZ Post Live API' | 'Mainfreight EDI' | 'Freightways Courier' | 'Manual Track';
+  trackingIntegration: 'NZ Post Live API' | 'NZ Post Courier' | 'Manual Track';
   statusNote: string;
   cutoffTime: string;
 }

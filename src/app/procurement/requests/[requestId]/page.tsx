@@ -59,14 +59,15 @@ export default function ProcurementRequestDetailPage() {
     );
   };
 
-  const initialRequest = resolveRequest(rawId);
-  const [request, setRequest] = useState<ProcurementRequest>(initialRequest);
+  const [mounted, setMounted] = useState(false);
+  const [request, setRequest] = useState<ProcurementRequest>(() => resolveRequest(rawId));
   const [quotes, setQuotes] = useState<SupplierQuoteItem[]>(() => {
-    const list = procurementService.getQuotesByRequestId(initialRequest.id);
+    const list = procurementService.getQuotesByRequestId(resolveRequest(rawId).id);
     return list.length > 0 ? list : INITIAL_SUPPLIER_QUOTES.slice(0, 3);
   });
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrderItem[]>(() => {
-    const pos = procurementService.getPurchaseOrders().filter((p) => p.requestId === initialRequest.id || p.requestRef === initialRequest.requestNumber);
+    const initReq = resolveRequest(rawId);
+    const pos = procurementService.getPurchaseOrders().filter((p) => p.requestId === initReq.id || p.requestRef === initReq.requestNumber);
     return pos.length > 0 ? pos : INITIAL_PURCHASE_ORDERS.slice(0, 2);
   });
   const [activeTab, setActiveTab] = useState<
@@ -89,6 +90,7 @@ export default function ProcurementRequestDetailPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
     loadData();
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_procurement_updated', handleUpdate);
@@ -123,8 +125,18 @@ export default function ProcurementRequestDetailPage() {
     'Activity',
   ];
 
+  if (!mounted) {
+    return (
+      <div suppressHydrationWarning className="space-y-6 animate-pulse">
+        <div className="h-44 bg-[#0B1120] rounded-2xl border border-slate-800" />
+        <div className="h-16 bg-white rounded-2xl border border-slate-200" />
+        <div className="h-96 bg-white rounded-2xl border border-slate-200" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div suppressHydrationWarning className="space-y-6">
       {/* 0. INTERACTIVE END-TO-END FLOW NAVIGATOR & ROLE SWITCHER */}
       <EndToEndFlowNavigator
         requestId={request.requestNumber}
@@ -554,13 +566,28 @@ export default function ProcurementRequestDetailPage() {
       {/* TAB: PURCHASE ORDER */}
       {activeTab === 'Purchase Order' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+          {/* Hard Rule 2 Banner */}
+          {!['Payment Received', 'Ordered', 'Ordered From Supplier', 'Received At Shipping Facility', 'In Transit', 'Customs Clearance', 'Delivered', 'Closed'].includes(request.status) && (
+            <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-xl text-xs text-amber-900 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-black uppercase tracking-wider block text-amber-800">
+                  Hard Rule 2 Enforcement — Financial Clearance Required
+                </span>
+                <p className="mt-0.5 text-amber-700">
+                  &ldquo;No procurement activity shall commence until payment confirmation or approved credit account verification.&rdquo; PO creation to overseas supplier (Tokyo Auto Spares) will unlock once Finance marks payment as received.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="text-sm font-bold text-slate-900">Purchase Orders Issued ({purchaseOrders.length})</h3>
             <button
               onClick={() => setCreatePOOpen(true)}
-              className="btn-red-polished text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1"
+              className="btn-red-polished text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm"
             >
-              <ShoppingCart className="w-3.5 h-3.5" /> Issue New PO
+              <ShoppingCart className="w-3.5 h-3.5" /> Issue Supplier PO
             </button>
           </div>
 

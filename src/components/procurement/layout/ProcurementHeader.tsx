@@ -36,7 +36,7 @@ export function ProcurementHeader({
 }: ProcurementHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(procurementService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<ProcurementStaffUser>(() => procurementService.getStaffUsers()[0]);
   const [notifications, setNotifications] = useState<ProcurementNotificationItem[]>([]);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [quickActionOpen, setQuickActionOpen] = useState(false);

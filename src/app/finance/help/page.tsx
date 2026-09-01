@@ -21,11 +21,11 @@ export default function FinanceHelpPage() {
   const faqs = [
     {
       q: 'How does an order transition from Customer Approval to Procurement Release?',
-      a: 'When a customer approves a quotation, the order enters the "Awaiting Payment" state. Once payment is settled via Stripe Card, direct bank wire, or verified against an active Trade Credit facility, a Finance specialist grants "Financial Clearance", unlocking PO generation for the Procurement team.',
+      a: 'When a customer approves a quotation, the order enters the "Awaiting Payment" state. Once payment is settled via Direct Bank Transfer (Account2Account or manual wire) or verified against an active Trade Credit facility (20th of Month Following), a Finance specialist grants "Financial Clearance", unlocking procurement for the operations team.',
     },
     {
       q: 'What is the required workflow for processing customer refunds?',
-      a: 'Refunds must progress through three audited stages: 1. Intake Reason Review (verifying supplier unavailability or customer cancellation before dispatch), 2. Finance Risk & Threshold Approval, and 3. Gateway Settlement Execution. Each step permanently logs actor attribution in the ledger.',
+      a: 'Refunds must progress through three audited stages: 1. Intake Reason Review (verifying supplier unavailability or customer cancellation before dispatch), 2. Finance Risk & Threshold Approval, and 3. Bank Remittance Settlement Execution. Each step permanently logs actor attribution in the ledger.',
     },
     {
       q: 'How are Trade Credit account limits monitored and placed on hold?',
@@ -39,8 +39,8 @@ export default function FinanceHelpPage() {
 
   const sops = [
     {
-      title: 'SOP-FIN-001: Commercial Payment Settlement & Gateway Clearance',
-      description: 'Step-by-step standard operating procedure for Stripe webhook reconciliation and BNZ manual wire verification.',
+      title: 'SOP-FIN-001: Commercial Payment Settlement & Bank Feed Clearance',
+      description: 'Step-by-step standard operating procedure for Account2Account settlements and BNZ manual wire verification.',
       icon: CreditCard,
     },
     {

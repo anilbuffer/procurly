@@ -34,7 +34,7 @@ export function PaymentModal({
   onPaymentSuccess,
 }: PaymentModalProps) {
   const [selectedMethod, setSelectedMethod] = useState<
-    'Approved Trade Credit (20th Mth Following)' | 'Credit Card (Visa/Mastercard)' | 'Account2Account Bank Transfer'
+    'Approved Trade Credit (20th Mth Following)' | 'Account2Account Bank Transfer'
   >('Approved Trade Credit (20th Mth Following)');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -172,37 +172,7 @@ export function PaymentModal({
               </div>
             </label>
 
-            {/* Option 2: Credit Card */}
-            <label
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${selectedMethod === 'Credit Card (Visa/Mastercard)'
-                  ? 'border-[#ed2025] bg-red-50/30 ring-2 ring-red-100 shadow-sm'
-                  : 'border-slate-200 hover:border-slate-300 bg-white'
-                }`}
-            >
-              <input
-                type="radio"
-                name="paymentMethod"
-                checked={selectedMethod === 'Credit Card (Visa/Mastercard)'}
-                onChange={() => setSelectedMethod('Credit Card (Visa/Mastercard)')}
-                className="mt-1"
-              />
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-slate-700" />
-                    <span className="text-xs font-bold text-slate-900">
-                      Company Credit / Debit Card
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-slate-400 font-mono">Visa • Mastercard • AMEX</span>
-                </div>
-                <p className="text-xs text-slate-500">
-                  Instant secure payment gateway via Stripe 256-bit SSL encryption.
-                </p>
-              </div>
-            </label>
-
-            {/* Option 3: Account2Account / Poli */}
+            {/* Option 2: Account2Account / Direct Bank Transfer */}
             <label
               className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start gap-3.5 block ${selectedMethod === 'Account2Account Bank Transfer'
                   ? 'border-[#ed2025] bg-red-50/30 ring-2 ring-red-100 shadow-sm'

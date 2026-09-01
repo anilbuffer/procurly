@@ -40,7 +40,7 @@ export default function HelpPage() {
     },
     {
       q: 'How does payment and trade credit billing work?',
-      a: 'Approved automotive trade customers can charge procurement directly to their 20th Month Following trade account ($50,000 credit limit). Alternatively, credit card and POLi direct bank deposit options are supported.',
+      a: 'Approved automotive trade customers can charge procurement directly to their 20th Month Following trade account ($50,000 credit limit). Alternatively, Account2Account / POLi direct bank deposit and manual bank wire transfer options are supported.',
     },
     {
       q: 'What is the return policy for procurement parts?',

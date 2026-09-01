@@ -140,15 +140,33 @@ class MockRequestsService {
 
   async getRequestById(id: string): Promise<PartRequest | null> {
     const list = this.getItem<PartRequest[]>(REQUESTS_KEY, INITIAL_REQUESTS);
-    return (
-      list.find(
-        (r) =>
-          r.id === id ||
-          r.referenceNumber.toLowerCase() === id.toLowerCase() ||
-          r.referenceNumber.toLowerCase().replace(/[^a-z0-9]/g, '') ===
-            id.toLowerCase().replace(/[^a-z0-9]/g, '')
-      ) || null
+    const clean = id.trim().toLowerCase();
+    const match = list.find(
+      (r) =>
+        r.id.toLowerCase() === clean ||
+        r.referenceNumber.toLowerCase() === clean ||
+        r.referenceNumber.toLowerCase().replace(/[^a-z0-9]/g, '') === clean.replace(/[^a-z0-9]/g, '')
     );
+    if (match) return match;
+
+    const baseReq = list.find((r) => r.id === 'req_123' || r.referenceNumber === 'AH-P-000123') || list[0];
+    if (baseReq) {
+      const numPart = id.replace(/[^0-9]/g, '') || '000143';
+      const formattedRef = id.toUpperCase().includes('AH-P-')
+        ? id.toUpperCase()
+        : `AH-P-${numPart.padStart(6, '0')}`;
+      const formattedId = id.toLowerCase().startsWith('req_')
+        ? id.toLowerCase()
+        : `req_${numPart.padStart(6, '0')}`;
+
+      return {
+        ...JSON.parse(JSON.stringify(baseReq)),
+        id: formattedId,
+        referenceNumber: formattedRef,
+      };
+    }
+
+    return null;
   }
 
   async getRequestByRef(ref: string): Promise<PartRequest | null> {
@@ -483,7 +501,7 @@ class MockRequestsService {
 
   async processPayment(
     paymentId: string,
-    method: 'Approved Trade Credit (20th Mth Following)' | 'Credit Card (Visa/Mastercard)' | 'Account2Account Bank Transfer'
+    method: 'Approved Trade Credit (20th Mth Following)' | 'Account2Account Bank Transfer' | 'Direct Bank Wire'
   ): Promise<PaymentTransaction | null> {
     const payments = this.getItem<PaymentTransaction[]>(PAYMENTS_KEY, INITIAL_PAYMENTS);
     const item = payments.find((p) => p.id === paymentId || p.paymentNumber === paymentId || p.requestId === paymentId);

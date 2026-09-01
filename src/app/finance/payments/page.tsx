@@ -212,10 +212,11 @@ export default function FinancePaymentsPage() {
             className="px-3 py-2 bg-slate-50 text-xs font-semibold text-slate-700 rounded-xl border border-slate-200 focus:outline-none"
           >
             <option value="All">All Payment Methods</option>
-            <option value="Card">Card (Stripe)</option>
-            <option value="Bank">Bank Transfer</option>
+            <option value="Bank">Direct Bank Transfer</option>
             <option value="Account2Account">Account2Account</option>
-            <option value="Trade Credit">Trade Credit</option>
+            <option value="Trade Credit">Trade Credit (20th Mth Following)</option>
+            <option value="Direct Debit">Direct Debit</option>
+            <option value="Card">Credit / Debit Card</option>
           </select>
 
           {/* Customer Filter */}

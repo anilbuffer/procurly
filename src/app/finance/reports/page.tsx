@@ -38,12 +38,12 @@ export default function FinancialReportsHubPage() {
     },
     {
       title: 'Transaction Ledgers & Reconciliations',
-      description: 'Complete audit-ready financial transaction ledger covering card settlements, bank wires, and refunds.',
+      description: 'Complete audit-ready financial transaction ledger covering bank wire settlements, A2A transfers, and refunds.',
       href: '/finance/reports/transactions',
       icon: BarChart3,
       badge: 'Ledger Audit',
       color: 'indigo',
-      subReports: ['Stripe Settlement Batches', 'Direct Bank Wire Audit', 'Rebate & Refund Adjustments', 'Merchant Fee Deductions'],
+      subReports: ['Bank Wire Settlement Batches', 'Direct Bank Feed Audit', 'Rebate & Refund Adjustments', 'Trade Account Reconciliations'],
     },
     {
       title: 'Trade Credit Facility Utilization',

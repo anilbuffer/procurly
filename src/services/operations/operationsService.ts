@@ -34,7 +34,7 @@ import {
 } from './mockData';
 import { syncRequestStatusAcrossRoles } from '@/lib/syncCrossRoleStore';
 
-const STORAGE_KEY_USER = 'procurly_ops_current_user_v1';
+const STORAGE_KEY_USER = 'procurly_ops_current_user_v2';
 const STORAGE_KEY_REQUESTS = 'procurly_ops_requests_v1';
 const STORAGE_KEY_CUSTOMERS = 'procurly_ops_customers_v1';
 const STORAGE_KEY_EXCEPTIONS = 'procurly_ops_exceptions_v1';
@@ -64,13 +64,40 @@ class OperationsService {
   public getCurrentUser(): OperationsStaffUser {
     if (!this.isBrowser()) return INITIAL_STAFF_USERS[0];
     try {
+      // Remove legacy keys with stale Admin data if present
+      const legacyKeys = ['procurly_ops_current_user_v1', 'procurly_ops_current_user', 'procurly_ops_user'];
+      legacyKeys.forEach((key) => {
+        try {
+          if (localStorage.getItem(key)) localStorage.removeItem(key);
+        } catch (e) {}
+      });
+
       const stored = localStorage.getItem(STORAGE_KEY_USER);
       if (stored) {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        // Verify this is a legitimate Operations staff member and NOT 'Admin User' or 'Administrator'
+        if (
+          parsed &&
+          parsed.id &&
+          parsed.role &&
+          parsed.name !== 'Admin User' &&
+          parsed.role !== 'Administrator' &&
+          parsed.roleTitle !== 'Systems Administrator' &&
+          INITIAL_STAFF_USERS.some(
+            (u) => u.id === parsed.id || u.name === parsed.name || u.role === parsed.role
+          )
+        ) {
+          return parsed;
+        }
       }
     } catch (e) {
       console.error(e);
     }
+
+    // Persist and return valid Operations default staff user
+    try {
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(INITIAL_STAFF_USERS[0]));
+    } catch (e) {}
     return INITIAL_STAFF_USERS[0];
   }
 
@@ -80,8 +107,13 @@ class OperationsService {
 
   public switchUser(userOrRole: OperationsRole | string): OperationsStaffUser {
     const matched =
-      INITIAL_STAFF_USERS.find((u) => u.role === userOrRole || u.id === userOrRole || u.name.toLowerCase().includes(userOrRole.toLowerCase())) ||
-      INITIAL_STAFF_USERS[0];
+      INITIAL_STAFF_USERS.find(
+        (u) =>
+          u.role === userOrRole ||
+          u.id === userOrRole ||
+          u.name.toLowerCase().includes(userOrRole.toLowerCase()) ||
+          u.roleTitle.toLowerCase().includes(userOrRole.toLowerCase())
+      ) || INITIAL_STAFF_USERS[0];
 
     if (this.isBrowser()) {
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(matched));
@@ -125,9 +157,45 @@ class OperationsService {
   public getRequestById(idOrRef: string): OperationalPartRequest | undefined {
     const reqs = this.getRequests();
     const clean = idOrRef.trim().toLowerCase();
-    return reqs.find(
-      (r) => r.id.toLowerCase() === clean || r.referenceNumber.toLowerCase() === clean
+    const match = reqs.find(
+      (r) =>
+        r.id.toLowerCase() === clean ||
+        r.referenceNumber.toLowerCase() === clean ||
+        r.referenceNumber.toLowerCase().replace(/[^a-z0-9]/g, '') === clean.replace(/[^a-z0-9]/g, '')
     );
+    if (match) return match;
+
+    // Gracefully instantiate dynamic prototype for any requested reference (e.g. AH-P-000143)
+    const baseReq = reqs.find((r) => r.id === 'req_000123' || r.referenceNumber === 'AH-P-000123') || reqs[0];
+    if (baseReq) {
+      const numPart = idOrRef.replace(/[^0-9]/g, '') || '000143';
+      const formattedRef = idOrRef.toUpperCase().includes('AH-P-')
+        ? idOrRef.toUpperCase()
+        : `AH-P-${numPart.padStart(6, '0')}`;
+      const formattedId = idOrRef.toLowerCase().startsWith('req_')
+        ? idOrRef.toLowerCase()
+        : `req_${numPart.padStart(6, '0')}`;
+
+      return {
+        ...JSON.parse(JSON.stringify(baseReq)),
+        id: formattedId,
+        referenceNumber: formattedRef,
+        customerQuote: baseReq.customerQuote
+          ? {
+              ...baseReq.customerQuote,
+              quoteNumber: `QUO-${formattedRef.replace('AH-P-', '')}-v1`,
+            }
+          : undefined,
+        payment: baseReq.payment
+          ? {
+              ...baseReq.payment,
+              paymentNumber: `PAY-${formattedRef.replace('AH-P-', '')}`,
+            }
+          : undefined,
+      };
+    }
+
+    return undefined;
   }
 
   public saveRequests(reqs: OperationalPartRequest[]) {

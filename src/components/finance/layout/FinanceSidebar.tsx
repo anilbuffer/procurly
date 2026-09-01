@@ -38,7 +38,7 @@ export function FinanceSidebar({
   onOpenRecordPayment,
 }: FinanceSidebarProps) {
   const pathname = usePathname();
-  const [currentUser, setCurrentUser] = useState<FinanceStaffUser>(financeService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<FinanceStaffUser>(() => financeService.getStaffUsers()[0]);
   const [staffUsers, setStaffUsers] = useState<FinanceStaffUser[]>(financeService.getStaffUsers());
   const [openTasksCount, setOpenTasksCount] = useState(0);
   const [unreadNotifsCount, setUnreadNotifsCount] = useState(0);

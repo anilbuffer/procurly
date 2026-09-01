@@ -132,8 +132,8 @@ export function QuoteComparisonModal({
                     key={opt.id}
                     onClick={() => setSelectedQuoteId(opt.id)}
                     className={`p-5 rounded-2xl border-2 cursor-pointer transition-all relative ${isSelected
-                        ? 'border-[#ed2025] bg-red-50/20 ring-2 ring-red-100 shadow-md'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                      ? 'border-[#ed2025] bg-red-50/20 ring-2 ring-red-100 shadow-md'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
                       }`}
                   >
                     {opt.isRecommended && (
@@ -206,14 +206,42 @@ export function QuoteComparisonModal({
             </div>
           )}
 
-          {/* 4. Verification Checkboxes & Acceptance */}
-          <div className="p-4 bg-white rounded-2xl border border-slate-200 space-y-3">
-            <div className="flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-wider">
-              <FileCheck className="w-4 h-4 text-brand-blue" />
-              <span>Confirm Your Procurement</span>
+          {/* 4. Verification Checkboxes & Acceptance (Step 7: 5-Point Confirmation) */}
+          <div className="p-4 bg-white rounded-2xl border-2 border-slate-200 space-y-3.5">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-xs font-black text-slate-900 uppercase tracking-wider">
+                <FileCheck className="w-4 h-4 text-[#ed2025]" />
+                <span>Point Verification Before Acceptance</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded">
+                Electronic Acceptance
+              </span>
             </div>
 
-            <div className="space-y-2.5 pt-1">
+            {/* 5 Points Verification Summary List */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">1. Vehicle Verified</span>
+                <span className="font-semibold text-slate-800">{request.vehicle.year} {request.vehicle.make} {request.vehicle.model} (VIN: {request.vehicle.vin})</span>
+              </div>
+
+              <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">2. Part Verified</span>
+                <span className="font-semibold text-slate-800">{request.parts[0]?.name || request.title} (OEM: {request.parts[0]?.partNumber || '48069-26150'}) · Qty: {request.parts[0]?.quantity || 1}</span>
+              </div>
+
+              <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80">
+                <span className="text-[10px] font-bold text-slate-400 block uppercase">3. Delivery Address</span>
+                <span className="font-semibold text-slate-800">{request.deliveryAddress?.businessName || 'AutoCare Auckland'}, {request.deliveryAddress?.street || '12 Example St'}, {request.deliveryAddress?.city || 'Auckland'}</span>
+              </div>
+
+              <div className="p-2.5 bg-red-50/60 rounded-xl border border-red-200">
+                <span className="text-[10px] font-bold text-red-600 block uppercase">4. Selected Freight</span>
+                <span className="font-black text-slate-900">{selectedQuote?.name} ({formatNZD(selectedQuote?.totalLandedCostNZD || 485.0)})</span>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-1 border-t border-slate-100">
               <label className="flex items-start gap-2.5 text-xs text-slate-700 cursor-pointer">
                 <input
                   type="checkbox"
@@ -222,7 +250,7 @@ export function QuoteComparisonModal({
                   className="mt-0.5 rounded border-slate-300 text-[#ed2025] focus:ring-[#ed2025]"
                 />
                 <span>
-                  I confirm the vehicle information ({request.vehicle.year} {request.vehicle.make} {request.vehicle.model}, VIN {request.vehicle.vin}) and requested part specifications are correct.
+                  <strong>I confirm</strong> the vehicle specifications, part fitment details, and delivery address are accurate.
                 </span>
               </label>
 
@@ -234,7 +262,7 @@ export function QuoteComparisonModal({
                   className="mt-0.5 rounded border-slate-300 text-[#ed2025] focus:ring-[#ed2025]"
                 />
                 <span>
-                  I accept the <strong>Procurly Procurement Terms & Conditions</strong> and authorize Autohub to coordinate overseas procurement on behalf of <strong>AutoCare Auckland</strong>.
+                  <strong>I accept the Autohub Terms of Procurement</strong> and authorize procurement of this consignment on behalf of <strong>AutoCare Auckland</strong> (Recorded user: James Wilson).
                 </span>
               </label>
             </div>

@@ -51,7 +51,7 @@ export default function HowItWorksPage() {
           {/* Quick-Jump Stage Pills */}
           <div className="pt-4 flex flex-wrap justify-center gap-2 sm:gap-3">
             {[
-              { num: '01', title: 'Digital Request & VIN Decode' },
+              { num: '01', title: 'Digital Request & Fitment Verification' },
               { num: '02', title: 'Global Sourcing & Landed Quote' },
               { num: '03', title: 'Export Crating & Air Dispatch' },
               { num: '04', title: 'Bonded Clearance & Hoist Delivery' },
@@ -63,24 +63,24 @@ export default function HowItWorksPage() {
                 <span className="w-5 h-5 rounded-md bg-brand-red text-white text-[10px] font-mono font-bold flex items-center justify-center">
                   {step.num}
                 </span>
-                <span className="font-heading font-semibold">{step.title}</span>
+                <span>{step.title}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* STAGE 1: DIGITAL REQUEST & VIN VALIDATION (PURE WHITE) */}
-      <section className="w-full bg-white border-b border-slate-200/80 py-16 sm:py-20 lg:py-24">
+      {/* Stage 01: Vehicle Intake & Fitment Verification */}
+      <section id="stage-1" className="py-12 sm:py-16 md:py-20 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Content */}
-            <div className="lg:col-span-6 space-y-4 sm:space-y-5 text-left">
-              <span className="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-brand-red bg-red-50 px-3 py-1 rounded-full border border-red-200 uppercase">
+            <div className="lg:col-span-6 space-y-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-brand-red text-xs font-bold font-mono tracking-wide border border-red-200 uppercase">
                 Stage 01 • Vehicle Verification
               </span>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-heading font-extrabold text-slate-900 tracking-tight">
-                Request Submission & Automated VIN Fitment Validation
+                Request Submission & Vehicle Fitment Verification
               </h2>
               <p className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed">
                 When a vehicle arrives at your workshop with damaged, missing, or unavailable components, submit a request via Procurly using the VIN, chassis code (e.g. GUN126R, ZE1, G20), or OEM part number. You can attach photos of the vehicle identification plate or damaged assembly directly.
@@ -89,7 +89,7 @@ export default function HowItWorksPage() {
               <div className="space-y-2.5 pt-2 text-xs sm:text-sm text-slate-700">
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-brand-red shrink-0 mt-0.5" />
-                  <span><strong>Instant 17-Digit VIN Decode:</strong> Cross-referenced against Japanese Domestic Market (JDM), European, Australian, and US OEM parts catalogs.</span>
+                  <span><strong>17-Digit VIN & Chassis Verification:</strong> Manually entered VINs cross-referenced by specialists against Japanese Domestic Market (JDM), European, Australian, and US OEM parts catalogs.</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-brand-red shrink-0 mt-0.5" />
@@ -112,7 +112,7 @@ export default function HowItWorksPage() {
                   <span className="ml-2 text-xs text-slate-400 font-sans font-bold">EPC_VALIDATION_MATRIX.ts</span>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                  DECODED
+                  VERIFIED
                 </span>
               </div>
 

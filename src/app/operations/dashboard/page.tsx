@@ -496,8 +496,8 @@ export default function OperationsDashboardPage() {
               <p className="text-sm font-black text-slate-900">Hyundai Santa Fe Brake Booster</p>
               <p className="text-xs text-slate-500 mt-0.5">Customer: AutoCare Auckland (Penrose)</p>
               <div className="my-3 text-xs text-slate-600 bg-white p-2 rounded border border-slate-200">
-                <p><span className="font-semibold text-slate-500">Carrier:</span> Mainfreight Air Express</p>
-                <p><span className="font-semibold text-slate-500">Tracking:</span> MF-AKL-882109</p>
+                <p><span className="font-semibold text-slate-500">Carrier:</span> NZ Post Air Express</p>
+                <p><span className="font-semibold text-slate-500">Tracking:</span> NZP-AKL-882109</p>
               </div>
             </div>
             <Link

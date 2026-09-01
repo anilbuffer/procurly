@@ -143,8 +143,8 @@ export default function ShipmentsCommandPage() {
               {shipmentRequests.map((req) => {
                 const shp = req.shipment;
                 const shpNumber = shp?.shipmentNumber || `SHP-${req.referenceNumber.replace('AH-P-', '')}`;
-                const carrier = shp?.carrier || 'DHL Express';
-                const tracking = shp?.trackingCode || 'DHL-NZ-9428-1192';
+                const carrier = shp?.carrier || 'NZ Post Express Courier';
+                const tracking = shp?.trackingCode || 'NZP-CP-9428-1192';
                 const eta = shp?.etaDate || '18 Sep 2026';
 
                 return (

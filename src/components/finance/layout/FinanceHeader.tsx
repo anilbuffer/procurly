@@ -39,7 +39,7 @@ export function FinanceHeader({
 }: FinanceHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<FinanceStaffUser>(financeService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<FinanceStaffUser>(() => financeService.getStaffUsers()[0]);
   const [notifications, setNotifications] = useState<FinanceNotification[]>([]);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [quickActionOpen, setQuickActionOpen] = useState(false);

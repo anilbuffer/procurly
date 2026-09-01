@@ -32,7 +32,7 @@ import {
   MessageSquare,
   Truck,
   Box,
-  CreditCard,
+  FileText,
 } from 'lucide-react';
 
 export default function RequestDetailsPage() {
@@ -122,6 +122,82 @@ export default function RequestDetailsPage() {
     setDocModalOpen(true);
   };
 
+  const handleDownloadInvoice = async () => {
+    if (!request) return;
+    const docs = await requestsService.getDocuments('Invoices');
+    const doc = docs.find((d) => d.id === 'doc_123_inv' || d.requestId === request.id || d.requestNumber === request.referenceNumber);
+    if (doc) {
+      setDocumentToView(doc);
+    } else {
+      const topQuote = request.quoteOptions?.find((q) => q.isRecommended) || request.quoteOptions?.[0];
+      const generatedDoc: PortalDocument = {
+        id: `doc_${request.id}_inv`,
+        title: `Tax Invoice — INV-2026-000123`,
+        category: 'Invoices',
+        requestId: request.id,
+        requestNumber: request.referenceNumber,
+        date: formatDate(request.createdAt),
+        fileFormat: 'PDF',
+        fileSizeBytes: 310000,
+        fileSizeFormatted: '310 KB',
+        documentType: 'Tax Invoice',
+        previewData: {
+          invoiceNumber: 'INV-2026-000123',
+          customerName: 'AutoCare Auckland (James Wilson)',
+          vehicleDetails: `${request.vehicle.year} ${request.vehicle.make} ${request.vehicle.model} (VIN: ${request.vehicle.vin})`,
+          partDetails: `${request.parts[0]?.name || request.title} (OEM: ${request.parts[0]?.partNumber || '48069-26150'})`,
+          items: [
+            { desc: `${request.parts[0]?.name || request.title} (Genuine OEM Toyota)`, qty: 1, unitPrice: topQuote?.partCostNZD || 350.0, total: topQuote?.partCostNZD || 350.0 },
+            { desc: 'International Air Freight (Priority Express NZ Post)', qty: 1, unitPrice: topQuote?.freightCostNZD || 85.0, total: topQuote?.freightCostNZD || 85.0 },
+            { desc: 'Autohub Verified Procurement & Logistics Service', qty: 1, unitPrice: topQuote?.procurementServiceNZD || 50.0, total: topQuote?.procurementServiceNZD || 50.0 },
+          ],
+          subtotal: topQuote?.totalLandedCostNZD || 485.0,
+          gst: 0.0,
+          total: topQuote?.totalLandedCostNZD || 485.0,
+        },
+      };
+      setDocumentToView(generatedDoc);
+    }
+    setDocModalOpen(true);
+  };
+
+  const handleDownloadReceipt = async () => {
+    if (!request) return;
+    const docs = await requestsService.getDocuments('Payment Receipts');
+    const doc = docs.find((d) => d.id === 'doc_123_rcp' || d.requestId === request.id || d.requestNumber === request.referenceNumber);
+    if (doc) {
+      setDocumentToView(doc);
+    } else {
+      const topQuote = request.quoteOptions?.find((q) => q.isRecommended) || request.quoteOptions?.[0];
+      const generatedDoc: PortalDocument = {
+        id: `doc_${request.id}_rcp`,
+        title: `Payment Receipt — RCP-2026-000123`,
+        category: 'Payment Receipts',
+        requestId: request.id,
+        requestNumber: request.referenceNumber,
+        date: formatDate(request.createdAt),
+        fileFormat: 'PDF',
+        fileSizeBytes: 180000,
+        fileSizeFormatted: '180 KB',
+        documentType: 'Receipt',
+        previewData: {
+          quoteNumber: 'RCP-2026-000123',
+          customerName: 'AutoCare Auckland (James Wilson)',
+          vehicleDetails: `${request.vehicle.year} ${request.vehicle.make} ${request.vehicle.model} (VIN: ${request.vehicle.vin})`,
+          partDetails: `${request.parts[0]?.name || request.title} (OEM: ${request.parts[0]?.partNumber || '48069-26150'})`,
+          items: [
+            { desc: 'Payment received via Direct Trade Settlement / Bank Wire', qty: 1, unitPrice: topQuote?.totalLandedCostNZD || 485.0, total: topQuote?.totalLandedCostNZD || 485.0 },
+          ],
+          subtotal: topQuote?.totalLandedCostNZD || 485.0,
+          gst: 0.0,
+          total: topQuote?.totalLandedCostNZD || 485.0,
+        },
+      };
+      setDocumentToView(generatedDoc);
+    }
+    setDocModalOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="text-center py-20 text-slate-500 space-y-2">
@@ -147,35 +223,46 @@ export default function RequestDetailsPage() {
     );
   }
 
-  // 8-stage primary workflow timeline definition
-  const primaryWorkflow = [
-    { id: 'Request Submitted', label: 'Request Submitted' },
-    { id: 'Sourcing', label: 'Sourcing' },
-    { id: 'Quote Ready', label: 'Quote Ready' },
-    { id: 'Customer Approval', label: 'Customer Approval' },
-    { id: 'Payment', label: 'Payment' },
-    { id: 'Procurement', label: 'Procurement' },
-    { id: 'Shipping', label: 'Shipping' },
-    { id: 'Delivered', label: 'Delivered' },
-  ];
-
-  // Map request status to timeline index
+  // Master workflow mapping
   const getWorkflowStageIndex = (status: string) => {
-    if (status === 'Request Submitted') return 0;
-    if (status === 'Sourcing') return 1;
-    if (status === 'Quote Ready' || status === 'Quoted' || status === 'Awaiting Customer Approval') return 2;
-    if (status === 'Customer Approved') return 3;
-    if (status === 'Awaiting Payment' || status === 'Payment Pending') return 4;
-    if (status === 'Payment Received' || status === 'Ordered From Supplier' || status === 'Received At Shipping Facility') return 5;
-    if (status.includes('In Transit') || status === 'Customs Clearance' || status === 'Out For Delivery') return 6;
-    if (status === 'Delivered' || status === 'Completed') return 7;
+    const s = status.toLowerCase();
+    if (s.includes('submitted')) return 0;
+    if (s.includes('sourcing')) return 1;
+    if (s.includes('quote ready') || s.includes('quoted')) return 2;
+    if (s.includes('awaiting customer') || s.includes('customer approved')) return 3;
+    if (s.includes('awaiting payment') || s.includes('payment pending')) return 4;
+    if (s.includes('payment received') || s.includes('ordered from supplier') || s.includes('facility')) return 5;
+    if (s.includes('in transit') || s.includes('customs') || s.includes('out for delivery')) return 6;
+    if (s.includes('delivered') || s.includes('closed') || s.includes('completed')) return 7;
     return 2;
   };
 
+  const primaryWorkflow = [
+    { id: 'Request Submitted', label: '1. Submitted' },
+    { id: 'Sourcing', label: '2. Sourcing' },
+    { id: 'Quote Ready', label: '3. Quote Ready' },
+    { id: 'Customer Approval', label: '4. Approved' },
+    { id: 'Payment', label: '5. Payment' },
+    { id: 'Procurement', label: '6. Sourced PO' },
+    { id: 'Shipping', label: '7. In Transit' },
+    { id: 'Delivered', label: '8. Delivered' },
+  ];
+
   const currentStageIndex = getWorkflowStageIndex(request.status);
   const isQuoteReady = request.status === 'Quote Ready' || request.status === 'Quoted' || request.status === 'Awaiting Customer Approval';
-  const isAwaitingPayment = request.status === 'Awaiting Payment' || request.paymentStatus === 'Awaiting Payment';
+  const isAwaitingPayment = request.status === 'Awaiting Payment' || request.paymentStatus === 'Awaiting Payment' || request.status === 'Payment Pending';
   const isPaymentFailed = request.status === 'Payment Failed' || request.paymentStatus === 'Payment Failed';
+  const isPaid = [
+    'Payment Received',
+    'Ordered From Supplier',
+    'Received At Shipping Facility',
+    'In Transit',
+    'Arrived In New Zealand',
+    'Customs Clearance',
+    'Out For Delivery',
+    'Delivered',
+    'Closed',
+  ].includes(request.status) || request.paymentStatus === 'Payment Received';
 
   const topQuote = request.quoteOptions?.find((q) => q.isRecommended) || request.quoteOptions?.[0];
 
@@ -188,7 +275,7 @@ export default function RequestDetailsPage() {
         onStatusChanged={loadData}
       />
 
-      {/* 1. TOP HEADER & THE 5 CRITICAL QUESTIONS BOX */}
+      {/* 1. TOP HEADER & ACTION BUTTONS */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-card space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div className="flex items-center gap-3">
@@ -220,6 +307,29 @@ export default function RequestDetailsPage() {
             >
               Download Quote
             </Button>
+
+            {isPaid && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadInvoice}
+                  leftIcon={<FileText className="w-3.5 h-3.5 text-blue-600" />}
+                  className="text-xs font-semibold"
+                >
+                  Tax Invoice
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadReceipt}
+                  leftIcon={<ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />}
+                  className="text-xs font-semibold"
+                >
+                  Receipt
+                </Button>
+              </>
+            )}
 
             {isQuoteReady && (
               <Button
@@ -291,33 +401,30 @@ export default function RequestDetailsPage() {
                 <React.Fragment key={step.id}>
                   <div className="flex flex-col items-center text-center space-y-1.5 min-w-[80px]">
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${
-                        isCurrent
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${isCurrent
                           ? 'bg-[#ed2025] text-white ring-4 ring-red-100 shadow-md scale-110'
                           : isPast
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-100 text-slate-400 border border-slate-200'
-                      }`}
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-slate-100 text-slate-400 border border-slate-200'
+                        }`}
                     >
                       {isPast ? <CheckCircle2 className="w-4 h-4" /> : isCurrent ? '●' : '○'}
                     </div>
                     <span
-                      className={`text-[11px] leading-tight ${
-                        isCurrent
+                      className={`text-[11px] leading-tight ${isCurrent
                           ? 'font-black text-[#ed2025]'
                           : isPast
-                          ? 'font-bold text-slate-800'
-                          : 'text-slate-400 font-medium'
-                      }`}
+                            ? 'font-bold text-slate-800'
+                            : 'text-slate-400 font-medium'
+                        }`}
                     >
                       {step.label}
                     </span>
                   </div>
                   {idx < primaryWorkflow.length - 1 && (
                     <div
-                      className={`flex-1 h-0.5 mx-2 transition-colors ${
-                        idx < currentStageIndex ? 'bg-emerald-500' : 'bg-slate-200'
-                      }`}
+                      className={`flex-1 h-0.5 mx-2 transition-colors ${idx < currentStageIndex ? 'bg-emerald-500' : 'bg-slate-200'
+                        }`}
                     />
                   )}
                 </React.Fragment>
@@ -363,11 +470,10 @@ export default function RequestDetailsPage() {
                     return (
                       <div
                         key={opt.id}
-                        className={`p-5 rounded-2xl border-2 transition-all relative ${
-                          opt.isRecommended
+                        className={`p-5 rounded-2xl border-2 transition-all relative ${opt.isRecommended
                             ? 'border-[#ed2025] bg-red-50/20 shadow-sm'
                             : 'border-slate-200 bg-white'
-                        }`}
+                          }`}
                       >
                         {opt.isRecommended && (
                           <span className="absolute top-3 right-3 text-[10px] font-black uppercase tracking-wider bg-[#ed2025] text-white px-2 py-0.5 rounded-full">
@@ -377,9 +483,8 @@ export default function RequestDetailsPage() {
 
                         <div className="flex items-center gap-3 mb-2">
                           <div
-                            className={`p-2 rounded-xl ${
-                              isAir ? 'bg-red-50 text-[#ed2025]' : 'bg-blue-50 text-brand-blue'
-                            }`}
+                            className={`p-2 rounded-xl ${isAir ? 'bg-red-50 text-[#ed2025]' : 'bg-blue-50 text-brand-blue'
+                              }`}
                           >
                             {isAir ? <Plane className="w-5 h-5" /> : <Ship className="w-5 h-5" />}
                           </div>
@@ -538,11 +643,10 @@ export default function RequestDetailsPage() {
                     className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
                   >
                     <div
-                      className={`max-w-[88%] p-3 rounded-xl leading-relaxed ${
-                        m.sender === 'user'
+                      className={`max-w-[88%] p-3 rounded-xl leading-relaxed ${m.sender === 'user'
                           ? 'bg-slate-900 text-white rounded-br-none'
                           : 'bg-slate-100 text-slate-900 rounded-bl-none border border-slate-200'
-                      }`}
+                        }`}
                     >
                       <p className="text-[10px] font-bold opacity-75 mb-0.5">{m.senderName}</p>
                       <p>{m.text}</p>

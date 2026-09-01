@@ -5,19 +5,19 @@ import { ShieldCheck, Check, X, Lock } from 'lucide-react';
 
 export default function RolesPermissionsPage() {
   const matrix = [
-    { permission: 'View & Manage Requests', ops: true, proc: true, fin: true, admin: true },
-    { permission: 'Assign Staff / Request Owners', ops: true, proc: false, fin: false, admin: true },
-    { permission: 'Source Parts & RFQ Dispatch', ops: true, proc: true, fin: false, admin: true },
-    { permission: 'Add Supplier Wholesale Quotes', ops: true, proc: true, fin: false, admin: true },
-    { permission: 'Build & Send Customer Quotes', ops: true, proc: true, fin: false, admin: true },
-    { permission: 'Issue Purchase Orders (POs)', ops: true, proc: true, fin: false, admin: true },
-    { permission: 'Update Freight & Milestones', ops: true, proc: true, fin: false, admin: true },
-    { permission: 'Manage & Resolve Exceptions', ops: true, proc: true, fin: true, admin: true },
-    { permission: 'Reconcile Customer Payments', ops: true, proc: false, fin: true, admin: true },
-    { permission: 'Process Customer Refunds', ops: false, proc: false, fin: true, admin: true },
-    { permission: 'Approve Trade Customer Accounts', ops: true, proc: false, fin: true, admin: true },
-    { permission: 'Configure Margins & SLAs', ops: false, proc: false, fin: false, admin: true },
-    { permission: 'Manage Users & RBAC Matrix', ops: false, proc: false, fin: false, admin: true },
+    { permission: 'View & Manage Requests', ops: true, proc: true, fin: true },
+    { permission: 'Assign Staff / Request Owners', ops: true, proc: false, fin: false },
+    { permission: 'Source Parts & RFQ Dispatch', ops: true, proc: true, fin: false },
+    { permission: 'Add Supplier Wholesale Quotes', ops: true, proc: true, fin: false },
+    { permission: 'Build & Send Customer Quotes', ops: true, proc: true, fin: false },
+    { permission: 'Issue Purchase Orders (POs)', ops: true, proc: true, fin: false },
+    { permission: 'Update Freight & Milestones', ops: true, proc: true, fin: false },
+    { permission: 'Manage & Resolve Exceptions', ops: true, proc: true, fin: true },
+    { permission: 'Reconcile Customer Payments', ops: true, proc: false, fin: true },
+    { permission: 'Process Customer Refunds', ops: false, proc: false, fin: true },
+    { permission: 'Approve Trade Customer Accounts', ops: true, proc: false, fin: true },
+    { permission: 'Configure Margins & Freight Carriers', ops: true, proc: false, fin: false },
+    { permission: 'Manage Staff Desks & RBAC Matrix', ops: true, proc: false, fin: false },
   ];
 
   return (

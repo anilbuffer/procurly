@@ -194,7 +194,7 @@ export default function ProcurementHelpPage() {
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4 text-xs">
             <h3 className="font-bold uppercase tracking-wider text-slate-400 text-[11px] flex items-center gap-1.5">
               <LifeBuoy className="w-4 h-4 text-brand-blue" />
-              Contact Systems Administrator
+              Contact IT & Operations Support
             </h3>
 
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
@@ -219,7 +219,7 @@ export default function ProcurementHelpPage() {
             {issueSubmitted ? (
               <div className="p-4 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 text-center space-y-1">
                 <CheckCircle className="w-6 h-6 text-emerald-600 mx-auto" />
-                <p className="font-bold">Ticket Submitted to Administrator</p>
+                <p className="font-bold">Ticket Submitted to Support Team</p>
                 <p className="text-[11px] text-emerald-700">Reference: TKT-{Math.floor(1000 + Math.random() * 9000)}</p>
               </div>
             ) : (

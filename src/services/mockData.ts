@@ -1046,7 +1046,7 @@ export const INITIAL_PAYMENTS: PaymentTransaction[] = [
     status: 'Payment Received',
     dueDate: '2026-08-20',
     paidAt: '2026-08-20T10:05:00Z',
-    paymentMethod: 'Credit Card (Visa/Mastercard)',
+    paymentMethod: 'Account2Account Bank Transfer',
     receiptNumber: 'RCP-2026-0820-118',
   },
   {

@@ -19,12 +19,11 @@ export interface FinanceStaffUser {
 }
 
 export type PaymentMethodType =
-  | 'Card'
-  | 'Credit Card (Stripe)'
   | 'Bank Transfer'
   | 'Account2Account'
   | 'Trade Credit'
-  | 'Direct Debit';
+  | 'Direct Debit'
+  | 'Card';
 
 export type PaymentStatusType =
   | 'Received'
@@ -51,11 +50,12 @@ export interface FinancePayment {
   status: PaymentStatusType;
   paymentDate: string;
   dueDate?: string;
-  gatewayReference?: string; // Stripe ch_3Nx... or ANZ-Ref-992
-  authCode?: string;
-  bankAccountLast4?: string;
+  bankReference?: string; // e.g. BNZ-WIRE-992 or A2A-Ref-102
+  gatewayReference?: string;
   cardBrand?: string;
   cardLast4?: string;
+  authCode?: string;
+  bankAccountLast4?: string;
   allocatedBy?: string;
   internalNotes?: string[];
   failureReason?: string;

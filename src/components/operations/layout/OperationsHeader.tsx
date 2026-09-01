@@ -307,8 +307,16 @@ export function OperationsHeader({ onOpenMobileMenu }: OperationsHeaderProps) {
             {userDropdownOpen && (
               <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-2 z-50 animate-slide-up text-xs overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/50">
-                  <p className="font-bold text-slate-900">{currentUser.name}</p>
+                  <div className="flex items-center justify-between gap-1 mb-0.5">
+                    <p className="font-bold text-slate-900 text-xs">{currentUser.name}</p>
+                    <span className="text-[9px] font-black uppercase text-[#2B4499] bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200">
+                      {currentUser.role}
+                    </span>
+                  </div>
                   <p className="text-[11px] text-slate-500">{currentUser.email}</p>
+                  <p className="text-[10px] text-emerald-700 font-semibold mt-1 flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-emerald-600" /> {currentUser.roleTitle}
+                  </p>
                 </div>
                 <div className="pt-1 mt-1 border-t border-slate-100">
                   <button

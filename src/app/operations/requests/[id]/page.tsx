@@ -102,12 +102,25 @@ export default function RequestDetailWorkspacePage() {
     setStaffUsers(operationsService.getStaffUsers());
   };
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     loadData();
     const handleUpdate = () => loadData();
     window.addEventListener('procurly_ops_updated', handleUpdate);
     return () => window.removeEventListener('procurly_ops_updated', handleUpdate);
   }, [idOrRef]);
+
+  if (!mounted) {
+    return (
+      <div suppressHydrationWarning className="space-y-6 animate-pulse">
+        <div className="h-44 bg-[#0B1120] rounded-2xl border border-slate-800" />
+        <div className="h-16 bg-white rounded-2xl border border-slate-200" />
+        <div className="h-96 bg-white rounded-2xl border border-slate-200" />
+      </div>
+    );
+  }
 
   if (!request) {
     return (
@@ -938,8 +951,8 @@ export default function RequestDetailWorkspacePage() {
               <div>
                 <h2 className="text-base font-black text-slate-900">SHP-000123 — Air Freight Tracking</h2>
                 <p className="text-xs text-slate-500">
-                  Carrier: <span className="font-bold text-slate-800">DHL Express</span> · Tracking:{' '}
-                  <span className="font-mono font-bold text-[#2B4499]">DHL-NZ-9428-1192</span> · ETA:{' '}
+                  Carrier: <span className="font-bold text-slate-800">NZ Post International Air</span> · Tracking:{' '}
+                  <span className="font-mono font-bold text-[#2B4499]">NZP-AIR-9428-1192</span> · ETA:{' '}
                   <span className="font-bold text-emerald-700">18 September 2026</span>
                 </p>
               </div>

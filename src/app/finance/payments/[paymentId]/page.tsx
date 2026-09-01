@@ -28,6 +28,7 @@ import { ProcessRefundModal } from '@/components/finance/modals/ProcessRefundMod
 import { AuditHistoryModal } from '@/components/finance/modals/AuditHistoryModal';
 import { INITIAL_FINANCE_PAYMENTS } from '@/services/finance/mockData';
 import { EndToEndFlowNavigator } from '@/components/ui/EndToEndFlowNavigator';
+import { syncRequestStatusAcrossRoles } from '@/lib/syncCrossRoleStore';
 
 export default function PaymentDetailPage() {
   const params = useParams();
@@ -136,6 +137,23 @@ export default function PaymentDetailPage() {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          {!isReceived && (
+            <button
+              onClick={() => {
+                financeService.updatePaymentStatus(payment.id, 'Received', 'Payment confirmed & reconciled via BNZ wire');
+                syncRequestStatusAcrossRoles(payment.requestNumber, 'Payment Received', {
+                  actorName: 'Finance Specialist',
+                  note: `Payment of NZ$${payment.amount.toFixed(2)} reconciled. Procurement released.`,
+                });
+                loadData();
+              }}
+              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors shadow-md animate-pulse"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Confirm & Reconcile Payment →</span>
+            </button>
+          )}
+
           <button
             onClick={() => setAuditModalOpen(true)}
             className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/80 text-xs font-bold text-slate-700 flex items-center gap-1.5 transition-colors shadow-xs"
@@ -187,7 +205,9 @@ export default function PaymentDetailPage() {
               <div>
                 <span className="text-slate-400 font-medium block">Payment Method</span>
                 <span className="font-bold text-slate-900 block mt-0.5">{payment.method}</span>
-                <span className="text-[10px] text-slate-400 font-mono">{payment.gatewayReference}</span>
+                <span className="text-[10px] text-slate-400 font-mono">
+                  {payment.gatewayReference || payment.bankReference || 'REF-PENDING'}
+                </span>
               </div>
               <div>
                 <span className="text-slate-400 font-medium block">Customer</span>
@@ -277,7 +297,7 @@ export default function PaymentDetailPage() {
               <div>
                 <span className="text-slate-400 font-medium block">Gateway Reference</span>
                 <span className="font-mono font-bold text-slate-900 text-[11px] block mt-0.5">
-                  {payment.gatewayReference}
+                  {payment.gatewayReference || payment.bankReference || 'BNZ-CLEAR-REC'}
                 </span>
               </div>
               <div>
@@ -289,7 +309,11 @@ export default function PaymentDetailPage() {
               <div>
                 <span className="text-slate-400 font-medium block">Card Brand / Account</span>
                 <span className="font-bold text-slate-900 block mt-0.5">
-                  {payment.cardBrand ? `${payment.cardBrand} •••• ${payment.cardLast4}` : payment.method}
+                  {payment.cardBrand
+                    ? `${payment.cardBrand} •••• ${payment.cardLast4 || '••••'}`
+                    : payment.bankAccountLast4
+                    ? `Bank Acc •••• ${payment.bankAccountLast4}`
+                    : payment.method}
                 </span>
               </div>
               <div>

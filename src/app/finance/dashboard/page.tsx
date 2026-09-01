@@ -313,31 +313,31 @@ export default function FinanceDashboardPage() {
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="text-slate-700">Credit / Debit Card (Stripe)</span>
-                <span className="text-slate-900 font-bold">52% (NZ$48.2k)</span>
+                <span className="text-slate-700">Approved Trade Credit (20th Mth Following)</span>
+                <span className="text-slate-900 font-bold">62% (NZ$57.6k)</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full w-[52%]" />
+                <div className="h-full bg-emerald-500 rounded-full w-[62%]" />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="text-slate-700">Trade Credit Facility</span>
-                <span className="text-slate-900 font-bold">28% (NZ$26.1k)</span>
+                <span className="text-slate-700">Direct Bank Wire (BNZ / ANZ)</span>
+                <span className="text-slate-900 font-bold">24% (NZ$22.3k)</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-500 rounded-full w-[28%]" />
+                <div className="h-full bg-indigo-500 rounded-full w-[24%]" />
               </div>
             </div>
 
             <div>
               <div className="flex justify-between text-xs font-semibold mb-1">
-                <span className="text-slate-700">Bank Wire / Account2Account</span>
-                <span className="text-slate-900 font-bold">18% (NZ$16.8k)</span>
+                <span className="text-slate-700">Account2Account Direct Clearing</span>
+                <span className="text-slate-900 font-bold">14% (NZ$13.0k)</span>
               </div>
               <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-teal-500 rounded-full w-[18%]" />
+                <div className="h-full bg-teal-500 rounded-full w-[14%]" />
               </div>
             </div>
 

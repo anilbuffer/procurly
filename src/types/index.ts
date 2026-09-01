@@ -261,7 +261,7 @@ export interface PaymentTransaction {
   status: PaymentStatus;
   dueDate: string;
   paidAt?: string;
-  paymentMethod?: 'Approved Trade Credit (20th Mth Following)' | 'Credit Card (Visa/Mastercard)' | 'Account2Account Bank Transfer';
+  paymentMethod?: 'Approved Trade Credit (20th Mth Following)' | 'Account2Account Bank Transfer' | 'Direct Bank Wire';
   receiptNumber?: string;
 }
 
