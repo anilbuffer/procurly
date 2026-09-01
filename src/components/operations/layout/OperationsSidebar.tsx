@@ -50,7 +50,6 @@ export function OperationsSidebar({
 }: OperationsSidebarProps) {
   const pathname = usePathname();
   const [currentUser, setCurrentUser] = useState<OperationsStaffUser>(operationsService.getDefaultUser());
-  const [staffUsers, setStaffUsers] = useState<OperationsStaffUser[]>(operationsService.getStaffUsers());
   const [openTasksCount, setOpenTasksCount] = useState(0);
   const [exceptionsCount, setExceptionsCount] = useState(0);
   const [pendingCustCount, setPendingCustCount] = useState(0);
@@ -60,7 +59,6 @@ export function OperationsSidebar({
 
   const loadData = () => {
     setCurrentUser(operationsService.getCurrentUser());
-    setStaffUsers(operationsService.getStaffUsers());
     const tasks = operationsService.getTasks();
     setOpenTasksCount(tasks.filter((t) => t.status !== 'Completed').length);
     const excs = operationsService.getExceptions();
@@ -86,12 +84,6 @@ export function OperationsSidebar({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const handleSwitchUser = (user: OperationsStaffUser) => {
-    operationsService.switchUser(user.id);
-    setCurrentUser(user);
-    setProfileDropdownOpen(false);
-  };
 
   // ─── Navigation structure (Freight & Logistics Execution Focus) ──────────
   const navSections = [
@@ -335,73 +327,6 @@ export function OperationsSidebar({
               <p className="text-[10px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" /> {currentUser.department}
               </p>
-            </div>
-
-            {/* Staff / Persona Switcher */}
-            <div className="px-3 py-2 border-b border-slate-800">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block px-1 mb-1.5">
-                Switch Active Staff Persona
-              </span>
-              <div className="space-y-1">
-                {staffUsers.map((usr) => (
-                  <button
-                    key={usr.id}
-                    type="button"
-                    onClick={() => handleSwitchUser(usr)}
-                    className={cn(
-                      'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left transition-colors',
-                      currentUser.id === usr.id
-                        ? 'bg-slate-800 text-white font-bold ring-1 ring-slate-700'
-                        : 'hover:bg-slate-800/60 text-slate-300'
-                    )}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-5 h-5 rounded-md bg-blue-900/80 text-[10px] font-bold text-blue-200 flex items-center justify-center shrink-0">
-                        {usr.avatar}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="text-xs truncate">{usr.name}</p>
-                        <p className="text-[10px] text-slate-400 truncate">{usr.roleTitle}</p>
-                      </div>
-                    </div>
-                    {currentUser.id === usr.id && (
-                      <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800">
-                        Active
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Cross-Portal Quick Switch */}
-            <div className="px-3 py-2 border-b border-slate-800">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 block px-1 mb-1">
-                Quick Portal Access
-              </span>
-              <div className="grid grid-cols-3 gap-1 pt-1">
-                <Link
-                  href="/dashboard"
-                  onClick={() => setProfileDropdownOpen(false)}
-                  className="px-2 py-1.5 bg-slate-800/50 hover:bg-slate-800 text-center rounded-lg text-[10px] font-bold text-slate-300 hover:text-white transition-colors"
-                >
-                  Customer
-                </Link>
-                <Link
-                  href="/procurement/dashboard"
-                  onClick={() => setProfileDropdownOpen(false)}
-                  className="px-2 py-1.5 bg-slate-800/50 hover:bg-slate-800 text-center rounded-lg text-[10px] font-bold text-slate-300 hover:text-white transition-colors"
-                >
-                  Procurement
-                </Link>
-                <Link
-                  href="/finance/dashboard"
-                  onClick={() => setProfileDropdownOpen(false)}
-                  className="px-2 py-1.5 bg-slate-800/50 hover:bg-slate-800 text-center rounded-lg text-[10px] font-bold text-slate-300 hover:text-white transition-colors"
-                >
-                  Finance
-                </Link>
-              </div>
             </div>
 
             {/* Sign Out */}
